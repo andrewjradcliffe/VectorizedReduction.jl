@@ -32,30 +32,29 @@ end
     sumsqdiff_quote(N, D)
 end
 
-function lvvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
+function _lvvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvvar1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvvar1(A, corrected))
     else
-        B = lvmean(A, dims=dims)
+        B = lvmean(A, dims=dims, multithreaded=false)
         Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
-        Tₒ = Base.promote_op(/, T, Int)
-        C = zeros(Tₒ, Dᴮ)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
         sumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
-        denom = one(Tₒ)
+        denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
-        denom = corrected ? denom - one(Tₒ) : denom
+        denom = corrected ? denom - 1 : denom
         x = inv(denom)
-        smul!(C, x)
+        _smul!(C, x)
     end
     return C
 end
-lvvar(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = lvvar(A, (dims,), corrected)
-lvvar(A::AbstractArray{T, N}; dims=:, corrected=true) where {T, N} = lvvar(A, dims, corrected)
-lvvar(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvvar1(A, corrected)
+_lvvar(A::AbstractArray{T, N}, dims::Int, corrected::Bool) where {T, N} =
+    _lvvar(A, (dims,), corrected)
+_lvvar(A::AbstractArray{T, N}, ::Colon, corrected::Bool) where {T, N} = lvvar1(A, corrected)
 
 function lvvar1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
@@ -87,30 +86,29 @@ end
     tsumsqdiff_quote(N, D)
 end
 
-function lvtvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
+function _lvtvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvtvar1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtvar1(A, corrected))
     else
-        B = lvmean(A, dims=dims)
+        B = lvmean(A, dims=dims, multithreaded=true)
         Dᴮ = size(B)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
-        Tₒ = Base.promote_op(/, T, Int)
-        C = zeros(Tₒ, Dᴮ)
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
         tsumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
-        denom = one(Tₒ)
+        denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
-        denom = corrected ? denom - one(Tₒ) : denom
+        denom = corrected ? denom - 1 : denom
         x = inv(denom)
-        tsmul!(C, x)
+        _tsmul!(C, x)
     end
     return C
 end
-lvtvar(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = lvtvar(A, (dims,), corrected)
-lvtvar(A::AbstractArray{T, N}; dims=:, corrected=true) where {T, N} = lvtvar(A, dims, corrected)
-lvtvar(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvtvar1(A, corrected)
+_lvtvar(A::AbstractArray{T, N}, dims::Int, corrected::Bool) where {T, N} =
+    _lvtvar(A, (dims,), corrected)
+_lvtvar(A::AbstractArray{T, N}, ::Colon, corrected::Bool) where {T, N} = lvtvar1(A, corrected)
 
 function lvtvar1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
@@ -124,6 +122,17 @@ function lvtvar1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N}
         ss += Δ * Δ
     end
     return corrected ? ss / (length(A) - 1) : ss / length(A)
+end
+
+################
+# Common interface
+function lvvar(A::AbstractArray{T, N}; dims=:, corrected::Bool=true, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        μ = _lvtvar(A, dims, corrected)
+    else
+        μ = _lvvar(A, dims, corrected)
+    end
+    return μ
 end
 
 ################
@@ -158,7 +167,7 @@ end
 
 function lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvstd1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvstd1(A))
     else
         B = lvmean(A, dims=dims)
         Dᴮ = size(B)
@@ -193,7 +202,7 @@ end
 
 function lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvtstd1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtstd1(A))
     else
         B = lvmean(A, dims=dims)
         Dᴮ = size(B)
