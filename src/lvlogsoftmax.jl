@@ -26,8 +26,8 @@ function aminusb_quote(N::Int, D)
     end
 end
 
-@generated function aminusb!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{T, N},
-                             dims::D) where {Tₒ, T, N, D}
+@generated function aminusb!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N},
+                             dims::D) where {Tₒ, T, Tₘ, N, D}
     aminusb_quote(N, D)
 end
 
@@ -73,7 +73,7 @@ function taminusb_quote(N::Int, D)
         return C
     end
 end
-@generated function taminusb!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{T, N}, dims::D) where {Tₒ, T, N, D}
+@generated function taminusb!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, D}
     taminusb_quote(N, D)
 end
 
@@ -81,7 +81,7 @@ function _lvtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, 
     if ntuple(identity, Val(N)) ⊆ dims
         C = lvtlogsoftmax1(A)
     else
-        B = lvtlogsumexp(A, dims=dims, multithreaded=true)
+        B = lvlogsumexp(A, dims=dims, multithreaded=true)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = similar(A, promote_type(T, eltype(B)))
         taminusb!(C, A, B, Dᴮ′)
