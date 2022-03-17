@@ -96,7 +96,7 @@ _lvreduce(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvreduce1(f, A)
         s
     end
 end
-for (op, init) ∈ zip((:+, :-, :*, :max, :min), (:zero, :zero, :one, :typemin, :typemax))
+for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
     @eval function _lvreduce(::typeof($op), A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         if ntuple(identity, Val(N)) ⊆ dims
             B = hvncat(ntuple(_ -> 1, Val(N)), true, lvreduce1($op, A))
@@ -147,8 +147,8 @@ end
 end
 _lvreduce_init(f, A::AbstractArray{T, N}, dims::Int, init) where {T, N} =
     _lvreduce_init(f, A, (dims,), init)
-_lvreduce(f, A::AbstractArray{T, N}; dims=:, init=nothing) where {T, N} =
-    init === nothing ? _lvreduce(f, A, dims) : _lvreduce_init(f, A, dims, init)
+# _lvreduce(f, A::AbstractArray{T, N}; dims=:, init=nothing) where {T, N} =
+#     init === nothing ? _lvreduce(f, A, dims) : _lvreduce_init(f, A, dims, init)
 
 # Handle scalar dims by wrapping in Tuple
 _lvreduce_init(f, A::AbstractArray{T, N}, ::Colon, init) where {T, N} = lvreduce1_init(f, A, init)
@@ -157,9 +157,11 @@ _lvreduce_init(f, A::AbstractArray{T, N}, ::Colon, init) where {T, N} = lvreduce
 # Common interface for everything related to reduce
 function lvreduce(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N}
     if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
-        B = _lvtreduce(f, A, dims=dims, init=init)
+        # B = _lvtreduce(f, A, dims=dims, init=init)
+        B = init === nothing ? _lvtreduce(f, A, dims) : _lvtreduce_init(f, A, dims, init)
     else
-        B = _lvreduce(f, A, dims=dims, init=init)
+        # B = _lvreduce(f, A, dims=dims, init=init)
+        B = init === nothing ? _lvreduce(f, A, dims) : _lvreduce_init(f, A, dims, init)
     end
     return B
 end
@@ -195,15 +197,12 @@ function mapreduce_quote(F, OP, N::Int, D)
     end
 end
 
-function lvmapreduce(f, op, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvmapreduce(f, op, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
         B = hvncat(ntuple(_ -> 1, Val(N)), true, lvmapreduce1(f, op, A))
     else
-        Dᴬ = size(A)
-        Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], N)
-        B = zeros(Base.promote_op(f, T), Dᴮ)
-        # Dᴮ′ = ntuple(d -> StaticInt(Dᴮ[d]), N)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), Val(N))
+        B = zeros(Base.promote_op(f, T), Dᴮ′)
         _lvmapreduce!(f, op, B, A, Dᴮ′)
     end
     return B
@@ -216,11 +215,11 @@ end
 
 ################
 # Handle scalar dims by wrapping in Tuple
-lvmapreduce(f, op, A::AbstractArray{T, N}, dims::Int) where {T, N} = lvmapreduce(f, op, A, (dims,))
+_lvmapreduce(f, op, A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvmapreduce(f, op, A, (dims,))
 # Convenience dispatches to match JuliaBase
-lvmapreduce(f, op, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, op, A, dims)
+# _lvmapreduce(f, op, A::AbstractArray{T, N}; dims=:) where {T, N} = _lvmapreduce(f, op, A, dims)
 lvmapreduce(f, op, A::AbstractArray{T, N}) where {T, N} = lvmapreduce1(f, op, A)
-lvmapreduce(f, op, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmapreduce1(f, op, A)
+_lvmapreduce(f, op, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmapreduce1(f, op, A)
 
 
 # When dimensions unspecified, treat as vector. Aside from special cases,
@@ -237,16 +236,13 @@ lvmapreduce(f, op, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmapreduce1(
         s
     end
 end
-for (op, init) ∈ zip((:+, :-, :*, :max, :min), (:zero, :zero, :one, :typemin, :typemax))
-    @eval function lvmapreduce(f, ::typeof($op), A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
+    @eval function _lvmapreduce(f, ::typeof($op), A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         if ntuple(identity, Val(N)) ⊆ dims
             B = hvncat(ntuple(_ -> 1, Val(N)), true, lvmapreduce1(f, $op, A))
         else
-            Dᴬ = size(A)
-            Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], N)
-            B = fill($init(Base.promote_op(f, T)), Dᴮ)
-            # Dᴮ′ = ntuple(d -> StaticInt(Dᴮ[d]), N)
-            Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
+            Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), Val(N))
+            B = fill($init(Base.promote_op(f, T)), Dᴮ′)
             _lvmapreduce!(f, $op, B, A, Dᴮ′)
         end
         return B
@@ -261,12 +257,70 @@ for (op, init) ∈ zip((:+, :-, :*, :max, :min), (:zero, :zero, :one, :typemin, 
 end
 
 # Convenience definitions
-lvsum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, +, A, dims=dims)
-lvprod(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, *, A, dims=dims)
-lvmaximum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, max, A, dims=dims)
-lvminimum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, min, A, dims=dims)
-lvextrema(f, A::AbstractArray{T, N}; dims=:) where {T, N} =
-    collect(zip(lvminimum(f, A, dims=dims), lvmaximum(f, A, dims=dims)))
+# lvsum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, +, A, dims=dims)
+# lvprod(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, *, A, dims=dims)
+# lvmaximum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, max, A, dims=dims)
+# lvminimum(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmapreduce(f, min, A, dims=dims)
+# lvextrema(f, A::AbstractArray{T, N}; dims=:) where {T, N} =
+#     collect(zip(lvminimum(f, A, dims=dims), lvmaximum(f, A, dims=dims)))
+
+################
+function _lvmapreduce_init(f, op, A::AbstractArray{T, N}, dims::NTuple{M, Int}, init) where {T, N, M}
+    if ntuple(identity, Val(N)) ⊆ dims
+        B = hvncat(ntuple(_ -> 1, Val(N)), true, lvmapreduce1_init(f, op, A, (init,)))
+    else
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), Val(N))
+        B = fill(Base.promote_op(f, op, T)(init), Dᴮ′)
+        _lvmapreduce!(f, op, B, A, Dᴮ′)
+    end
+    return B
+end
+@generated function lvmapreduce1_init(f::F, op::OP, A::AbstractArray{T, N}, init) where {F, OP, T, N}
+    f = F.instance
+    op = OP.instance
+    quote
+        s = Base.promote_op($f, $T)(init[1])
+        @turbo for i ∈ eachindex(A)
+            s = $op(s, $f(A[i]))
+        end
+        s
+    end
+end
+_lvmapreduce_init(f, op, A::AbstractArray{T, N}, dims::Int, init) where {T, N} =
+    _lvmapreduce_init(f, op, A, (dims,), init)
+# _lvmapreduce(f, op, A::AbstractArray{T, N}; dims=:, init=nothing) where {T, N} =
+#     init === nothing ? _lvmapreduce(f, op, A, dims) : _lvmapreduce_init(f, op, A, dims, init)
+
+# Handle scalar dims by wrapping in Tuple
+_lvmapreduce_init(f, op, A::AbstractArray{T, N}, ::Colon, init) where {T, N} =
+    lvmapreduce1_init(f, op, A, init)
+
+################
+# Common interface for everything related to reduce
+function lvmapreduce(f, op, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        # B = _lvtmapreduce(f, A, dims=dims, init=init)
+        B = init === nothing ? _lvtmapreduce(f, op, A, dims) : _lvtmapreduce_init(f, op, A, dims, init)
+    else
+        # B = _lvmapreduce(f, A, dims=dims, init=init)
+        B = init === nothing ? _lvmapreduce(f, op, A, dims) : _lvmapreduce_init(f, op, A, dims, init)
+    end
+    return B
+end
+
+# Convenience definitions
+lvsum(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
+    lvmapreduce(f, +, A, dims=dims, init=init, multithreaded=multithreaded)
+lvprod(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
+    lvmapreduce(f, *, A, dims=dims, init=init, multithreaded=multithreaded)
+lvmaximum(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
+    lvmapreduce(f, max, A, dims=dims, init=init, multithreaded=multithreaded)
+lvminimum(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
+    lvmapreduce(f, min, A, dims=dims, init=init, multithreaded=multithreaded)
+lvextrema(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
+    collect(zip(lvminimum(f, A, dims=dims, init=init, multithreaded=multithreaded),
+                lvmaximum(f, A, dims=dims, init=init, multithreaded=multithreaded)))
+
 ############################################################################################
 #### threaded versions
 function treduce_quote(F, N::Int, D)
