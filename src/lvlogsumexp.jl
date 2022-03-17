@@ -9,8 +9,8 @@ function aminusb_exp_sumbody(N::Int, D)
     body = Expr(:block)
     params = D.parameters
     a = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
-    b = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
-    c = Expr(:ref, :C, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
+    b = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
+    c = Expr(:ref, :C, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
     e = Expr(:(=), c, Expr(:call, :+, c, Expr(:call, :exp, Expr(:call, :-, a, b))))
     push!(body.args, e)
     body
@@ -37,26 +37,23 @@ function logself_plusb!(C::AbstractArray{Tₒ, N}, B::AbstractArray{T, N}) where
     C
 end
 
-function lvlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        # return hvncat(ntuple(i -> 1, Val(N)), true, lvlogsumexp1(A))
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvlogsumexp1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvlogsumexp1(A))
     else
-        B = lvmaximum(A, dims=dims)
+        B = lvmaximum(A, dims=dims, multithreaded=false)
         Dᴮ = size(B)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
         C = zeros(Base.promote_op(exp, T), Dᴮ)
         aminusb_exp_sum!(C, A, B, Dᴮ′)
         logself_plusb!(C, B)
-        # return C
     end
     return C
 end
 
-lvlogsumexp(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvlogsumexp(A, (dims,))
-lvlogsumexp(A::AbstractArray{T, N}; dims=:) where {T, N} = lvlogsumexp(A, dims)
-lvlogsumexp(A::AbstractArray{T, N}) where {T, N} = lvlogsumexp1(A)
-lvlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsumexp1(A)
+_lvlogsumexp(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvlogsumexp(A, (dims,))
+_lvlogsumexp(A::AbstractArray{T, N}) where {T, N} = lvlogsumexp1(A)
+_lvlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsumexp1(A)
 
 function lvlogsumexp1(A::AbstractArray{T, N}) where {T, N}
     α = typemin(T)
@@ -92,11 +89,11 @@ function tlogself_plusb!(C::AbstractArray{Tₒ, N}, B::AbstractArray{T, N}) wher
     C
 end
 
-function lvtlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvtlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(i -> 1, Val(N)), true, lvtlogsumexp1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtlogsumexp1(A))
     else
-        B = lvtmaximum(A, dims=dims)
+        B = lvmaximum(A, dims=dims, multithreaded=true)
         Dᴮ = size(B)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
         C = zeros(Base.promote_op(exp, T), Dᴮ)
@@ -107,10 +104,9 @@ function lvtlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N,
     return C
 end
 
-lvtlogsumexp(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvtlogsumexp(A, (dims,))
-lvtlogsumexp(A::AbstractArray{T, N}; dims=:) where {T, N} = lvtlogsumexp(A, dims)
-lvtlogsumexp(A::AbstractArray{T, N}) where {T, N} = lvtlogsumexp1(A)
-lvtlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsumexp1(A)
+_lvtlogsumexp(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvtlogsumexp(A, (dims,))
+_lvtlogsumexp(A::AbstractArray{T, N}) where {T, N} = lvtlogsumexp1(A)
+_lvtlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsumexp1(A)
 
 function lvtlogsumexp1(A::AbstractArray{T, N}) where {T, N}
     α = typemin(T)
@@ -122,4 +118,14 @@ function lvtlogsumexp1(A::AbstractArray{T, N}) where {T, N}
         s += exp(A[i] - α)
     end
     α + log(s)
+end
+
+# Common interface
+function lvlogsumexp(A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        μ = _lvtlogsumexp(A, dims)
+    else
+        μ = _lvlogsumexp(A, dims)
+    end
+    return μ
 end
