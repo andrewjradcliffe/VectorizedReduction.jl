@@ -9,8 +9,8 @@ function sumsqdiff_body(N::Int, D)
     body = Expr(:block)
     a = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     params = D.parameters
-    b = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
-    c = Expr(:ref, :C, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
+    b = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
+    c = Expr(:ref, :C, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
     δ = Expr(:(=), :Δ, Expr(:call, :-, a, b))
     e = Expr(:(=), c, Expr(:call, :+, c, Expr(:call, :*, :Δ, :Δ)))
     push!(body.args, δ)
@@ -158,75 +158,79 @@ end
 #     smul_sqrt_inplace_quote(N)
 # end
 
-function smul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
+function _smul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
     @turbo for i ∈ eachindex(A)
         A[i] = sqrt(A[i] * x)
     end
     A
 end
 
-function lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
+function _lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvstd1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvstd1(A, corrected))
     else
-        B = lvmean(A, dims=dims)
+        B = lvmean(A, dims=dims, multithreaded=false)
         Dᴮ = size(B)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
-        Tₒ = Base.promote_op(/, T, Int)
-        C = zeros(Tₒ, Dᴮ)
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
         sumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
-        denom = one(Tₒ)
+        denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
-        denom = corrected ? denom - one(Tₒ) : denom
+        denom = corrected ? denom - 1 : denom
         x = inv(denom)
-        smul_sqrt!(C, x)
+        _smul_sqrt!(C, x)
     end
     return C
 end
-lvstd(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = lvstd(A, (dims,), corrected)
-lvstd(A::AbstractArray{T, N}; dims=:, corrected=true) where {T, N} = lvstd(A, dims, corrected)
-lvstd(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvstd1(A, corrected)
-
+_lvstd(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = _lvstd(A, (dims,), corrected)
+_lvstd(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvstd1(A, corrected)
 lvstd1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N} = √(lvvar1(A, corrected))
 
 ################ threaded version
-function tsmul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
+function _tsmul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
     @tturbo for i ∈ eachindex(A)
         A[i] = sqrt(A[i] * x)
     end
     A
 end
 
-function lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
+function _lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtstd1(A))
+        C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtstd1(A, corrected))
     else
-        B = lvmean(A, dims=dims)
+        B = lvmean(A, dims=dims, multithreaded=true)
         Dᴮ = size(B)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
-        Tₒ = Base.promote_op(/, T, Int)
-        C = zeros(Tₒ, Dᴮ)
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
         tsumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
-        denom = one(Tₒ)
+        denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
-        denom = corrected ? denom - one(Tₒ) : denom
+        denom = corrected ? denom - 1 : denom
         x = inv(denom)
-        tsmul_sqrt!(C, x)
+        _tsmul_sqrt!(C, x)
     end
     return C
 end
-lvtstd(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = lvtstd(A, (dims,), corrected)
-lvtstd(A::AbstractArray{T, N}; dims=:, corrected=true) where {T, N} = lvtstd(A, dims, corrected)
-lvtstd(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvtstd1(A, corrected)
-
+_lvtstd(A::AbstractArray{T, N}, dims::Int, corrected) where {T, N} = _lvtstd(A, (dims,), corrected)
+_lvtstd(A::AbstractArray{T, N}, ::Colon, corrected) where {T, N} = lvtstd1(A, corrected)
 lvtstd1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N} = √(lvtvar1(A, corrected))
 
+################
+# Common interface
+function lvstd(A::AbstractArray{T, N}; dims=:, corrected::Bool=true, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        μ = _lvtstd(A, dims, corrected)
+    else
+        μ = _lvstd(A, dims, corrected)
+    end
+    return μ
+end
 
 # ################################################################
 # # covariance in multiple dimensions
@@ -261,16 +265,16 @@ lvtstd1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N} = √(lvtvar1
 #     # # As it was originally conceived, but the more efficient form (iᵢ, iⱼ)
 #     # # actually confers enhanced clarity.
 #     # aᵢ = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
-#     # bᵢ = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
+#     # bᵢ = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
 #     # aⱼ = Expr(:ref, :A, ntuple(d -> Symbol(:j_, d), N)...)
-#     # bⱼ = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:j_, d), N)...)
-#     # c = Expr(:ref, :C, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...,
-#     #          ntuple(d -> params[d] == Static.One ? 1 : Symbol(:j_, d), N)...)
-#     iᵢ = ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)
-#     iⱼ = ntuple(d -> params[d] == Static.One ? 1 : Symbol(:j_, d), N)
+#     # bⱼ = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:j_, d), N)...)
+#     # c = Expr(:ref, :C, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...,
+#     #          ntuple(d -> params[d] === Static.One ? 1 : Symbol(:j_, d), N)...)
+#     iᵢ = ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)
+#     iⱼ = ntuple(d -> params[d] === Static.One ? 1 : Symbol(:j_, d), N)
 #     aᵢ = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
 #     bᵢ = Expr(:ref, :B, iᵢ...)
-#     aⱼ = Expr(:ref, :A, ntuple(d -> params[d] == Static.One ? Symbol(:i_, d) : Symbol(:j_, d), N)...)
+#     aⱼ = Expr(:ref, :A, ntuple(d -> params[d] === Static.One ? Symbol(:i_, d) : Symbol(:j_, d), N)...)
 #     bⱼ = Expr(:ref, :B, iⱼ...)
 #     c = Expr(:ref, :C, iᵢ..., iⱼ...)
 #     δᵢ = Expr(:(=), :Δᵢ, Expr(:call, :-, aᵢ, bᵢ))
