@@ -35,41 +35,38 @@ end
 #     smul_inplace_quote(N)
 # end
 
-function smul!(A::AbstractArray{T, N}, x::T) where {T, N}
+function _smul!(A::AbstractArray{T, N}, x::T) where {T, N}
     @turbo for i ∈ eachindex(A)
         A[i] *= x
     end
     A
 end
 
-function smul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
+function _smul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
     @turbo for i ∈ eachindex(A)
         B[i] = A[i] * x
     end
     B
 end
-smul(A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N} = smul!(similar(A, Tₒ), A, x)
+_smul(A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N} = _smul!(similar(A, Tₒ), A, x)
 
-function lvmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        return hvncat(ntuple(i -> 1, Val(N)), true, lvmean1(A))
+        return hvncat(ntuple(_ -> 1, Val(N)), true, lvmean1(A))
     else
-        B = lvsum(A, dims=dims)
+        B = lvsum(A, dims=dims, multithreaded=false)
         Dᴬ = size(A)
         denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
         x = inv(denom)
-        # smul!(B, x)
-        # B
-        return eltype(B) <: AbstractFloat ? smul!(B, x) : smul(B, x)
+        return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
     end
 end
-lvmean(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvmean(A, (dims,))
-lvmean(A::AbstractArray{T, N}; dims=:) where {T, N} = lvmean(A, dims)
-lvmean(A::AbstractArray{T, N}) where {T, N} = lvmean1(A)
-lvmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(A)
+_lvmean(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvmean(A, (dims,))
+_lvmean(A::AbstractArray{T, N}) where {T, N} = lvmean1(A)
+_lvmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(A)
 
 function lvmean1(A::AbstractArray{T, N}) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
@@ -80,26 +77,26 @@ function lvmean1(A::AbstractArray{T, N}) where {T, N}
 end
 
 ################ the mapreduce version analogous to Julia base Statistics
-function lvmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+# Although, truly, why anyone would _only_ compute mean of a transformation is
+# puzzling. Consequently, from a theoretical and practical perspective, one
+# would usually want to transform the samples...
+function _lvmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        return hvncat(ntuple(i -> 1, Val(N)), true, lvmean1(f, A))
+        return hvncat(ntuple(_ -> 1, Val(N)), true, lvmean1(f, A))
     else
-        B = lvsum(f, A, dims=dims)
+        B = lvsum(f, A, dims=dims, multithreaded=false)
         Dᴬ = size(A)
         denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
         x = inv(denom)
-        # smul!(B, x)
-        # B
-        return eltype(B) <: AbstractFloat ? smul!(B, x) : smul(B, x)
+        return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
     end
 end
-lvmean(f, A::AbstractArray{T, N}, dims::Int) where {T, N} = lvmean(f, A, (dims,))
-lvmean(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvmean(f, A, dims)
-lvmean(f, A::AbstractArray{T, N}) where {T, N} = lvmean1(f, A)
-lvmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(f, A)
+_lvmean(f, A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvmean(f, A, (dims,))
+_lvmean(f, A::AbstractArray{T, N}) where {T, N} = lvmean1(f, A)
+_lvmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(f, A)
 
 @generated function lvmean1(f::F, A::AbstractArray{T, N}) where {F, T, N}
     f = F.instance
@@ -115,39 +112,38 @@ end
 
 ################ threaded version
 
-function tsmul!(A::AbstractArray{T, N}, x::T) where {T, N}
+function _tsmul!(A::AbstractArray{T, N}, x::T) where {T, N}
     @tturbo for i ∈ eachindex(A)
         A[i] *= x
     end
     A
 end
 
-function tsmul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
+function _tsmul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
     @tturbo for i ∈ eachindex(A)
         B[i] = A[i] * x
     end
     B
 end
-tsmul(A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N} = tsmul!(similar(A, Tₒ), A, x)
+_tsmul(A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N} = _tsmul!(similar(A, Tₒ), A, x)
 
-function lvtmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvtmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        return hvncat(ntuple(i -> 1, Val(N)), true, lvtmean1(A))
+        return hvncat(ntuple(_ -> 1, Val(N)), true, lvtmean1(A))
     else
-        B = lvtsum(A, dims=dims)
+        B = lvsum(A, dims=dims, multithreaded=true)
         Dᴬ = size(A)
         denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
         x = inv(denom)
-        return eltype(B) <: AbstractFloat ? tsmul!(B, x) : tsmul(B, x)
+        return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
     end
 end
-lvtmean(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvtmean(A, (dims,))
-lvtmean(A::AbstractArray{T, N}; dims=:) where {T, N} = lvtmean(A, dims)
-lvtmean(A::AbstractArray{T, N}) where {T, N} = lvtmean1(A)
-lvtmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtmean1(A)
+_lvtmean(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvtmean(A, (dims,))
+_lvtmean(A::AbstractArray{T, N}) where {T, N} = lvtmean1(A)
+_lvtmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtmean1(A)
 
 function lvtmean1(A::AbstractArray{T, N}) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
@@ -158,26 +154,25 @@ function lvtmean1(A::AbstractArray{T, N}) where {T, N}
 end
 
 ################
-function lvtmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvtmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
-        return hvncat(ntuple(i -> 1, Val(N)), true, lvtmean1(f, A))
+        return hvncat(ntuple(_ -> 1, Val(N)), true, lvtmean1(f, A))
     else
-        B = lvtsum(f, A, dims=dims)
+        B = lvsum(f, A, dims=dims, multithreaded=true)
         Dᴬ = size(A)
         denom = 1
         for d ∈ eachindex(Dᴬ)
             denom = d ∈ dims ? denom * Dᴬ[d] : denom
         end
         x = inv(denom)
-        return eltype(B) <: AbstractFloat ? tsmul!(B, x) : tsmul(B, x)
+        return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
     end
 end
-lvtmean(f, A::AbstractArray{T, N}, dims::Int) where {T, N} = lvtmean(f, A, (dims,))
-lvtmean(f, A::AbstractArray{T, N}; dims=:) where {T, N} = lvtmean(f, A, dims)
-lvtmean(f, A::AbstractArray{T, N}) where {T, N} = lvtmean1(f, A)
-lvtmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtmean1(f, A)
+_lvtmean(f, A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvtmean(f, A, (dims,))
+_lvtmean(f, A::AbstractArray{T, N}) where {T, N} = _lvtmean1(f, A)
+_lvtmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = _lvtmean1(f, A)
 
-@generated function lvtmean1(f::F, A::AbstractArray{T, N}) where {F, T, N}
+@generated function _lvtmean1(f::F, A::AbstractArray{T, N}) where {F, T, N}
     f = F.instance
     Tₒ = Base.promote_op(+, Base.promote_op(f, T), Int)
     quote
@@ -187,4 +182,24 @@ lvtmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtmean1(f, A)
         end
         s / length(A)
     end
+end
+
+################
+# Common interface
+function lvmean(A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        μ = _lvtmean(A, dims)
+    else
+        μ = _lvmean(A, dims)
+    end
+    return μ
+end
+
+function lvmean(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        μ = _lvtmean(f, A, dims)
+    else
+        μ = _lvmean(f, A, dims)
+    end
+    return μ
 end
