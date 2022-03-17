@@ -120,6 +120,7 @@ function lvtlogsumexp1(A::AbstractArray{T, N}) where {T, N}
     α + log(s)
 end
 
+################
 # Common interface
 function lvlogsumexp(A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N}
     if (multithreaded === :auto && length(A) > 4095) || multithreaded === true

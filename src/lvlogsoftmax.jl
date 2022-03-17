@@ -9,7 +9,7 @@ function aminusbbody(N::Int, D)
     body = Expr(:block)
     params = D.parameters
     a = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
-    b = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
+    b = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
     c = Expr(:ref, :C, ntuple(d -> Symbol(:i_, d), N)...)
     e = Expr(:(=), c, Expr(:call, :-, a, b))
     push!(body.args, e)
@@ -38,24 +38,23 @@ function exp!(A::AbstractArray{T, N}) where {T, N}
     A
 end
 
-function lvlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
         C = lvlogsoftmax1(A)
     else
-        B = lvlse(A, dims=dims)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), N)
+        B = lvlogsumexp(A, dims=dims, multithreaded=false)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = similar(A, promote_type(T, eltype(B)))
         aminusb!(C, A, B, Dᴮ′)
     end
     return C
 end
-lvlogsoftmax(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvlogsoftmax(A, (dims,))
-lvlogsoftmax(A::AbstractArray{T, N}; dims=:) where {T, N} = lvlogsoftmax(A, dims)
-lvlogsoftmax(A::AbstractArray{T, N}) where {T, N} = lvlogsoftmax1(A)
-lvlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsoftmax1(A)
+_lvlogsoftmax(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvlogsoftmax(A, (dims,))
+_lvlogsoftmax(A::AbstractArray{T, N}) where {T, N} = lvlogsoftmax1(A)
+_lvlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsoftmax1(A)
 
 function lvlogsoftmax1(A::AbstractArray{T, N}) where {T, N}
-    b = lvlse1(A)
+    b = lvlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
     @turbo for i ∈ eachindex(A)
         C[i] = A[i] - b
@@ -78,27 +77,37 @@ end
     taminusb_quote(N, D)
 end
 
-function lvtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
         C = lvtlogsoftmax1(A)
     else
-        B = lvtlse(A, dims=dims)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), N)
+        B = lvtlogsumexp(A, dims=dims)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = similar(A, promote_type(T, eltype(B)))
         taminusb!(C, A, B, Dᴮ′)
     end
     return C
 end
-lvtlogsoftmax(A::AbstractArray{T, N}, dims::Int) where {T, N} = lvtlogsoftmax(A, (dims,))
-lvtlogsoftmax(A::AbstractArray{T, N}; dims=:) where {T, N} = lvtlogsoftmax(A, dims)
-lvtlogsoftmax(A::AbstractArray{T, N}) where {T, N} = lvtlogsoftmax1(A)
-lvtlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsoftmax1(A)
+_lvtlogsoftmax(A::AbstractArray{T, N}, dims::Int) where {T, N} = _lvtlogsoftmax(A, (dims,))
+_lvtlogsoftmax(A::AbstractArray{T, N}) where {T, N} = lvtlogsoftmax1(A)
+_lvtlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsoftmax1(A)
 
 function lvtlogsoftmax1(A::AbstractArray{T, N}) where {T, N}
-    b = lvtlse1(A)
+    b = lvtlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
     @tturbo for i ∈ eachindex(A)
         C[i] = A[i] - b
     end
     C
+end
+
+################
+# Common interface
+function lvlogsoftmax(A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        α = _lvtlogsoftmax(A, dims)
+    else
+        α = _lvlogsoftmax(A, dims)
+    end
+    return α
 end
