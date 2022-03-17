@@ -43,7 +43,7 @@ function _lvlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N,
     else
         B = lvmaximum(A, dims=dims, multithreaded=false)
         Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
         C = zeros(Base.promote_op(exp, T), Dᴮ)
         aminusb_exp_sum!(C, A, B, Dᴮ′)
         logself_plusb!(C, B)
@@ -95,7 +95,7 @@ function _lvtlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N
     else
         B = lvmaximum(A, dims=dims, multithreaded=true)
         Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
         C = zeros(Base.promote_op(exp, T), Dᴮ)
         taminusb_exp_sum!(C, A, B, Dᴮ′)
         tlogself_plusb!(C, B)
