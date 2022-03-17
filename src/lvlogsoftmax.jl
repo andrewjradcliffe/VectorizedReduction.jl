@@ -81,7 +81,7 @@ function _lvtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, 
     if ntuple(identity, Val(N)) ⊆ dims
         C = lvtlogsoftmax1(A)
     else
-        B = lvtlogsumexp(A, dims=dims)
+        B = lvtlogsumexp(A, dims=dims, multithreaded=true)
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = similar(A, promote_type(T, eltype(B)))
         taminusb!(C, A, B, Dᴮ′)
