@@ -15,7 +15,7 @@ function aminusb_expbody(N::Int, D)
     body = Expr(:block)
     params = D.parameters
     a = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
-    b = Expr(:ref, :B, ntuple(d -> params[d] == Static.One ? 1 : Symbol(:i_, d), N)...)
+    b = Expr(:ref, :B, ntuple(d -> params[d] === Static.One ? 1 : Symbol(:i_, d), N)...)
     c = Expr(:ref, :C, ntuple(d -> Symbol(:i_, d), N)...)
     e = Expr(:(=), c, Expr(:call, :exp, Expr(:call, :-, a, b)))
     push!(body.args, e)
