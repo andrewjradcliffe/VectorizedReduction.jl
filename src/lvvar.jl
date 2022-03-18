@@ -42,7 +42,7 @@ function _lvvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         sumsqdiff!(C, A, B, Dᴮ′)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -94,7 +94,7 @@ function _lvtvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         tsumsqdiff!(C, A, B, Dᴮ′)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -171,7 +171,7 @@ function _lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         sumsqdiff!(C, A, B, Dᴮ′)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -201,7 +201,7 @@ function _lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         tsumsqdiff!(C, A, B, Dᴮ′)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)

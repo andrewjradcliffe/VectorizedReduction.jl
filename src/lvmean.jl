@@ -57,7 +57,7 @@ function _lvmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         B = lvsum(A, dims=dims, multithreaded=false)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
@@ -86,7 +86,7 @@ function _lvmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M
         B = lvsum(f, A, dims=dims, multithreaded=false)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
@@ -132,7 +132,7 @@ function _lvtmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         B = lvsum(A, dims=dims, multithreaded=true)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
@@ -158,7 +158,7 @@ function _lvtmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, 
         B = lvsum(f, A, dims=dims, multithreaded=true)
         denom = 1
         for d = 1:N
-            denom = d ∈ dims ? demon * size(A, d) : denom
+            denom = d ∈ dims ? denom * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
