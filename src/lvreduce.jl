@@ -162,6 +162,8 @@ lvminimum(A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) whe
 lvextrema(A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
     collect(zip(lvminimum(A, dims=dims, init=init, multithreaded=multithreaded),
                 lvmaximum(A, dims=dims, init=init, multithreaded=multithreaded)))
+# Handle case of no options
+lvextrema(A::AbstractArray{T, N}) where {T, N} = (lvminimum(A), lvmaximum(A))
 ################
 
 function mapreduce_quote(F, OP, N::Int, D)
@@ -286,7 +288,8 @@ lvminimum(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) 
 lvextrema(f, A::AbstractArray{T, N}; dims=:, init=nothing, multithreaded=:auto) where {T, N} =
     collect(zip(lvminimum(f, A, dims=dims, init=init, multithreaded=multithreaded),
                 lvmaximum(f, A, dims=dims, init=init, multithreaded=multithreaded)))
-
+# Handle case of no options
+lvextrema(f, A::AbstractArray{T, N}) where {T, N} = (lvminimum(f, A), lvmaximum(f, A))
 ############################################################################################
 #### threaded versions
 function treduce_quote(F, N::Int, D)
@@ -304,7 +307,7 @@ function treduce_quote(F, N::Int, D)
         return B
     end
 end
-function lvtreduce(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function _lvtreduce(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     if ntuple(identity, Val(N)) ⊆ dims
         B = hvncat(ntuple(_ -> 1, Val(N)), true, lvtreduce1(f, A))
     else
@@ -320,7 +323,7 @@ end
 
 ################
 _lvtreduce(f, A, dims::Int) = _lvtreduce(f, A, (dims,))
-lvtreduce(f, A) = lvtreduce1(f, A)
+_lvtreduce(f, A) = lvtreduce1(f, A)
 _lvtreduce(f, A, ::Colon) = lvtreduce1(f, A)
 
 @generated function lvtreduce1(f::F, A::AbstractArray{T, N}) where {F, T, N}
@@ -411,7 +414,7 @@ end
 
 ################
 _lvtmapreduce(f, op, A, dims::Int) = _lvtmapreduce(f, op, A, (dims,))
-lvtmapreduce(f, op, A) = lvtmapreduce1(f, op, A)
+_lvtmapreduce(f, op, A) = lvtmapreduce1(f, op, A)
 _lvtmapreduce(f, op, A, ::Colon) = lvtmapreduce1(f, op, A)
 
 @generated function lvtmapreduce1(f::F, op::OP, A::AbstractArray{T, N}) where {F, OP, T, N}
