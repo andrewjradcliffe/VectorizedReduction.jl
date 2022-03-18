@@ -37,9 +37,8 @@ function _lvvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         C = hvncat(ntuple(_ -> 1, Val(N)), true, lvvar1(A, corrected))
     else
         B = lvmean(A, dims=dims, multithreaded=false)
-        Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
-        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         sumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
         denom = 1
@@ -91,9 +90,8 @@ function _lvtvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtvar1(A, corrected))
     else
         B = lvmean(A, dims=dims, multithreaded=true)
-        Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
-        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         tsumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
         denom = 1
@@ -170,9 +168,8 @@ function _lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         C = hvncat(ntuple(_ -> 1, Val(N)), true, lvstd1(A, corrected))
     else
         B = lvmean(A, dims=dims, multithreaded=false)
-        Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
-        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         sumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
         denom = 1
@@ -202,9 +199,8 @@ function _lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         C = hvncat(ntuple(_ -> 1, Val(N)), true, lvtstd1(A, corrected))
     else
         B = lvmean(A, dims=dims, multithreaded=true)
-        Dᴮ = size(B)
-        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], Val(N))
-        C = zeros(Base.promote_op(/, T, Int), Dᴮ)
+        Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
+        C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         tsumsqdiff!(C, A, B, Dᴮ′)
         Dᴬ = size(A)
         denom = 1
@@ -308,7 +304,7 @@ end
 # function lvcov(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) where {T, N, M}
 #     B = lvmean(A, dims=dims)
 #     Dᴮ = size(B)
-#     Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : Dᴮ[d], N)
+#     Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), N)
 #     Tₒ = Base.promote_op(/, T, Int)
 #     C = zeros(Tₒ, Dᴮ..., Dᴮ...)
 #     sumsqdiffij!(C, A, B, Dᴮ′)
