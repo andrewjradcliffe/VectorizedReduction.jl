@@ -40,10 +40,9 @@ function _lvvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         sumsqdiff!(C, A, B, Dᴮ′)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -93,10 +92,9 @@ function _lvtvar(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         tsumsqdiff!(C, A, B, Dᴮ′)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -171,10 +169,9 @@ function _lvstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) w
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         sumsqdiff!(C, A, B, Dᴮ′)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)
@@ -202,10 +199,9 @@ function _lvtstd(A::AbstractArray{T, N}, dims::NTuple{M, Int}, corrected::Bool) 
         Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(B, d), Val(N))
         C = zeros(Base.promote_op(/, T, Int), Dᴮ′)
         tsumsqdiff!(C, A, B, Dᴮ′)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         denom = corrected ? denom - 1 : denom
         x = inv(denom)

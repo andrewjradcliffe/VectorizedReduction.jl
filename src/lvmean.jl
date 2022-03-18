@@ -55,10 +55,9 @@ function _lvmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         return hvncat(ntuple(_ -> 1, Val(N)), true, lvmean1(A))
     else
         B = lvsum(A, dims=dims, multithreaded=false)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
@@ -85,10 +84,9 @@ function _lvmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M
         return hvncat(ntuple(_ -> 1, Val(N)), true, lvmean1(f, A))
     else
         B = lvsum(f, A, dims=dims, multithreaded=false)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _smul!(B, x) : _smul(B, x)
@@ -132,10 +130,9 @@ function _lvtmean(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
         return hvncat(ntuple(_ -> 1, Val(N)), true, lvtmean1(A))
     else
         B = lvsum(A, dims=dims, multithreaded=true)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
@@ -159,10 +156,9 @@ function _lvtmean(f, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, 
         return hvncat(ntuple(_ -> 1, Val(N)), true, lvtmean1(f, A))
     else
         B = lvsum(f, A, dims=dims, multithreaded=true)
-        Dᴬ = size(A)
         denom = 1
-        for d ∈ eachindex(Dᴬ)
-            denom = d ∈ dims ? denom * Dᴬ[d] : denom
+        for d = 1:N
+            denom = d ∈ dims ? demon * size(A, d) : denom
         end
         x = inv(denom)
         return eltype(B) <: AbstractFloat ? _tsmul!(B, x) : _tsmul(B, x)
