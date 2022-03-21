@@ -95,6 +95,7 @@ function findmax_quote(N::Int, D)
         $Bᵥ
         $Cᵥ
         @turbo $loops
+        return B, C
     end
 end
 
@@ -111,8 +112,87 @@ end
     findmax_quote(N, D)
 end
 
-B, C = vfindmax(A, dims)
+A = rand(10,10);
+dims=(1,)
+N = ndims(A)
+Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), N)
+D = typeof(Dᴮ′)
+B, C = vfindmax(A, dims);
 findmax_quote(N, D)
 CartesianIndices(A)[C] == argmax(A, dims=dims)
 @benchmark vfindmax(A, dims)
 @benchmark findmax(A, dims=dims)
+@benchmark bfindmax(A, dims)
+bfindmax_quote(N, D)
+
+
+B = similar(A, Dᴮ′)
+C = similar(A, Int, Dᴮ′)
+
+ls0 = :(for i_1 = indices((A, B, C), 1)
+           v = typemin(eltype(Bᵥ))
+           j_2 = one(Int)
+           for i_2 = axes(A, 2)
+               newmax = A[i_1, i_2] > v
+               v = ifelse(newmax, A[i_1, i_2], v)
+               j_2 = ifelse(newmax, i_2, j_2)
+           end
+           Bᵥ[i_1] = v
+           Cᵥ[i_1] = D_1 * j_2 + i_1 + 1 + Dstar
+       end);
+ls = LoopVectorization.LoopSet(ls0);
+ops = LoopVectorization.operations(ls)
+deps = LoopVectorization.loopdependencies.(ops);
+
+ls02 = :(for i_2 = indices((A, B, C), 2)
+             v = typemin(eltype(Bᵥ))
+             j_1 = one(Int)
+             for i_1 = axes(A, 1)
+                 newmax = A[i_1, i_2] > v
+                 v = ifelse(newmax, A[i_1, i_2], v)
+                 j_1 = ifelse(newmax, i_1, j_1)
+             end
+             Bᵥ[i_2] = v
+             Cᵥ[i_2] = j_1 + D_1 * i_2 + 1 + Dstar
+         end);
+ls2 = LoopVectorization.LoopSet(ls02);
+ops2 = LoopVectorization.operations(ls2)
+
+# following sequence
+q = @macroexpand @turbo for i_2 = indices((A, B, C), 2)
+    v = typemin(eltype(Bᵥ))
+    j_1 = one(Int)
+    for i_1 = axes(A, 1)
+        newmax = A[i_1, i_2] > v
+        v = ifelse(newmax, A[i_1, i_2], v)
+        j_1 = ifelse(newmax, i_1, j_1)
+    end
+    Bᵥ[i_2] = v
+    Cᵥ[i_2] = j_1 + D_1 * i_2 + 1 + Dstar
+end;
+
+LoopVectorization.avx_body(ls2, )
+
+function foo!(B, C, A)
+    (D_1, D_2) = size(A)
+    Dstar = (*)(1) + (*)(D_1)
+    Dstar = -Dstar
+    Bᵥ = view(B, firstindex(B, 1), Colon())
+    Cᵥ = view(C, firstindex(C, 1), Colon())
+    @macroexpand @turbo for i_2 = indices((A, B, C), 2)
+        v = typemin(eltype(Bᵥ))
+        j_1 = one(Int)
+        for i_1 = axes(A, 1)
+            newmax = A[i_1, i_2] > v
+            v = ifelse(newmax, A[i_1, i_2], v)
+            j_1 = ifelse(newmax, i_1, j_1)
+        end
+        Bᵥ[i_2] = v
+        Cᵥ[i_2] = j_1 + D_1 * i_2 + 1 + Dstar
+    end
+    B, C
+end
+
+@enter vfindmax(A, dims)
+
+@enter foo!(B, C, A)
