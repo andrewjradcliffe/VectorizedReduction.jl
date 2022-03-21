@@ -62,6 +62,7 @@ function findmax_quote(N::Int, D)
     setmax = Expr(:(=), :v, Expr(:call, :ifelse, :newmax, A, :v))
     push!(block.args, setmax)
     for d ∈ rinds
+        # setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
         setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
         push!(block.args, setj)
     end
@@ -112,8 +113,21 @@ end
     findmax_quote(N, D)
 end
 
+function vfindmax2(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+    Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), Val(N))
+    B = similar(A, Dᴮ′)
+    C = similar(A, Int, Dᴮ′)
+    if 1 ∈ dims
+        Dᴮ′′ = (1, Dᴮ′...)
+        _vfindmax!(reshape(B, Dᴮ′′), reshape(C, Dᴮ′′), reshape(A, 1, size(A)...), Dᴮ′′)
+    else
+        _vfindmax!(B, C, A, Dᴮ′)
+    end
+    B, C
+end
+
 A = rand(10,10);
-dims=(1,)
+dims=(2,)
 N = ndims(A)
 Dᴮ′ = ntuple(d -> d ∈ dims ? StaticInt(1) : size(A, d), N)
 D = typeof(Dᴮ′)
@@ -121,6 +135,7 @@ B, C = vfindmax(A, dims);
 findmax_quote(N, D)
 CartesianIndices(A)[C] == argmax(A, dims=dims)
 @benchmark vfindmax(A, dims)
+@benchmark vfindmax2(A, dims)
 @benchmark findmax(A, dims=dims)
 @benchmark bfindmax(A, dims)
 bfindmax_quote(N, D)
