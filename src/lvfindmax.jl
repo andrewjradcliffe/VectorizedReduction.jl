@@ -57,9 +57,9 @@ function findmax_quote(N::Int, D)
         block = newblock
     end
     # Push to inside innermost loop
-    cmpr = Expr(:(=), :newmax, Expr(:call, :(>), a, :v))
+    cmpr = Expr(:(=), :newmax, Expr(:call, :(>), A, :v))
     push!(block.args, cmpr)
-    setmax = Expr(:(=), :v, Expr(:call, :ifelse, :newmax, a, :v))
+    setmax = Expr(:(=), :v, Expr(:call, :ifelse, :newmax, A, :v))
     push!(block.args, setmax)
     for d ∈ rinds
         setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
@@ -69,7 +69,7 @@ function findmax_quote(N::Int, D)
     postmax = Expr(:(=), Bᵥ′, :v)
     push!(rblock.args, postmax)
     # # Simplest variety
-    # postj = Expr(:(=), Cᵥ′, partialtermrawj(Tuple(rinds)))
+    # postj = Expr(:(=), Cᵥ′, length(rinds) == 1 ? singletermrawj(first(rinds)) : partialtermrawj(Tuple(rinds)))
     # push!(rblock.args, postj)
     # Potential loop-carried dependency
     jterm = partialtermrawj(Tuple(rinds))
