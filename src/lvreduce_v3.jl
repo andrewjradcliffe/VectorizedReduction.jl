@@ -45,6 +45,11 @@ vvminimum(A, dims) = vvmapreduce(identity, min, typemax, A, dims)
     end
 end
 
+vvsum(f::F, A) where {F<:Function} = vvmapreduce(f, +, zero, A, :)
+vvprod(f::F, A) where {F<:Function} = vvmapreduce(f, *, one, A, :)
+vvmaximum(f::F, A) where {F<:Function} = vvmapreduce(f, max, typemin, A, :)
+vvminimum(f::F, A) where {F<:Function} = vvmapreduce(f, min, typemax, A, :)
+
 vvsum(A) = vvmapreduce(identity, +, zero, A, :)
 vvprod(A) = vvmapreduce(identity, *, one, A, :)
 vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
@@ -52,7 +57,7 @@ vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 
 # A surprising convenience opportunity -- albeit, a specific implementation will
 # be necessary in order to utilize Array{Bool} rather than the default, which
-# will get promoted to Array{Int}. Oddly, only works on Array{Int} inputs.
+# will get promoted to Array{Int}. Oddly, only works on Array{<:Integer} inputs.
 # A (inefficient) workaround would be to sum Bools, then compare to length
 # vany(f::F, A, dims) where {F} = vvmapreduce(f, |, zero, A, dims)
 # vall(f::F, A, dims) where {F} = vvmapreduce(f, &, one, A, dims)
