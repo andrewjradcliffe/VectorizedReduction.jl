@@ -58,7 +58,7 @@ vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 # A surprising convenience opportunity -- albeit, a specific implementation will
 # be necessary in order to utilize Array{Bool} rather than the default, which
 # will get promoted to Array{Int}. Oddly, only works on Array{<:Integer} inputs.
-# A (inefficient) workaround would be to sum Bools, then compare to length
+# A workaround (inefficient) would be to sum Bools, then compare to length
 # vany(f::F, A, dims) where {F} = vvmapreduce(f, |, zero, A, dims)
 # vall(f::F, A, dims) where {F} = vvmapreduce(f, &, one, A, dims)
 # vany(A, dims) = vvmapreduce(identity, |, zero, A, dims)
@@ -192,3 +192,155 @@ end
     :(copyto!(B, A); return B)
 end
 
+################
+# Version wherein an initial value is supplied
+
+function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I<:Number, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Base.promote_op(op, Base.promote_op(f, T), Int), Dᴮ′)
+    _vvmapreduce_init!(f, op, init, B, A, dims)
+    return B
+end
+
+# reduction over all dims
+@generated function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I<:Number, T, N}
+    fsym = F.instance
+    opsym = OP.instance
+    Tₒ = Base.promote_op(opsym, Base.promote_op(fsym, T), Int)
+    quote
+        ξ = convert($Tₒ, init)
+        @turbo for i ∈ eachindex(A)
+            ξ = $opsym($fsym(A[i]), ξ)
+        end
+        return ξ
+    end
+end
+
+function staticdim_mapreduce_init_quote(F, OP, static_dims::Vector{Int}, N::Int)
+    A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
+    Bᵥ = Expr(:call, :view, :B)
+    Bᵥ′ = Expr(:ref, :Bᵥ)
+    rinds = Int[]
+    nrinds = Int[]
+    for d = 1:N
+        if d ∈ static_dims
+            push!(Bᵥ.args, Expr(:call, :firstindex, :B, d))
+            push!(rinds, d)
+        else
+            push!(Bᵥ.args, :)
+            push!(nrinds, d)
+            push!(Bᵥ′.args, Symbol(:i_, d))
+        end
+    end
+    reverse!(rinds)
+    reverse!(nrinds)
+    if !isempty(nrinds)
+        # ξ₀ = Expr(:call, Expr(:call, :eltype, :Bᵥ), :init)
+        ξ₀ = Expr(:call, :convert, Expr(:call, :eltype, :Bᵥ), :init)
+        block = Expr(:block)
+        loops = Expr(:for, Expr(:(=), Symbol(:i_, nrinds[1]),
+                                Expr(:call, :indices, Expr(:tuple, :A, :B), nrinds[1])), block)
+        for i = 2:length(nrinds)
+            newblock = Expr(:block)
+            push!(block.args,
+                  Expr(:for, Expr(:(=), Symbol(:i_, nrinds[i]),
+                                  Expr(:call, :indices, Expr(:tuple, :A, :B), nrinds[i])), newblock))
+            block = newblock
+        end
+        rblock = block
+        # Pre-reduction
+        ξ = Expr(:(=), :ξ, :ξ₀)
+        push!(rblock.args, ξ)
+        # Reduction loop
+        for d ∈ rinds
+            newblock = Expr(:block)
+            push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :axes, :A, d)), newblock))
+            block = newblock
+        end
+        # Push to inside innermost loop
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
+                                   Expr(:call, Symbol(F.instance), A), :ξ))
+        push!(block.args, setξ)
+        setb = Expr(:(=), Bᵥ′, :ξ)
+        push!(rblock.args, setb)
+        return quote
+            Bᵥ = $Bᵥ
+            ξ₀ = $ξ₀
+            @turbo $loops
+            return B
+        end
+    else
+        # Pre-reduction
+        ξ = Expr(:(=), :ξ, Expr(:call, Expr(:call, :eltype, :Bᵥ), :init))
+        # Reduction loop
+        block = Expr(:block)
+        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]),
+                                Expr(:call, :axes, :A, rinds[1])), block)
+        for i = 2:length(rinds)
+            newblock = Expr(:block)
+            push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, rinds[i]),
+                                              Expr(:call, :axes, :A, rinds[i])), newblock))
+            block = newblock
+        end
+        # Push to inside innermost loop
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
+                                   Expr(:call, Symbol(F.instance), A), :ξ))
+        push!(block.args, setξ)
+        return quote
+            Bᵥ = $Bᵥ
+            $ξ
+            @turbo $loops
+            Bᵥ[] = ξ
+            return B
+        end
+    end
+end
+
+function branches_mapreduce_init_quote(F, OP, N::Int, M::Int, D)
+    static_dims = Int[]
+    for m ∈ 1:M
+        param = D.parameters[m]
+        if param <: StaticInt
+            new_dim = _dim(param)::Int
+            push!(static_dims, new_dim)
+        else
+            # tuple of static dimensions
+            t = Expr(:tuple)
+            for n ∈ static_dims
+                push!(t.args, :(StaticInt{$n}()))
+            end
+            q = Expr(:block, :(dimm = dims[$m]))
+            qold = q
+            # if-elseif statements
+            ifsym = :if
+            for n ∈ 1:N
+                n ∈ static_dims && continue
+                tc = copy(t)
+                push!(tc.args, :(StaticInt{$n}()))
+                qnew = Expr(ifsym, :(dimm == $n), :(return _vvmapreduce_init!(f, op, init, B, A, $tc)))
+                for r ∈ m+1:M
+                    push!(tc.args, :(dims[$r]))
+                end
+                push!(qold.args, qnew)
+                qold = qnew
+                ifsym = :elseif
+            end
+            # else statement
+            tc = copy(t)
+            for r ∈ m+1:M
+                push!(tc.args, :(dims[$r]))
+            end
+            push!(qold.args, Expr(:block, :(return _vvmapreduce_init!(f, op, init, B, A, $tc))))
+            return q
+        end
+    end
+    return staticdim_mapreduce_init_quote(F, OP, static_dims, N)
+end
+
+@generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+    branches_mapreduce_init_quote(F, OP, N, M, D)
+end
+@generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
+    :(copyto!(B, A); return B)
+end
