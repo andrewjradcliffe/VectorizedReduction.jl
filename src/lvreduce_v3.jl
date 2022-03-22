@@ -18,6 +18,40 @@ function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     return B
 end
 
+# Convenience definitions
+vvsum(f::F, A, dims) where {F} = vvmapreduce(f, +, zero, A, dims)
+vvprod(f::F, A, dims) where {F} = vvmapreduce(f, *, one, A, dims)
+vvmaximum(f::F, A, dims) where {F} = vvmapreduce(f, max, typemin, A, dims)
+vvminimum(f::F, A, dims) where {F} = vvmapreduce(f, min, typemax, A, dims)
+
+vvsum(A, dims) = vvmapreduce(identity, +, zero, A, dims)
+vvprod(A, dims) = vvmapreduce(identity, *, one, A, dims)
+vvmaximum(A, dims) = vvmapreduce(identity, max, typemin, A, dims)
+vvminimum(A, dims) = vvmapreduce(identity, min, typemax, A, dims)
+
+# reduction over all dims
+@generated function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
+    fsym = F.instance
+    opsym = OP.instance
+    initsym = I.instance
+    quote
+        ξ = $initsym($T)
+        @turbo for i ∈ eachindex(A)
+            ξ = $opsym($fsym(A[i]), ξ)
+        end
+        return ξ
+    end
+end
+
+vvsum(A) = vvmapreduce(identity, +, zero, A, :)
+vvprod(A) = vvmapreduce(identity, *, one, A, :)
+vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
+vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
+
+
+# Define reduce
+vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
+
 function staticdim_mapreduce_quote(F, OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
