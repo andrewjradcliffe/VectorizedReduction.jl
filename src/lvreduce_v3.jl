@@ -13,7 +13,8 @@ _dim(::Type{StaticInt{N}}) where {N} = N::Int
 function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
-    B = similar(A, Base.promote_op(op, T, Int), Dᴮ′)
+    # B = similar(A, Base.promote_op(op, T, Int), Dᴮ′)
+    B = similar(A, Base.promote_op(op, Base.promote_op(f, T), Int), Dᴮ′)
     _vvmapreduce!(f, op, init, B, A, dims)
     return B
 end
@@ -34,8 +35,9 @@ vvminimum(A, dims) = vvmapreduce(identity, min, typemax, A, dims)
     fsym = F.instance
     opsym = OP.instance
     initsym = I.instance
+    Tₒ = initsym(Base.promote_op(opsym, Base.promote_op(fsym, T), Int))
     quote
-        ξ = $initsym($T)
+        ξ = $initsym($Tₒ)
         @turbo for i ∈ eachindex(A)
             ξ = $opsym($fsym(A[i]), ξ)
         end
