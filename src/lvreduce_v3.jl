@@ -35,7 +35,7 @@ vvminimum(A, dims) = vvmapreduce(identity, min, typemax, A, dims)
     fsym = F.instance
     opsym = OP.instance
     initsym = I.instance
-    Tₒ = initsym(Base.promote_op(opsym, Base.promote_op(fsym, T), Int))
+    Tₒ = Base.promote_op(opsym, Base.promote_op(fsym, T), Int)
     quote
         ξ = $initsym($Tₒ)
         @turbo for i ∈ eachindex(A)
@@ -50,6 +50,14 @@ vvprod(A) = vvmapreduce(identity, *, one, A, :)
 vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
 vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 
+# A surprising convenience opportunity -- albeit, a specific implementation will
+# be necessary in order to utilize Array{Bool} rather than the default, which
+# will get promoted to Array{Int}. Oddly, only works on Array{Int} inputs.
+# A (inefficient) workaround would be to sum Bools, then compare to length
+# vany(f::F, A, dims) where {F} = vvmapreduce(f, |, zero, A, dims)
+# vall(f::F, A, dims) where {F} = vvmapreduce(f, &, one, A, dims)
+# vany(A, dims) = vvmapreduce(identity, |, zero, A, dims)
+# vall(A, dims) = vvmapreduce(identity, &, one, A, dims)
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
