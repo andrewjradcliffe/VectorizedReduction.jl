@@ -176,3 +176,33 @@ end
     mapreduce_quote3(F, OP, I, N, D)
 end
 
+# Handle scalar dims by wrapping in Tuple
+_lvmapreduce3(f, op, A, dims::Int) = _lvmapreduce3(f, op, A, (dims,))
+# Convenience dispatches to match JuliaBase
+lvmapreduce3(f, op, A) = lvmapreduce1(f, op, A)
+_lvmapreduce3(f, op, A, ::Colon) = lvmapreduce1(f, op, A)
+
+# Common interface for everything related to mapreduce
+function lvmapreduce3(f::F, op::OP, init::I, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {F, OP, I, T, N}
+    if (multithreaded === :auto && length(A) > 4095) || multithreaded === true
+        # B = init === nothing ? _lvtmapreduce(op, A, dims) : _lvtmapreduce_init(op, A, dims, init)
+        B = _lvmapreduce3(f, op, init, A, dims)
+    else
+        # B = init === nothing ? _lvmapreduce(op, A, dims) : _lvmapreduce_init(op, A, dims, init)
+        B = _lvmapreduce3(f, op, init, A, dims)
+    end
+    return B
+end
+
+# Convenience definitions
+lvsum3(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N} =
+    lvmapreduce3(f, +, zero, A, dims=dims, multithreaded=multithreaded)
+lvprod3(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N} =
+    lvmapreduce3(f, *, one, A, dims=dims, multithreaded=multithreaded)
+lvmaximum3(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N} =
+    lvmapreduce3(f, max, typemin, A, dims=dims, multithreaded=multithreaded)
+lvminimum3(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N} =
+    lvmapreduce3(f, min, typemax, A, dims=dims, multithreaded=multithreaded)
+lvextrema3(f, A::AbstractArray{T, N}; dims=:, multithreaded=:auto) where {T, N} =
+    collect(zip(lvminimum3(f, A, dims=dims, multithreaded=multithreaded),
+                lvmaximum3(f, A, dims=dims, multithreaded=multithreaded)))
