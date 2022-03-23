@@ -96,7 +96,7 @@ function staticdim_mapreduce_quote(F, OP, I, static_dims::Vector{Int}, N::Int)
             push!(block.args,
                   Expr(:for, Expr(:(=), Symbol(:i_, nrinds[i]),
                                   Expr(:call, :indices, Expr(:tuple, :A, :B), nrinds[i])), newblock))
-            # push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = indices((A, B), $d)), block))
+            # push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = indices((A, B), $d)), newblock))
             block = newblock
         end
         rblock = block
@@ -122,30 +122,32 @@ function staticdim_mapreduce_quote(F, OP, I, static_dims::Vector{Int}, N::Int)
             return B
         end
     else
-    # Pre-reduction
-    ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance), Expr(:call, :eltype, :Bᵥ)))
-    # Reduction loop
-    block = Expr(:block)
-    loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]),
-                            Expr(:call, :axes, :A, rinds[1])), block)
-    for i = 2:length(rinds)
-        newblock = Expr(:block)
-        push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, rinds[i]),
-                                          Expr(:call, :axes, :A, rinds[i])), newblock))
-        block = newblock
+        # Pre-reduction
+        ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance), Expr(:call, :eltype, :Bᵥ)))
+        # Reduction loop
+        block = Expr(:block)
+        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]),
+                                Expr(:call, :axes, :A, rinds[1])), block)
+        # loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = axes(A, $(rinds[1]))), block)
+        for i = 2:length(rinds)
+            newblock = Expr(:block)
+            push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, rinds[i]),
+                                              Expr(:call, :axes, :A, rinds[i])), newblock))
+            # push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = axes(A, $d)), newblock))
+            block = newblock
+        end
+        # Push to inside innermost loop
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
+                                   Expr(:call, Symbol(F.instance), A), :ξ))
+        push!(block.args, setξ)
+        return quote
+            Bᵥ = $Bᵥ
+            $ξ
+            @turbo $loops
+            Bᵥ[] = ξ
+            return B
+        end
     end
-    # Push to inside innermost loop
-    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
-                               Expr(:call, Symbol(F.instance), A), :ξ))
-    push!(block.args, setξ)
-    return quote
-        Bᵥ = $Bᵥ
-        $ξ
-        @turbo $loops
-        Bᵥ[] = ξ
-        return B
-    end
-end
 end
 
 function branches_mapreduce_quote(F, OP, I, N::Int, M::Int, D)
