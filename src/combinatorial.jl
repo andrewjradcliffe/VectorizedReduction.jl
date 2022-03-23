@@ -69,3 +69,6 @@ vvmapreduce(identity, min, typemin, A, (1,2,3)) == vvmapreduce(identity, min, ty
 @timev vvmapreduce(identity, min, typemin, A, (4,2));
 @timev vvmapreduce(identity, min, typemin, A, (4,3));
 
+@timev B = vvmapreduce(identity, min, typemax, A, dims)
+@timev vvmapreduce!(identity, min, typemax, B, A)
+@code_typed _vvmapreduce!(identity, +, zero, B, A, dims)
