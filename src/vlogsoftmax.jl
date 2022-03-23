@@ -7,9 +7,8 @@
 
 function vvlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     Dᴬ = size(A)
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     B = vvlogsumexp(A, dims)
-    C = similar(A, Base.promote_op(log, T), Dᴮ′)
+    C = similar(A, Base.promote_op(exp, T))
     _vvlogsoftmax!(C, A, B, dims)
     return C
 end
@@ -30,21 +29,17 @@ function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
     Bᵥ′ = Expr(:ref, :Bᵥ)
-    Cᵥ = Expr(:call, :view, :C)
-    Cᵥ′ = Expr(:ref, :Cᵥ)
+    C = Expr(:ref, :C, ntuple(d -> Symbol(:i_, d), N)...)
     rinds = Int[]
     nrinds = Int[]
     for d = 1:N
         if d ∈ static_dims
             push!(Bᵥ.args, Expr(:call, :firstindex, :B, d))
-            push!(Cᵥ.args, Expr(:call, :firstindex, :C, d))
             push!(rinds, d)
         else
             push!(Bᵥ.args, :)
-            push!(Cᵥ.args, :)
             push!(nrinds, d)
             push!(Bᵥ′.args, Symbol(:i_, d))
-            push!(Cᵥ′.args, Symbol(:i_, d))
         end
     end
     reverse!(rinds)
@@ -59,50 +54,40 @@ function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
         end
         rblock = block
         # Pre-reduction
-        vmax = Expr(:(=), :vmax, Bᵥ′)
-        push!(rblock.args, vmax)
-        ξ = Expr(:(=), :ξ, Expr(:call, :zero, Expr(:call, :eltype, :Cᵥ)))
-        push!(rblock.args, ξ)
+        lse = Expr(:(=), :lse, Bᵥ′)
+        push!(rblock.args, lse)
         # Reduction loop
         for d ∈ rinds
             newblock = Expr(:block)
-            push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = axes(A, $d)), newblock))
+            push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = indices((A, C), $d)), newblock))
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, :+, Expr(:call, :exp, Expr(:call, :-, A, :vmax)), :ξ))
-        push!(block.args, setξ)
-        # Post-reduction
-        setc = Expr(:(=), Cᵥ′, Expr(:call, :+, Expr(:call, :log, :ξ), :vmax))
-        push!(rblock.args, setc)
+        setc = Expr(:(=), C, Expr(:call, :-, A, :lse))
+        push!(block.args, setc)
         return quote
             Bᵥ = $Bᵥ
-            Cᵥ = $Cᵥ
             @turbo $loops
             return C
         end
     else
         # Pre-reduction
-        vmax = Expr(:(=), :vmax, Bᵥ′)
-        ξ = Expr(:(=), :ξ, Expr(:call, :zero, Expr(:call, :eltype, :Cᵥ)))
+        lse = Expr(:(=), :lse, Bᵥ′)
         # Reduction loop
         block = Expr(:block)
-        loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = axes(A, $(rinds[1]))), block)
+        loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = indices((A, C), $(rinds[1]))), block)
         for d ∈ @view(rinds[2:end])
             newblock = Expr(:block)
-            push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = axes(A, $d)), newblock))
+            push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = indices((A, C), $d)), newblock))
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, :+, Expr(:call, :exp, Expr(:call, :-, A, :vmax)), :ξ))
-        push!(block.args, setξ)
+        setc = Expr(:(=), C, Expr(:call, :-, A, :lse))
+        push!(block.args, setc)
         return quote
             Bᵥ = $Bᵥ
-            Cᵥ = $Cᵥ
-            $vmax
-            $ξ
+            $lse
             @turbo $loops
-            Cᵥ[] = log(ξ) + vmax
             return C
         end
     end
