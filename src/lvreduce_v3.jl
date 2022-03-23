@@ -37,6 +37,18 @@ function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     return B
 end
 
+# dims determination would ideally be non-allocating. Also, who would
+# call this anyway? Almost assuredly, a caller would already know dims, hence
+# just call _vvmapreduce! anyway.
+function vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}) where {F, OP, I, Tₒ, T, N}
+    Dᴬ = size(A)
+    Dᴮ = size(B)
+    dims = Tuple((d for d ∈ eachindex(Dᴮ) if isone(Dᴮ[d])))
+    all(d -> Dᴮ[d] == Dᴬ[d], (d for d ∈ eachindex(Dᴮ) if !isone(Dᴮ[d]))) || throw(DimensionMismatch)
+    _vvmapreduce!(f, op, init, B, A, dims)
+    return B
+end
+
 # Convenience definitions
 vvsum(f::F, A, dims) where {F} = vvmapreduce(f, +, zero, A, dims)
 vvprod(f::F, A, dims) where {F} = vvmapreduce(f, *, one, A, dims)
