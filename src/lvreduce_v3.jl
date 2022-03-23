@@ -16,6 +16,24 @@ function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     # B = similar(A, Base.promote_op(op, T, Int), Dᴮ′)
     B = similar(A, Base.promote_op(op, Base.promote_op(f, T), Int), Dᴮ′)
     _vvmapreduce!(f, op, init, B, A, dims)
+    # One must ensure that the dims are sorted, as the type dispatch within and on
+    # the generated branch functions AND work functions respects the order of permutations.
+    # Consequently, given some N and M, in the most extreme case, a naive approach would
+    # generate new functions for all the possible permutations which
+    # could be generated from the combinations N choose (M - 1),
+    # i.e. N! / (N - M + 1)! ≡ factorial(N) / factorial(N - M + 1)
+    # M - 1 arises due to the fact that the Mᵗʰ branch of the function will
+    # result in a work function call.
+    # Conversely, if one ensures that permutations do not matter (by sorting dims),
+    # then at most N choose M work functions will be compiled.
+    # Alas, one is loathe to ensure that the dimensions will be sorted, as
+    # it incurs overhead of approximately 90ns, which, for length(A) = 625,
+    # is substantial (increase in time by factor of 1.33, and 80 bytes).
+    # Perhaps one could just make it the caller's responsibility to avoid
+    # this unnecessary compilation.
+    # v = sort!(collect(dims))
+    # newdims = ntuple(i -> v[i], Val(M))
+    # _vvmapreduce!(f, op, init, B, A, newdims)
     return B
 end
 
