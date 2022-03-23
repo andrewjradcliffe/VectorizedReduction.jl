@@ -14,6 +14,21 @@ function vvlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, 
     return C
 end
 
+# reduction over all dims
+function vvlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N}
+    vmax = typemin(T)
+    s = zero(promote_type(T, Float64))
+    @turbo for i ∈ eachindex(A)
+        vmax = max(A[i], vmax)
+    end
+    @turbo for i ∈ eachindex(A)
+        s += exp(A[i] - vmax)
+    end
+    vmax + log(s)
+end
+
+vvlogsumexp(A) = vvlogsumexp(A, :)
+
 function staticdim_logsumexp_quote(static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
