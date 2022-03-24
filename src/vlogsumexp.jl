@@ -31,6 +31,22 @@ function vvlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, 
     return B
 end
 
+# function vlogsumexp(A::AbstractArray{T, N}) where {T, N}
+#     m = typemin(T)
+#     d = zero(T)
+#     # @turbo for i ∈ eachindex(A)
+#     #     d = exp(min(m, A[i]) - A[i]) * d + exp(A[i] - max(m, A[i]))
+#     #     newmax = A[i] > m
+#     #     m = ifelse(newmax, A[i], m)
+#     # end
+#     @turbo for i ∈ eachindex(A)
+#         d = d * exp(m - max(m, A[i])) + exp(A[i] - max(m, A[i]))
+#         newmax = A[i] > m
+#         m = ifelse(newmax, A[i], m)
+#     end
+#     log(d) + m
+# end
+
 function staticdim_logsumexp_quote(static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
