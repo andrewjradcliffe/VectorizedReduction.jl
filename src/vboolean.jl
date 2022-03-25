@@ -56,6 +56,9 @@ function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
 end
 vcount(f::F, A) where {F} = vcount(f, A, :)
 
+vcount(A::AbstractArray{Bool, N}, dims) where {N} = vcount(identity, A, dims)
+vcount(A::AbstractArray{Bool, N}) where {N} = vcount(identity, A)
+
 
 vany(A, dims) = vany(identity, A, dims)
 vall(A, dims) = vall(identity, A, dims)
