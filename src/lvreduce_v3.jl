@@ -97,8 +97,15 @@ vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 # A curious solution: initialize with a value, rather than `zero` or `one`.
 # Most likely, this is due promotion by LoopVectorization, which in this case
 # breaks the ability to use anything but Array{<:Integer} for a Boolean predicate
-# function. However, initializing to a Bool solves this handily, preventing any
+# function. However, initializing to a Bool solves this, preventing any
 # problems with the type conversion.
+# Alas! Another issue which also happens to come up with findminmax, argminmax:
+# Reductions on the first dimension are not well-defined, hence, the same
+# errors occur. Awkwardly, the same fix could be used: re-shape to shift
+# everything to +1 dimension, reduce, then drop the dimension.
+# Unfortunately, this results in worse performance than just calling
+# `any` from Julia Base. It would probably be faster to do vcount
+# and then compare...
 function vany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -121,6 +128,21 @@ function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T,
     return B
 end
 
+# # An approach to permitting anonymous functions
+# function _named(f::F) where {F<:Function}
+#     F <: Base.Fix2 ? begin @eval function $(gensym())(y) $(f.f)(y, $(f.x)) end end : f
+# end
+
+# function vany2(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+#     if 1 ∈ dims
+#         newdims = ntuple(d -> dims[d] + 1, Val(M))
+#         Dᴬ′ = ntuple(d -> d == 1 ? 1 : size(A, d - 1), Val(N+1))
+#         B = vany(f, reshape(A, Dᴬ′), newdims)
+#         return dropdims(B, dims=1)
+#     else
+#         return vany(f, A, dims)
+#     end
+# end
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
