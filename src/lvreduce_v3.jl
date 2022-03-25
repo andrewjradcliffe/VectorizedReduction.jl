@@ -128,6 +128,8 @@ function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T,
     return B
 end
 
+vany(A, dims) = vany(identity, A, dims)
+vall(A, dims) = vall(identity, A, dims)
 # # An approach to permitting anonymous functions
 # function _named(f::F) where {F<:Function}
 #     F <: Base.Fix2 ? begin @eval function $(gensym())(y) $(f.f)(y, $(f.x)) end end : f
@@ -143,6 +145,16 @@ end
 #         return vany(f, A, dims)
 #     end
 # end
+
+# A silly definition, but it is nonetheless possible... and, an improvement by 2x
+function vmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
+    B = similar(A, Bool)
+    @turbo for i ∈ eachindex(A)
+        B[i] = f(A[i])
+    end
+    return B
+end
+vfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vmask(f, A)]
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
