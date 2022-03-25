@@ -50,10 +50,27 @@ vfindmin(A, dims) = vfindminmax(identity, <, typemax, A, dims)
     end
 end
 
+# A seemingly superfluous dispatch, but is necessary to enforce that a vector returns
+# a linear index.
+@generated function vfindminmax(f::F, op::OP, init::I, A::AbstractVector{T}, ::Colon) where {F, OP, I, T}
+    opsym = OP.instance
+    initsym = I.instance
+    quote
+        m = $initsym(Base.promote_op(f, $T))
+        j = 0
+        @turbo for i ∈ eachindex(A)
+            newm = $opsym(f(A[i]), m)
+            m = ifelse(newm, f(A[i]), m)
+            j = ifelse(newm, i, j)
+        end
+        return m, j
+    end
+end
+
 vfindmax(f::F, A) where {F<:Function} = vfindminmax(f, >, typemin, A, :)
 vfindmin(f::F, A) where {F<:Function} = vfindminmax(f, <, typemax, A, :)
-vfindmax(A) = vfindmax(identity, A)#vfindminmax(identity, >, typemin, A, :)
-vfindmin(A) = vfindmin(identity, A)#vfindminmax(identity, <, typemax, A, :)
+vfindmax(A) = vfindmax(identity, A)
+vfindmin(A) = vfindmin(identity, A)
 
 function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
