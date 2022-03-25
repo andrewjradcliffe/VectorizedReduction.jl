@@ -62,7 +62,6 @@ function findmax_quote(N::Int, D)
     setmax = Expr(:(=), :v, Expr(:call, :ifelse, :newmax, A, :v))
     push!(block.args, setmax)
     for d ∈ rinds
-        # setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
         setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
         push!(block.args, setj)
     end
