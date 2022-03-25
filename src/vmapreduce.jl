@@ -42,6 +42,7 @@ function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     # _vvmapreduce!(f, op, init, B, A, newdims)
     return B
 end
+# vvmapreduce(f, op, init, A, dims::Int) = vvmapreduce(f, op, init, A, (dims,))
 
 # dims determination would ideally be non-allocating. Also, who would
 # call this anyway? Almost assuredly, a caller would already know dims, hence
@@ -94,6 +95,15 @@ vvsum(A) = vvmapreduce(identity, +, zero, A, :)
 vvprod(A) = vvmapreduce(identity, *, one, A, :)
 vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
 vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
+
+# a custom implementation of extrema is not really worth it, as the time/memory
+# cost is approximately the same. Also, it suffers from first dimension reduction
+# error.
+vvextrema(f::F, A, dims) where {F} = collect(zip(vvminimum(f, A, dims), vvmaximum(f, A, dims)))
+vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
+vvextrema(f::F, A) where {F<:Function} = vvextrema(f, A, :)
+vvextrema(A, dims) = vvextrema(identity, A, dims)
+vvextrema(A) = (vvminimum(A), vvmaximum(A))
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
