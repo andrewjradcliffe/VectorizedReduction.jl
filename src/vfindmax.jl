@@ -15,6 +15,33 @@ function vvfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTupl
     return B, CartesianIndices(A)[C]
 end
 
+# Convenience defintions
+vfindmax(f::F, A, dims) where {F<:Function} = vvfindminmax(f, >, typemin, A, dims)
+vfindmin(f::F, A, dims) where {F<:Function} = vvfindminmax(f, <, typemax, A, dims)
+
+# over all dims
+@generated function vvfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
+    fsym = F.instance
+    opsym = OP.instance
+    initsym = I.instance
+    Tₒ = Base.promote_op(fsym, T)
+    quote
+        m = $initsym($Tₒ)
+        j = 0
+        @turbo for i ∈ eachindex(A)
+            newm = $opsym($fsym(A[i]), m)
+            m = ifelse(newm, $fsym(A[i]), m)
+            j = ifelse(newm, i, j)
+        end
+        return m, CartesianIndices(A)[j]
+    end
+end
+
+vfindmax(f::F, A) where {F<:Function} = vvfindminmax(f, >, typemin, A, :)
+vfindmin(f::F, A) where {F<:Function} = vvfindminmax(f, <, typemax, A, :)
+vfindmax(A) = vvfindminmax(identity, >, typemin, A, :)
+vfindmin(A) = vvfindminmax(identity, <, typemax, A, :)
+
 function staticdim_findminmax_quote(F, OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
