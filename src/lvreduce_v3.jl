@@ -94,6 +94,34 @@ vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 # vany(A, dims) = vvmapreduce(identity, |, zero, A, dims)
 # vall(A, dims) = vvmapreduce(identity, &, one, A, dims)
 
+# A curious solution: initialize with a value, rather than `zero` or `one`.
+# Most likely, this is due promotion by LoopVectorization, which in this case
+# breaks the ability to use anything but Array{<:Integer} for a Boolean predicate
+# function. However, initializing to a Bool solves this handily, preventing any
+# problems with the type conversion.
+function vany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vvmapreduce_init!(f, |, false, B, A, dims)
+    return B
+end
+function vall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vvmapreduce_init!(f, &, true, B, A, dims)
+    return B
+end
+function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Int, Dᴮ′)
+    _vvmapreduce!(f, +, zero, B, A, dims)
+    return B
+end
+
+
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
 
