@@ -4,7 +4,6 @@
 #
 #
 ############################################################################################
-
 function vvlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     Dᴬ = size(A)
     B = vvlogsumexp(A, dims)

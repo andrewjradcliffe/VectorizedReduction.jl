@@ -219,3 +219,21 @@ d5 = (StaticInt{1}(),StaticInt{3}(),StaticInt{2}())
 @timev vvmapreduce(identity, +, zero, A, (1,4,3));
 # (1,3,4)    : 1 work, 1 branch
 @timev vvmapreduce(identity, +, zero, A, (1,3,4));
+
+
+################
+function namedf2(f::F) where {F<:Function}
+    if F <: Base.Fix2
+        sym = gensym()
+        φ = f.f
+        x = f.x
+        return @eval function $sym(y) $φ(y, $x) end
+    else
+        return f
+    end
+end
+
+function namedf3(f::F) where {F<:Function}
+    F <: Base.Fix2 ? begin @eval function $(gensym())(y) $(f.f)(y, $(f.x)) end end : f
+end
+

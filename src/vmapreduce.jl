@@ -7,7 +7,6 @@
 # - Implementing reduce(op, ...) as simply mapreduce(identity, op, ...)
 # - Using compile-time branch resolution rather than dispatch system (well,
 #   less on the dispatch system)
-
 _dim(::Type{StaticInt{N}}) where {N} = N::Int
 
 # Demonstrated: that technically, `f`, can be anonymous. The reduction still needs
@@ -97,8 +96,7 @@ vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
 vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
 
 # a custom implementation of extrema is not really worth it, as the time/memory
-# cost is approximately the same. Also, it suffers from first dimension reduction
-# error.
+# cost is approximately the same. Also, it suffers from first dimension reduction error.
 vvextrema(f::F, A, dims) where {F} = collect(zip(vvminimum(f, A, dims), vvmaximum(f, A, dims)))
 vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
 vvextrema(f::F, A) where {F<:Function} = vvextrema(f, A, :)
