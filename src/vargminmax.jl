@@ -38,6 +38,30 @@ vargmin(f, A; dims=:) = vargmin(f, A, dims)
 vargmin(A; dims=:) = vargmin(identity, A, dims)
 
 ################
+vtargminmax(f::F, op::OP, init::I, A, dims) where {F, OP, I} = vtfindminmax(f, op, init, A, dims)[2]
+
+# Convenience defintions
+vtargmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, dims)[2]
+vtargmin(f::F, A, dims) where {F<:Function} = vtfindminmax(f, <, typemax, A, dims)[2]
+# ::AbstractArray required in order for kwargs interface to work
+vtargmax(A::AbstractArray, dims) = vtargminmax(identity, >, typemin, A, dims)
+vtargmin(A::AbstractArray, dims) = vtargminmax(identity, <, typemax, A, dims)
+
+# Over all dims
+vtargmax(f::F, A) where {F<:Function} = vtfindminmax(f, >, typemin, A, :)[2]
+vtargmin(f::F, A) where {F<:Function} = vtfindminmax(f, <, typemax, A, :)[2]
+# ::AbstractArray required in order for kwargs interface to work
+vtargmax(A::AbstractArray) = vtargmax(identity, A)
+vtargmin(A::AbstractArray) = vtargmin(identity, A)
+
+# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
+# indicated above.
+vtargmax(f, A; dims=:) = vtargmax(f, A, dims)
+vtargmax(A; dims=:) = vtargmax(identity, A, dims)
+vtargmin(f, A; dims=:) = vtargmin(f, A, dims)
+vtargmin(A; dims=:) = vtargmin(identity, A, dims)
+
+################
 # function vargminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
 #     Dᴬ = size(A)
 #     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
