@@ -28,8 +28,9 @@ end
 # Convenience defintions
 vfindmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims)
 vfindmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims)
-vfindmax(A, dims) = vfindminmax(identity, >, typemin, A, dims)
-vfindmin(A, dims) = vfindminmax(identity, <, typemax, A, dims)
+# ::AbstractArray required in order for kwargs interface to work
+vfindmax(A::AbstractArray, dims) = vfindminmax(identity, >, typemin, A, dims)
+vfindmin(A::AbstractArray, dims) = vfindminmax(identity, <, typemax, A, dims)
 
 # over all dims
 @generated function vfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
@@ -69,8 +70,16 @@ end
 
 vfindmax(f::F, A) where {F<:Function} = vfindminmax(f, >, typemin, A, :)
 vfindmin(f::F, A) where {F<:Function} = vfindminmax(f, <, typemax, A, :)
-vfindmax(A) = vfindmax(identity, A)
-vfindmin(A) = vfindmin(identity, A)
+# ::AbstractArray required in order for kwargs interface to work
+vfindmax(A::AbstractArray) = vfindmax(identity, A)
+vfindmin(A::AbstractArray) = vfindmin(identity, A)
+
+# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
+# indicated above.
+vfindmax(f, A; dims=:) = vfindmax(f, A, dims)
+vfindmax(A; dims=:) = vfindmax(identity, A, dims)
+vfindmin(f, A; dims=:) = vfindmin(f, A, dims)
+vfindmin(A; dims=:) = vfindmin(identity, A, dims)
 
 function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
