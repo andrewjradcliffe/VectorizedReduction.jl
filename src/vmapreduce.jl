@@ -43,7 +43,7 @@ function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     # _vvmapreduce!(f, op, init, B, A, newdims)
     return B
 end
-# vvmapreduce(f, op, init, A, dims::Int) = vvmapreduce(f, op, init, A, (dims,))
+vvmapreduce(f, op, init, A, dims::Int) = vvmapreduce(f, op, init, A, (dims,))
 
 # dims determination would ideally be non-allocating. Also, who would
 # call this anyway? Almost assuredly, a caller would already know dims, hence
@@ -63,10 +63,11 @@ vvprod(f::F, A, dims) where {F} = vvmapreduce(f, *, one, A, dims)
 vvmaximum(f::F, A, dims) where {F} = vvmapreduce(f, max, typemin, A, dims)
 vvminimum(f::F, A, dims) where {F} = vvmapreduce(f, min, typemax, A, dims)
 
-vvsum(A, dims) = vvmapreduce(identity, +, zero, A, dims)
-vvprod(A, dims) = vvmapreduce(identity, *, one, A, dims)
-vvmaximum(A, dims) = vvmapreduce(identity, max, typemin, A, dims)
-vvminimum(A, dims) = vvmapreduce(identity, min, typemax, A, dims)
+# ::AbstractArray required in order for kwargs interface to work
+vvsum(A::AbstractArray, dims) = vvmapreduce(identity, +, zero, A, dims)
+vvprod(A::AbstractArray, dims) = vvmapreduce(identity, *, one, A, dims)
+vvmaximum(A::AbstractArray, dims) = vvmapreduce(identity, max, typemin, A, dims)
+vvminimum(A::AbstractArray, dims) = vvmapreduce(identity, min, typemax, A, dims)
 
 # reduction over all dims
 @generated function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
@@ -92,21 +93,40 @@ vvprod(f::F, A) where {F<:Function} = vvmapreduce(f, *, one, A, :)
 vvmaximum(f::F, A) where {F<:Function} = vvmapreduce(f, max, typemin, A, :)
 vvminimum(f::F, A) where {F<:Function} = vvmapreduce(f, min, typemax, A, :)
 
-vvsum(A) = vvmapreduce(identity, +, zero, A, :)
-vvprod(A) = vvmapreduce(identity, *, one, A, :)
-vvmaximum(A) = vvmapreduce(identity, max, typemin, A, :)
-vvminimum(A) = vvmapreduce(identity, min, typemax, A, :)
+# ::AbstractArray required in order for kwargs interface to work
+vvsum(A::AbstractArray) = vvmapreduce(identity, +, zero, A, :)
+vvprod(A::AbstractArray) = vvmapreduce(identity, *, one, A, :)
+vvmaximum(A::AbstractArray) = vvmapreduce(identity, max, typemin, A, :)
+vvminimum(A::AbstractArray) = vvmapreduce(identity, min, typemax, A, :)
 
 # a custom implementation of extrema is not really worth it, as the time/memory
 # cost is approximately the same. Also, it suffers from first dimension reduction error.
 vvextrema(f::F, A, dims) where {F} = collect(zip(vvminimum(f, A, dims), vvmaximum(f, A, dims)))
 vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
 vvextrema(f::F, A) where {F<:Function} = vvextrema(f, A, :)
-vvextrema(A, dims) = vvextrema(identity, A, dims)
-vvextrema(A) = (vvminimum(A), vvmaximum(A))
+# ::AbstractArray required in order for kwargs interface to work
+vvextrema(A::AbstractArray, dims) = vvextrema(identity, A, dims)
+vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
+
+# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
+# indicated above.
+vvmapreduce(f, op, A; dims=:, init) = vvmapreduce(f, op, init, A, dims)
+vvsum(f, A; dims=:, init=zero) = vvmapreduce(f, +, init, A, dims)
+vvsum(A; dims=:, init=zero) = vvmapreduce(identity, +, init, A, dims)
+vvprod(f, A; dims=:, init=one) = vvmapreduce(f, *, init, A, dims)
+vvprod(A; dims=:, init=one) = vvmapreduce(identity, *, init, A, dims)
+vvmaximum(f, A; dims=:, init=typemin) = vvmapreduce(f, max, init, A, dims)
+vvmaximum(A; dims=:, init=typemin) = vvmapreduce(identity, max, init, A, dims)
+vvminimum(f, A; dims=:, init=typemax) = vvmapreduce(f, min, init, A, dims)
+vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
+vvextrema(f, A; dims=:, init=(typemax, typemin)) =
+    collect(zip(vvmapreduce(f, min, init[1], A, dims), vvmapreduce(f, max, init[2], A, dims)))
+vvextrema(A; dims=:, init=(typemax, typemin)) =
+    collect(zip(vvmapreduce(identity, min, init[1], A, dims), vvmapreduce(identity, max, init[2], A, dims)))
+
 
 function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
