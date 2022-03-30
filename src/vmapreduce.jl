@@ -114,6 +114,7 @@ vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, ini
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
 vvmapreduce(f, op, A; dims=:, init) = vvmapreduce(f, op, init, A, dims)
+vvreduce(op, A; dims=:, init) = vvreduce(op, init, A, dims)
 vvsum(f, A; dims=:, init=zero) = vvmapreduce(f, +, init, A, dims)
 vvsum(A; dims=:, init=zero) = vvmapreduce(identity, +, init, A, dims)
 vvprod(f, A; dims=:, init=one) = vvmapreduce(f, *, init, A, dims)
@@ -598,10 +599,11 @@ vtprod(f::F, A, dims) where {F} = vtmapreduce(f, *, one, A, dims)
 vtmaximum(f::F, A, dims) where {F} = vtmapreduce(f, max, typemin, A, dims)
 vtminimum(f::F, A, dims) where {F} = vtmapreduce(f, min, typemax, A, dims)
 
-vtsum(A, dims) = vtmapreduce(identity, +, zero, A, dims)
-vtprod(A, dims) = vtmapreduce(identity, *, one, A, dims)
-vtmaximum(A, dims) = vtmapreduce(identity, max, typemin, A, dims)
-vtminimum(A, dims) = vtmapreduce(identity, min, typemax, A, dims)
+# ::AbstractArray required in order for kwargs interface to work
+vtsum(A::AbstractArray, dims) = vtmapreduce(identity, +, zero, A, dims)
+vtprod(A::AbstractArray, dims) = vtmapreduce(identity, *, one, A, dims)
+vtmaximum(A::AbstractArray, dims) = vtmapreduce(identity, max, typemin, A, dims)
+vtminimum(A::AbstractArray, dims) = vtmapreduce(identity, min, typemax, A, dims)
 
 # reduction over all dims
 @generated function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
@@ -621,18 +623,37 @@ vtprod(f::F, A) where {F<:Function} = vtmapreduce(f, *, one, A, :)
 vtmaximum(f::F, A) where {F<:Function} = vtmapreduce(f, max, typemin, A, :)
 vtminimum(f::F, A) where {F<:Function} = vtmapreduce(f, min, typemax, A, :)
 
-vtsum(A) = vtmapreduce(identity, +, zero, A, :)
-vtprod(A) = vtmapreduce(identity, *, one, A, :)
-vtmaximum(A) = vtmapreduce(identity, max, typemin, A, :)
-vtminimum(A) = vtmapreduce(identity, min, typemax, A, :)
+# ::AbstractArray required in order for kwargs interface to work
+vtsum(A::AbstractArray) = vtmapreduce(identity, +, zero, A, :)
+vtprod(A::AbstractArray) = vtmapreduce(identity, *, one, A, :)
+vtmaximum(A::AbstractArray) = vtmapreduce(identity, max, typemin, A, :)
+vtminimum(A::AbstractArray) = vtmapreduce(identity, min, typemax, A, :)
 
 vtextrema(f::F, A, dims) where {F} = collect(zip(vtminimum(f, A, dims), vtmaximum(f, A, dims)))
 vtextrema(f::F, A, ::Colon) where {F} = (vtminimum(f, A, :), vtmaximum(f, A, :))
 vtextrema(f::F, A) where {F<:Function} = vtextrema(f, A, :)
-vtextrema(A, dims) = vtextrema(identity, A, dims)
-vtextrema(A) = (vtminimum(A), vtmaximum(A))
+# ::AbstractArray required in order for kwargs interface to work
+vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
+vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
 
 vtreduce(op::OP, init::I, A, dims) where {OP, I} = vtmapreduce(identity, op, init, A, dims)
+
+# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
+# indicated above.
+vtmapreduce(f, op, A; dims=:, init) = vtmapreduce(f, op, init, A, dims)
+vtreduce(op, A; dims=:, init) = vtreduce(op, init, A, dims)
+vtsum(f, A; dims=:, init=zero) = vtmapreduce(f, +, init, A, dims)
+vtsum(A; dims=:, init=zero) = vtmapreduce(identity, +, init, A, dims)
+vtprod(f, A; dims=:, init=one) = vtmapreduce(f, *, init, A, dims)
+vtprod(A; dims=:, init=one) = vtmapreduce(identity, *, init, A, dims)
+vtmaximum(f, A; dims=:, init=typemin) = vtmapreduce(f, max, init, A, dims)
+vtmaximum(A; dims=:, init=typemin) = vtmapreduce(identity, max, init, A, dims)
+vtminimum(f, A; dims=:, init=typemax) = vtmapreduce(f, min, init, A, dims)
+vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
+vtextrema(f, A; dims=:, init=(typemax, typemin)) =
+    collect(zip(vtmapreduce(f, min, init[1], A, dims), vtmapreduce(f, max, init[2], A, dims)))
+vtextrema(A; dims=:, init=(typemax, typemin)) =
+    collect(zip(vtmapreduce(identity, min, init[1], A, dims), vtmapreduce(identity, max, init[2], A, dims)))
 
 function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
@@ -686,7 +707,7 @@ function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         # Reduction loop
         block = Expr(:block)
         loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = axes(A, $(rinds[1]))), block)
-        for i = 2:length(rinds)
+        for d ∈ @view(rinds[2:end])
             newblock = Expr(:block)
             push!(block.args, Expr(:for, :($(Symbol(:i_, d)) = axes(A, $d)), newblock))
             block = newblock
