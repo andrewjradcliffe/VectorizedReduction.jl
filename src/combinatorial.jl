@@ -237,3 +237,42 @@ function namedf3(f::F) where {F<:Function}
     F <: Base.Fix2 ? begin @eval function $(gensym())(y) $(f.f)(y, $(f.x)) end end : f
 end
 
+################################################################
+#### 2022-03-30: p. 62 extra 1-3
+# Given N, M, at the terminal branching function, how many work functions will be compiled
+# if the dims combination is new?
+# In this context, new is defined as a combination that has not yet been compiled
+# as the result of (1) a direct call (i.e. dims is just a permutation of some previous dims)
+# or (2) an indirect call (i.e. some previous dims led to branching which inadvertently caused
+# compilation, but said dims targeted a different combination).
+# To illustrate with examples will clarify, using N=4, M=3
+# An example of (1): consider a call made using dims=(1,2,3), then, consider a second call
+# made using dims=(2,1,3). The second call is just a permutation of the dims from the first
+# call, thus, branching aside, the work function is the same.
+# An example of (2): consider a call made using dims=(1,2,3), then, consider a second call
+# made using dims=(1,2,4). The second call corresponds to a different work function,
+# but said work function would have been (inadvertently) compiled on the first call.
+####
+# At the mᵗʰ branching function call, there are (N - m) choose (M - m) remaining combinations.
+# At the terminal branching function, all but one dimension is determined, thus
+# there are (N - (M - 1)) choose 1 remaining ways to choose. Hence, for a new
+# combination, (N - M + 1)! / 1!(N - M)! work functions will be compiled.
+# The number of work functions compiled for a single combination as a fraction of the
+# total work functions necessitated for all combinations is therefore M!(N - M + 1)! / N!.
+# This fractional coverage experiences a minimum at M = N ÷ 2 + 1, but that is not
+# necessarily relevant.
+# What one should take from this is that given N, the number of work functions
+# compiled by a single call decreases monotonically with increasing M,
+# following (N - M + 1)! / 1!(N - M)!
+# If one assumed (don't!) equal compilation time irrespective of M, then given N, the
+# longest compilation for a single call would be at the smallest M. But, equal
+# compilation time is an obviously false premise, hence, some additional modeling
+# would be needed to determine the value of M which maximizes compilation time.
+
+remaining(N, M, m) = binomial(N - m, M - m)
+lastremaining(N, M) = remaining(N, M, M - 1)
+# lastremaining2(N, M) = factorial(N - M + 1) ÷ factorial(N - M)
+frac(N, M) = lastremaining(N, M) // binomial(N, M)
+N = 7
+map(M -> (M, binomial(N, M), lastremaining(N, M), frac(N, M)), 1:N)
+a = map(N -> map(M -> (M, binomial(N, M), lastremaining(N, M), frac(N, M)), 1:N), 5:7)
