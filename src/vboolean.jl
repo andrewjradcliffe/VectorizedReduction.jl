@@ -33,6 +33,7 @@ function vany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N
     _vvmapreduce_init!(f, |, false, B, A, dims)
     return B
 end
+vany(f, A, dims::Int) = vany(f, A, (dims,))
 function vall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -40,6 +41,7 @@ function vall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N
     _vvmapreduce_init!(f, &, true, B, A, dims)
     return B
 end
+vall(f, A, dims::Int) = vall(f, A, (dims,))
 function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -47,6 +49,7 @@ function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T,
     _vvmapreduce!(f, +, zero, B, A, dims)
     return B
 end
+vcount(f, A, dims::Int) = vcount(f, A, (dims,))
 function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     ξ = 0
     @turbo for i ∈ eachindex(A)
@@ -54,14 +57,23 @@ function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     end
     return ξ
 end
-vcount(f::F, A) where {F} = vcount(f, A, :)
-
+vcount(f::F, A::AbstractArray) where {F} = vcount(f, A, :)
 vcount(A::AbstractArray{Bool, N}, dims) where {N} = vcount(identity, A, dims)
 vcount(A::AbstractArray{Bool, N}) where {N} = vcount(identity, A)
 
+# kwargs interface
+vcount(f, A; dims=:) = vcount(f, A, dims)
+vcount(A; dims=:) = vcount(A, dims)
 
-vany(A, dims) = vany(identity, A, dims)
-vall(A, dims) = vall(identity, A, dims)
+
+vany(A::AbstractArray, dims) = vany(identity, A, dims)
+vall(A::AbstractArray, dims) = vall(identity, A, dims)
+
+# kwargs interface
+vany(f, A; dims=:) = vany(f, A, dims)
+vall(f, A; dims=:) = vall(f, A, dims)
+vany(A; dims=:) = vany(identity, A, dims)
+vall(A; dims=:) = vall(identity, A, dims)
 
 # Realistically, I would not recommend these, as they
 # are inevitably slower than code that can break out of the loop.
@@ -111,3 +123,78 @@ function vmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     return B
 end
 vfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vmask(f, A)]
+
+############################################################################################
+
+function vtany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vtmapreduce_init!(f, |, false, B, A, dims)
+    return B
+end
+vtany(f, A, dims::Int) = vtany(f, A, (dims,))
+function vtall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vtmapreduce_init!(f, &, true, B, A, dims)
+    return B
+end
+vtall(f, A, dims::Int) = vtall(f, A, (dims,))
+function vtcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Int, Dᴮ′)
+    _vtmapreduce!(f, +, zero, B, A, dims)
+    return B
+end
+vtcount(f, A, dims::Int) = vtcount(f, A, (dims,))
+function vtcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
+    ξ = 0
+    @tturbo for i ∈ eachindex(A)
+        ξ += f(A[i])
+    end
+    return ξ
+end
+vtcount(f::F, A::AbstractArray) where {F} = vtcount(f, A, :)
+vtcount(A::AbstractArray{Bool, N}, dims) where {N} = vtcount(identity, A, dims)
+vtcount(A::AbstractArray{Bool, N}) where {N} = vtcount(identity, A)
+
+# kwargs interface
+vtcount(f, A; dims=:) = vtcount(f, A, dims)
+vtcount(A; dims=:) = vtcount(A, dims)
+
+
+vtany(A::AbstractArray, dims) = vtany(identity, A, dims)
+vtall(A::AbstractArray, dims) = vtall(identity, A, dims)
+
+# kwargs interface
+vtany(f, A; dims=:) = vtany(f, A, dims)
+vtall(f, A; dims=:) = vtall(f, A, dims)
+vtany(A; dims=:) = vtany(identity, A, dims)
+vtall(A; dims=:) = vtall(identity, A, dims)
+
+function vtany(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
+    return vtcount(f, A) != 0
+end
+vtany(f::F, A) where {F<:Function} = vtany(f, A, :)
+vtany(A::AbstractArray{Bool, N}) where {N} = vtany(identity, A)
+function vtall(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
+    ξ = true
+    @tturbo for i ∈ eachindex(A)
+        ξ &= f(A[i])
+    end
+    return ξ
+end
+vtall(f::F, A) where {F<:Function} = vtall(f, A, :)
+vtall(A::AbstractArray{Bool, N}) where {N} = vtall(identity, A)
+
+function vtmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
+    B = similar(A, Bool)
+    @tturbo for i ∈ eachindex(A)
+        B[i] = f(A[i])
+    end
+    return B
+end
+vtfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vtmask(f, A)]
