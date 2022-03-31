@@ -31,6 +31,8 @@ function vlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M
     return B
 end
 vlogsumexp(A, dims::Int) = vlogsumexp(A, (dims,))
+
+# Single-pass version, but order of operations mangled by @turbo
 # function vlogsumexp(A::AbstractArray{T, N}) where {T, N}
 #     m = typemin(T)
 #     d = zero(T)
