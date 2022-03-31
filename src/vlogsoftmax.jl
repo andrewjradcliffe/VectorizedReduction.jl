@@ -171,7 +171,7 @@ vtlogsoftmax(A::AbstractArray) = vtlogsoftmax(A, :)
 # indicated above.
 vtlogsoftmax(A; dims=:) = vtlogsoftmax(A, dims)
 
-function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
+function staticdim_tlogsoftmax_quote(static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
     Bᵥ′ = Expr(:ref, :Bᵥ)
@@ -239,7 +239,7 @@ function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
     end
 end
 
-function branches_logsoftmax_quote(N::Int, M::Int, D)
+function branches_tlogsoftmax_quote(N::Int, M::Int, D)
     static_dims = Int[]
     for m ∈ 1:M
         param = D.parameters[m]
@@ -277,11 +277,11 @@ function branches_logsoftmax_quote(N::Int, M::Int, D)
             return q
         end
     end
-    return staticdim_logsoftmax_quote(static_dims, N)
+    return staticdim_tlogsoftmax_quote(static_dims, N)
 end
 
 @generated function _vtlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{Integer, M}}}
-    branches_logsoftmax_quote(N, M, D)
+    branches_tlogsoftmax_quote(N, M, D)
 end
 @generated function _vtlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::Tuple{}) where {Tₒ, T, Tₘ, N}
     :(copyto!(C, A); return C)
