@@ -173,8 +173,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
-                                   Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -188,8 +187,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance), Expr(:call, :eltype, :Bᵥ)))
         # Reduction loop
         block = Expr(:block)
-        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]),
-                                Expr(:call, :axes, :A, rinds[1])), block)
+        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]), Expr(:call, :axes, :A, rinds[1])), block)
         # loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = axes(A, $(rinds[1]))), block)
         for i = 2:length(rinds)
             newblock = Expr(:block)
@@ -199,8 +197,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
-                                   Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ
@@ -273,14 +270,10 @@ end
 
 # reduction over all dims
 @generated function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I<:Number, T, N}
-    # fsym = F.instance
     opsym = OP.instance
-    # Tₒ = Base.promote_op(opsym, Base.promote_op(fsym, T), Int)
     quote
-        # ξ = convert($Tₒ, init)
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
         @turbo for i ∈ eachindex(A)
-            # ξ = $opsym($fsym(A[i]), ξ)
             ξ = $opsym(f(A[i]), ξ)
         end
         return ξ
@@ -329,8 +322,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
-                                   Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -345,8 +337,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         ξ = Expr(:(=), :ξ, Expr(:call, Expr(:call, :eltype, :Bᵥ), :init))
         # Reduction loop
         block = Expr(:block)
-        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]),
-                                Expr(:call, :axes, :A, rinds[1])), block)
+        loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]), Expr(:call, :axes, :A, rinds[1])), block)
         for i = 2:length(rinds)
             newblock = Expr(:block)
             push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, rinds[i]),
@@ -354,8 +345,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance),
-                                   Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ
