@@ -1,5 +1,7 @@
 module VectorizedReduction
 
+using LoopVectorization, Static
+
 export vvmapreduce, vvmapreduce!, vvsum, vvprod, vvmaximum, vvminimum, vvextrema,
     vtmapreduce, vtmapreduce!, vtsum, vtprod, vtmaximum, vtminimum, vtextrema
 
