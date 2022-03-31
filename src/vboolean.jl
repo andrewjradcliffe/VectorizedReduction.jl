@@ -115,6 +115,8 @@ vall(A::AbstractArray{Bool, N}) where {N} = vall(identity, A)
 # end
 
 # A silly definition, but it is nonetheless possible... and, an improvement by 2x
+# Note: an improvement only when A is reasonably small, perhaps 10^4 elements at most,
+# at which point the cost of CartesianIndices(A)[B] becomes the limiting factor.
 function vmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     B = similar(A, Bool)
     @turbo for i ∈ eachindex(A)
@@ -123,6 +125,7 @@ function vmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     return B
 end
 vfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vmask(f, A)]
+vfindall(f::F, A::AbstractVector{T}) where {F, T} = LinearIndices(A)[vmask(f, A)]
 
 ############################################################################################
 
@@ -198,3 +201,4 @@ function vtmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     return B
 end
 vtfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vtmask(f, A)]
+vtfindall(f::F, A::AbstractVector{T}) where {F, T} = LinearIndices(A)[vtmask(f, A)]
