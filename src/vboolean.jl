@@ -5,6 +5,29 @@
 #
 ############################################################################################
 
+function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Int, Dᴮ′)
+    _vvmapreduce!(f, +, zero, B, A, dims)
+    return B
+end
+vcount(f, A, dims::Int) = vcount(f, A, (dims,))
+function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
+    ξ = 0
+    @turbo for i ∈ eachindex(A)
+        ξ += f(A[i])
+    end
+    return ξ
+end
+vcount(f::F, A::AbstractArray) where {F} = vcount(f, A, :)
+vcount(A::AbstractArray{Bool, N}, dims) where {N} = vcount(identity, A, dims)
+vcount(A::AbstractArray{Bool, N}) where {N} = vcount(identity, A)
+
+# kwargs interface
+vcount(f, A; dims=:) = vcount(f, A, dims)
+vcount(A; dims=:) = vcount(A, dims)
+
 # A surprising convenience opportunity -- albeit, a specific implementation will
 # be necessary in order to utilize Array{Bool} rather than the default, which
 # will get promoted to Array{Int}. Oddly, only works on Array{<:Integer} inputs.
@@ -42,29 +65,6 @@ function vall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N
     return B
 end
 vall(f, A, dims::Int) = vall(f, A, (dims,))
-function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
-    Dᴬ = size(A)
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
-    B = similar(A, Int, Dᴮ′)
-    _vvmapreduce!(f, +, zero, B, A, dims)
-    return B
-end
-vcount(f, A, dims::Int) = vcount(f, A, (dims,))
-function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
-    ξ = 0
-    @turbo for i ∈ eachindex(A)
-        ξ += f(A[i])
-    end
-    return ξ
-end
-vcount(f::F, A::AbstractArray) where {F} = vcount(f, A, :)
-vcount(A::AbstractArray{Bool, N}, dims) where {N} = vcount(identity, A, dims)
-vcount(A::AbstractArray{Bool, N}) where {N} = vcount(identity, A)
-
-# kwargs interface
-vcount(f, A; dims=:) = vcount(f, A, dims)
-vcount(A; dims=:) = vcount(A, dims)
-
 
 vany(A::AbstractArray, dims) = vany(identity, A, dims)
 vall(A::AbstractArray, dims) = vall(identity, A, dims)
@@ -126,22 +126,6 @@ vfindall(f::F, A::AbstractArray{T, N}) where {F, T, N} = CartesianIndices(A)[vma
 
 ############################################################################################
 
-function vtany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
-    Dᴬ = size(A)
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
-    B = similar(A, Bool, Dᴮ′)
-    _vtmapreduce_init!(f, |, false, B, A, dims)
-    return B
-end
-vtany(f, A, dims::Int) = vtany(f, A, (dims,))
-function vtall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
-    Dᴬ = size(A)
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
-    B = similar(A, Bool, Dᴮ′)
-    _vtmapreduce_init!(f, &, true, B, A, dims)
-    return B
-end
-vtall(f, A, dims::Int) = vtall(f, A, (dims,))
 function vtcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -165,6 +149,22 @@ vtcount(A::AbstractArray{Bool, N}) where {N} = vtcount(identity, A)
 vtcount(f, A; dims=:) = vtcount(f, A, dims)
 vtcount(A; dims=:) = vtcount(A, dims)
 
+function vtany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vtmapreduce_init!(f, |, false, B, A, dims)
+    return B
+end
+vtany(f, A, dims::Int) = vtany(f, A, (dims,))
+function vtall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
+    Dᴬ = size(A)
+    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
+    B = similar(A, Bool, Dᴮ′)
+    _vtmapreduce_init!(f, &, true, B, A, dims)
+    return B
+end
+vtall(f, A, dims::Int) = vtall(f, A, (dims,))
 
 vtany(A::AbstractArray, dims) = vtany(identity, A, dims)
 vtall(A::AbstractArray, dims) = vtall(identity, A, dims)
