@@ -82,27 +82,22 @@ end
     extrema_quote(N, D)
 end
 
-@benchmark vextrema2(A, dims)
-@benchmark extrema(A, dims=dims)
-@benchmark vextrema(A, dims=dims)
-@benchmark lvextrema(A, dims=dims)
-@benchmark vvextrema(A, dims)
-
 ################
 # Compile-time determination rather than using dispatch system
 _dim(::Type{StaticInt{N}}) where {N} = N::Int
+# Stable return type version, otherwise it's just a suggestion
+# _dim2(::Type{StaticInt{N}})::Int where {N} = N
 
-function vvextrema(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+function vvvextrema(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     B = similar(A, Dᴮ′)
     C = similar(A, Dᴮ′)
-    _vvextrema!(B, C, A, dims)
+    _vvvextrema!(B, C, A, dims)
     collect(zip(C, B))
 end
 
 function staticdim_extrema_quote(static_dims::Vector{Int}, N::Int)
-    M = length(static_dims)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     Bᵥ = Expr(:call, :view, :B)
     Cᵥ = Expr(:call, :view, :C)
@@ -214,7 +209,7 @@ function branches_extrema_quote(N::Int, M::Int, D)
                 n ∈ static_dims && continue
                 tc = copy(t)
                 push!(tc.args, :(StaticInt{$n}()))
-                qnew = Expr(ifsym, :(dimm == $n), :(return _vvextrema!(B, C, A, $tc)))
+                qnew = Expr(ifsym, :(dimm == $n), :(return _vvvextrema!(B, C, A, $tc)))
                 for r ∈ m+1:M
                     push!(tc.args, :(dims[$r]))
                 end
@@ -227,18 +222,18 @@ function branches_extrema_quote(N::Int, M::Int, D)
             for r ∈ m+1:M
                 push!(tc.args, :(dims[$r]))
             end
-            push!(qold.args, Expr(:block, :(return _vvextrema!(B, C, A, $tc))))
+            push!(qold.args, Expr(:block, :(return _vvvextrema!(B, C, A, $tc))))
             return q
         end
     end
     return staticdim_extrema_quote(static_dims, N)
 end
 
-@generated function _vvextrema!(B::AbstractArray{T, N}, C::AbstractArray{T, N},
+@generated function _vvvextrema!(B::AbstractArray{T, N}, C::AbstractArray{T, N},
                                 A::AbstractArray{T, N}, dims::D) where {T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_extrema_quote(N, M, D)
 end
-@generated function _vvextrema!(B::AbstractArray{T, N}, C::AbstractArray{T, N},
+@generated function _vvvextrema!(B::AbstractArray{T, N}, C::AbstractArray{T, N},
                                 A::AbstractArray{T, N}, dims::Tuple{}) where {T, N}
     :(copyto!(B, A); copyto!(C, A); return B, C)
 end
