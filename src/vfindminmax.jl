@@ -24,6 +24,7 @@ function vfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     _vfindminmax!(f, op, init, B, C, A, dims)
     return B, CartesianIndices(A)[C]
 end
+vfindminmax(f, op, init, A, dims::Int) = vfindminmax(f, op, init, A, (dims,))
 
 # Convenience defintions
 vfindmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims)
@@ -578,6 +579,7 @@ function vtfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTupl
     _vtfindminmax!(f, op, init, B, C, A, dims)
     return B, CartesianIndices(A)[C]
 end
+vtfindminmax(f, op, init, A, dims::Int) = vtfindminmax(f, op, init, A, (dims,))
 
 # Convenience defintions
 vtfindmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, dims)
