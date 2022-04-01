@@ -275,7 +275,6 @@ function map_quote(N::Int)
 end
 
 @generated function _vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # :(copyto!(B, A); return B)
     map_quote(N)
 end
 
@@ -424,7 +423,6 @@ end
     branches_mapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # :(copyto!(B, A); return B)
     map_quote(N)
 end
 
@@ -802,7 +800,6 @@ function tmap_quote(N::Int)
 end
 
 @generated function _vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # :(copyto!(B, A); return B)
     tmap_quote(N)
 end
 
@@ -947,6 +944,5 @@ end
     branches_tmapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # :(copyto!(B, A); return B)
     tmap_quote(N)
 end
