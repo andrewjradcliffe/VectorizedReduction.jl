@@ -356,7 +356,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         end
     else
         # Pre-reduction
-        ξ = Expr(:(=), :ξ, Expr(:call, Expr(:call, :eltype, :Bᵥ), :init))
+        ξ = Expr(:(=), :ξ, Expr(:call, :convert, Expr(:call, :eltype, :Bᵥ), :init))
         # Reduction loop
         block = Expr(:block)
         loops = Expr(:for, Expr(:(=), Symbol(:i_, rinds[1]), Expr(:call, :axes, :A, rinds[1])), block)
@@ -879,7 +879,7 @@ function staticdim_tmapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         end
     else
         # Pre-reduction
-        ξ = Expr(:(=), :ξ, Expr(:call, Expr(:call, :eltype, :Bᵥ), :init))
+        ξ = Expr(:(=), :ξ, Expr(:call, :convert, Expr(:call, :eltype, :Bᵥ), :init))
         # Reduction loop
         block = Expr(:block)
         loops = Expr(:for, :($(Symbol(:i_, rinds[1])) = axes(A, $(rinds[1]))), block)
