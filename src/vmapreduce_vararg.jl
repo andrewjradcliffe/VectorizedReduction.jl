@@ -5,6 +5,28 @@
 #
 ############################################################################################
 
+# Attempt at interface to vvmapreduce
+vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {P, M} =
+    vvmapreduce_vararg(f, op, init, As, dims)
+vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray, P}}) where {P} =
+    vvmapreduce_vararg(f, op, init, As, :)
+vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} =
+    vvmapreduce_vararg(f, op, init, As, :)
+
+# kwargs interface
+vvmapreduce(f, op, A::AbstractArray; dims=:, init) = vvmapreduce(f, op, init, A, dims)
+vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} =
+    vvmapreduce_vararg(f, op, init, As, dims)
+
+# Not certain that this is a great idea... performance suffers for convenience.
+# for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
+#     @eval vvmapreduce(f, ::typeof($op), A::AbstractArray; dims=:, init=$init) = vvmapreduce(f, $op, init, A, dims)
+#     @eval vvmapreduce(f, ::typeof($op), As::Vararg{AbstractArray, P}; dims=:, init=$init) where {P} =
+#         vvmapreduce_vararg(f, $op, init, As, dims)
+# end
+
+
+################
 function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M, S<:AbstractArray{T, N}, P}
     ax = axes(As[1])
     for p = 2:P
@@ -14,6 +36,7 @@ function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims
     B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(_ -> T, Val(P))...), Int), Dᴮ′)
     _vvmapreduce_vararg!(f, op, init, B, As, dims)
 end
+vvmapreduce_vararg(f, op, init, As, dims::Int) = vvmapreduce_vararg(f, op, init, As, (dims,))
 # One approach to handle differently typed arrays is have an additional method as below,
 # and to provide generated functions that also accept Vararg{AbstractArray}
 function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
@@ -45,6 +68,12 @@ A4 = rand(1:5, 5,5,5,5);
 @benchmark vvmapreduce_vararg(+, +, zero, (A1, A2), (2,3,4))
 @benchmark vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4))
 vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3,4))
+
+# A rather absurd performance difference
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, zero, 1:10, 11:20, 21:30, 31:40)
+@benchmark mapreduce((x,y,z,w) -> x*y*z*w, +, 1:10, 11:20, 21:30, 31:40)
+@benchmark vvmapreduce((x,y,z,w,u) -> x*y*z*w*u, +, zero, 1:10, 11:20, 21:30, 31:40, 41:50)
+@benchmark mapreduce((x,y,z,w,u) -> x*y*z*w*u, +, 1:10, 11:20, 21:30, 31:40, 41:50)
 
 function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::Int, P::Int)
     t = Expr(:tuple)
@@ -267,6 +296,9 @@ end
 
 ################
 # Version wherein an initial value is supplied
+# These functions could be eliminated by dispatching on the generated functions,
+# provided the generated functions matched the name _vvmapreduce_vararg!.
+# TO DO: test performance of above proposal.
 
 function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I<:Number, T, N, M, S<:AbstractArray{T, N}, P}
     ax = axes(As[1])
