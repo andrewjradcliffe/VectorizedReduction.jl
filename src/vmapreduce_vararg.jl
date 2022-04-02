@@ -19,12 +19,20 @@ vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} =
     vvmapreduce_vararg(f, op, init, As, dims)
 
 # Not certain that this is a great idea... performance suffers for convenience.
-# for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
-#     @eval vvmapreduce(f, ::typeof($op), A::AbstractArray; dims=:, init=$init) = vvmapreduce(f, $op, init, A, dims)
-#     @eval vvmapreduce(f, ::typeof($op), As::Vararg{AbstractArray, P}; dims=:, init=$init) where {P} =
-#         vvmapreduce_vararg(f, $op, init, As, dims)
-# end
+# But, it's the same price as any use of kwargs
+for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
+    @eval vvmapreduce(f, ::typeof($op), A::AbstractArray; dims=:, init=$init) = vvmapreduce(f, $op, init, A, dims)
+    @eval vvmapreduce(f, ::typeof($op), As::Vararg{AbstractArray, P}; dims=:, init=$init) where {P} =
+        vvmapreduce_vararg(f, $op, init, As, dims)
+end
 
+# A less harmful idea that incurs no performance loss, at least not that on individual tests.
+# Faster (≈ 4x) than relying on the respective kwargs versions to provide default init and dims
+for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
+    @eval vvmapreduce(f::F, ::typeof($op), A::AbstractArray) where {F<:Function} = vvmapreduce(f, $op, $init, A, :)
+    @eval vvmapreduce(f::F, ::typeof($op), As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+        vvmapreduce_vararg(f, $op, $init, As, :)
+end
 
 ################
 function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M, S<:AbstractArray{T, N}, P}
@@ -74,6 +82,12 @@ vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, di
 @benchmark mapreduce((x,y,z,w) -> x*y*z*w, +, 1:10, 11:20, 21:30, 31:40)
 @benchmark vvmapreduce((x,y,z,w,u) -> x*y*z*w*u, +, zero, 1:10, 11:20, 21:30, 31:40, 41:50)
 @benchmark mapreduce((x,y,z,w,u) -> x*y*z*w*u, +, 1:10, 11:20, 21:30, 31:40, 41:50)
+
+# interface tests
+@benchmark vvmapreduce(*, +, zero, A1, A2, A3)
+@benchmark vvmapreduce(*, +, A1, A2, A3)
+@benchmark vvmapreduce(*, +, A1, A2, A3, dims=:)
+@benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=1)
 
 function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::Int, P::Int)
     t = Expr(:tuple)

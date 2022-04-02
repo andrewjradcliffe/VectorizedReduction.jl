@@ -84,7 +84,7 @@ vvminimum(A::AbstractArray, dims) = vvmapreduce(identity, min, typemax, A, dims)
         return ξ
     end
 end
-vvmapreduce(f, op, init, A::AbstractArray) = vvmapreduce(f, op, init, A, :)
+vvmapreduce(f::F, op::OP, init::I, A::AbstractArray) where {F, OP, I} = vvmapreduce(f, op, init, A, :)
 
 # The dispatch on function type is faster if the function is named,
 # slower (≈ 15%) for anonymous. This would only affect performance in the REPL,
