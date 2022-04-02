@@ -6,9 +6,9 @@
 ############################################################################################
 
 # Attempt at interface to vvmapreduce
-vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {P, M} =
+vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, P, M} =
     vvmapreduce_vararg(f, op, init, As, dims)
-vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray, P}}) where {P} =
+vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P} =
     vvmapreduce_vararg(f, op, init, As, :)
 vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} =
     vvmapreduce_vararg(f, op, init, As, :)
@@ -60,6 +60,8 @@ end
 A1 = rand(5,5,5,5);
 A2 = rand(5,5,5,5);
 A3 = rand(5,5,5,5);
+A4 = rand(5,5,5,5);
+A5 = rand(5,5,5,5);
 as = (A1, A2, A3);
 @benchmark vvmapreduce_vararg(+, +, zero, as, (1,2,4))
 @benchmark mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
@@ -88,6 +90,34 @@ vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, di
 @benchmark vvmapreduce(*, +, A1, A2, A3)
 @benchmark vvmapreduce(*, +, A1, A2, A3, dims=:)
 @benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=1)
+@benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=zero)
+
+# Notably, if ≥ 4 slurped array args, then * slows down and allocates a lot for reasons unknown.
+# oddly, if one manually writes the operations, then the cost is as it should be.
+@benchmark vvmapreduce(*, +, A1, A2, A3, A4)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, A1, A2, A3, A4)
+@benchmark vvmapreduce(+, +, A1, A2, A3, A4)
+
+# And for really strange stuff (e.g. posterior predictive transformations)
+@benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, A1, A2, A3)
+@benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, A1, A2, A3, dims=(2,3,4))
+# using ifelse for just a boolean is quite slow, but the above is just for demonstration
+@benchmark vvmapreduce(≥, +, A1, A2)
+@benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3)
+@benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3, dims=(2,3,4))
+@benchmark mapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3)
+# What I mean by posterior predictive transformation? Well, one might encounter
+# this in Bayesian model checking, which provides a convenient example.
+# If one wishes to compute the Pr = ∫∫𝕀(T(yʳᵉᵖ, θ) ≥ T(y, θ))p(yʳᵉᵖ|θ)p(θ|y)dyʳᵉᵖdθ
+# Let's imagine that A1 represents T(yʳᵉᵖ, θ) and A2 represents T(y, θ)
+# i.e. the test variable samples computed as a functional of the Markov chain (samples of θ)
+# Then, Pr is computed as
+vvmapreduce(≥, +, A1, A2) / length(A1)
+# Or, if only the probability is of interest, and we do not wish to use the functionals
+# for any other purpose, we could compute it as:
+vvmapreduce((x, y) -> ≥(f(x), f(y)), +, A1, A2)
+# where `f` is the functional of interest, e.g.
+@benchmark vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2)
 
 function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::Int, P::Int)
     t = Expr(:tuple)
