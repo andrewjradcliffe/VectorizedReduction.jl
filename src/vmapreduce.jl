@@ -112,6 +112,13 @@ vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
 
 # Define reduce
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
+vvreduce(op::OP, init::I, A) where {OP, I} = vvmapreduce(identity, op, init, A, :)
+
+for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
+    @eval vvreduce(::typeof($op), A; dims=:, init=$init) = vvmapreduce(identity, $op, init, A, dims)
+    # 2-argument version for common binary ops, but one should just use sum,prod,maximum, minimum
+    @eval vvreduce(::typeof($op), A::AbstractArray) = vvmapreduce(identity, $op, $init, A, :)
+end
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
@@ -592,7 +599,7 @@ function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
     _vtmapreduce!(f, op, init, B, A, dims)
     return B
 end
-# vtmapreduce(f, op, init, A, dims::Int) = vtmapreduce(f, op, init, A, (dims,))
+vtmapreduce(f, op, init, A, dims::Int) = vtmapreduce(f, op, init, A, (dims,))
 
 # dims determination would ideally be non-allocating. Also, who would
 # call this anyway? Almost assuredly, a caller would already know dims, hence
@@ -630,6 +637,7 @@ vtminimum(A::AbstractArray, dims) = vtmapreduce(identity, min, typemax, A, dims)
         return ξ
     end
 end
+vtmapreduce(f::F, op::OP, init::I, A) where {F, OP, I} = vtmapreduce(f, op, init, A, :)
 
 vtsum(f::F, A) where {F<:Function} = vtmapreduce(f, +, zero, A, :)
 vtprod(f::F, A) where {F<:Function} = vtmapreduce(f, *, one, A, :)
@@ -650,6 +658,12 @@ vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
 vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
 
 vtreduce(op::OP, init::I, A, dims) where {OP, I} = vtmapreduce(identity, op, init, A, dims)
+vtreduce(op::OP, init::I, A) where {OP, I} = vtmapreduce(identity, op, init, A, :)
+for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
+    @eval vtreduce(::typeof($op), A; dims=:, init=$init) = vtmapreduce(identity, $op, init, A, dims)
+    # 2-argument version for common binary ops, but one should just use sum,prod,maximum, minimum
+    @eval vtreduce(::typeof($op), A::AbstractArray) = vtmapreduce(identity, $op, $init, A, :)
+end
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
