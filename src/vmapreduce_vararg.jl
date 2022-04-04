@@ -4,6 +4,10 @@
 #
 #
 ############################################################################################
+# Revision of interface: in fact, the interface is complicated more by the introduction of
+# `vvmapreduce_vararg`, as it could have been handled by simply dispatching from `vvmapreduce`.
+# It does seem worthwhile to use separate generated functions, but that is an internal
+# detail of the `vvmapreduce` dispatch.
 
 # Attempt at interface to vvmapreduce
 vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, P, M} =
@@ -62,6 +66,7 @@ A2 = rand(5,5,5,5);
 A3 = rand(5,5,5,5);
 A4 = rand(5,5,5,5);
 A5 = rand(5,5,5,5);
+A6 = rand(1:10, 5,5,5,5);
 as = (A1, A2, A3);
 @benchmark vvmapreduce_vararg(+, +, zero, as, (1,2,4))
 @benchmark mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
@@ -96,6 +101,7 @@ vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, di
 # oddly, if one manually writes the operations, then the cost is as it should be.
 @benchmark vvmapreduce(*, +, A1, A2, A3, A4)
 @benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, A1, A2, A3, A4)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, A1, A2, A3, A4, dims=:, init=zero)
 @benchmark vvmapreduce(+, +, A1, A2, A3, A4)
 
 # And for really strange stuff (e.g. posterior predictive transformations)
