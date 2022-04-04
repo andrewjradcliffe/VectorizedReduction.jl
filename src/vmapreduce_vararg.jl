@@ -8,37 +8,15 @@
 # `vvmapreduce_vararg`, as it could have been handled by simply dispatching from `vvmapreduce`.
 # It does seem worthwhile to use separate generated functions, but that is an internal
 # detail of the `vvmapreduce` dispatch.
-
-# Attempt at interface to vvmapreduce
-vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, P, M} =
-    vvmapreduce_vararg(f, op, init, As, dims)
-vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P} =
-    vvmapreduce_vararg(f, op, init, As, :)
-vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} =
-    vvmapreduce_vararg(f, op, init, As, :)
-
-# kwargs interface
-vvmapreduce(f, op, A::AbstractArray; dims=:, init) = vvmapreduce(f, op, init, A, dims)
-vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} =
-    vvmapreduce_vararg(f, op, init, As, dims)
-
-# Not certain that this is a great idea... performance suffers for convenience.
-# But, it's the same price as any use of kwargs
-for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
-    @eval vvmapreduce(f, ::typeof($op), A::AbstractArray; dims=:, init=$init) = vvmapreduce(f, $op, init, A, dims)
-    @eval vvmapreduce(f, ::typeof($op), As::Vararg{AbstractArray, P}; dims=:, init=$init) where {P} =
-        vvmapreduce_vararg(f, $op, init, As, dims)
-end
-
-# A less harmful idea that incurs no performance loss, at least not that on individual tests.
-# Faster (≈ 4x) than relying on the respective kwargs versions to provide default init and dims
-for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
-    @eval vvmapreduce(f::F, ::typeof($op), A::AbstractArray) where {F<:Function} = vvmapreduce(f, $op, $init, A, :)
-    @eval vvmapreduce(f::F, ::typeof($op), As::Vararg{AbstractArray, P}) where {F<:Function, P} =
-        vvmapreduce_vararg(f, $op, $init, As, :)
-end
-
-# Attempt 2 at interface
+# Also, it seems that the specialization on Vararg{S, P} where S<:AbstractArray{T, N}
+# is unnecessary at both the public-facing and generated function interfaces.
+# Moreover, based on a variety of test cases, it seems to provide no benefits
+# to performance. Given that the generated function branching would theoretically
+# be specialized as well, it would certainly lead to longer compilation times, and, perhaps
+# a small performance hit if one were to expand a massive number of the branches?
+# -- doubtful, but one should be wary of combinatorial explosions.
+# I leave the specialization code in-place, but commented out. If a future use warrants it,
+# it can simply be reactivated.
 
 vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} = vvmapreduce(f, op, init, As, :)
 vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} = vvmapreduce(f, op, init, As, dims)
