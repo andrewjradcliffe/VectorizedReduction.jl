@@ -38,20 +38,36 @@ for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
         vvmapreduce_vararg(f, $op, $init, As, :)
 end
 
-################
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M, S<:AbstractArray{T, N}, P}
-    ax = axes(As[1])
-    for p = 2:P
-        axes(As[p]) == ax || throw(DimensionMismatch)
-    end
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), Val(N))
-    B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(_ -> T, Val(P))...), Int), Dᴮ′)
-    _vvmapreduce_vararg!(f, op, init, B, As, dims)
+# Attempt 2 at interface
+
+vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} = vvmapreduce(f, op, init, As, :)
+vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} = vvmapreduce(f, op, init, As, dims)
+
+# While this is a nice convenience, it does add 16 dispatches to the user-visible method table.
+# On the other hand, it does not cause any issues.
+for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
+    # Convenience default initializers.
+    # First line covers both AbstractArray and ::Tuple{Vararg{AbstractArray, P}}
+    @eval vvmapreduce(f, ::typeof($op), A; dims=:, init=$init) = vvmapreduce(f, $op, init, A, dims)
+    @eval vvmapreduce(f, ::typeof($op), As::Vararg{AbstractArray, P}; dims=:, init=$init) where {P} = vvmapreduce(f, $op, init, As, dims)
+    # 3-argument versions for common binary ops
+    @eval vvmapreduce(f::F, ::typeof($op), A) where {F<:Function} = vvmapreduce(f, $op, $init, A, :)
+    @eval vvmapreduce(f::F, ::typeof($op), As::Vararg{AbstractArray, P}) where {F<:Function, P} = vvmapreduce(f, $op, $init, As, :)
 end
-vvmapreduce_vararg(f, op, init, As, dims::Int) = vvmapreduce_vararg(f, op, init, As, (dims,))
+
+################
+# function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M, S<:AbstractArray{T, N}, P}
+#     ax = axes(As[1])
+#     for p = 2:P
+#         axes(As[p]) == ax || throw(DimensionMismatch)
+#     end
+#     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), Val(N))
+#     B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(_ -> T, Val(P))...), Int), Dᴮ′)
+#     _vvmapreduce_vararg!(f, op, init, B, As, dims)
+# end
 # One approach to handle differently typed arrays is have an additional method as below,
 # and to provide generated functions that also accept Vararg{AbstractArray}
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
+function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     ax = axes(As[1])
     for p = 2:P
         axes(As[p]) == ax || throw(DimensionMismatch)
@@ -59,6 +75,7 @@ function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArra
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), ndims(As[1]))
     B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(p -> eltype(As[p]), Val(P))...), Int), Dᴮ′)
     _vvmapreduce_vararg!(f, op, init, B, As, dims)
+    return B
 end
 
 A1 = rand(5,5,5,5);
@@ -68,7 +85,8 @@ A4 = rand(5,5,5,5);
 A5 = rand(5,5,5,5);
 A6 = rand(1:10, 5,5,5,5);
 as = (A1, A2, A3);
-@benchmark vvmapreduce_vararg(+, +, zero, as, (1,2,4))
+@benchmark vvmapreduce(+, +, zero, as, (1,2,4))
+@benchmark vvmapreduce(+, +, as, dims=(1,2,4), init=zero)
 @benchmark mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
 vvmapreduce_vararg(+, +, zero, as, (1,2,4)) ≈ mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
 g(x, y, z) = x * y + z
@@ -80,8 +98,8 @@ vvmapreduce_vararg(+, +, zero, as, (5,)) ≈ mapreduce(+, +, A1, A2, A3, dims=5)
 
 # Tests of variably typed arrays
 A4 = rand(1:5, 5,5,5,5);
-@benchmark vvmapreduce_vararg(+, +, zero, (A1, A2), (2,3,4))
-@benchmark vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4))
+@benchmark vvmapreduce(+, +, zero, (A1, A2), (2,3,4))
+@benchmark vvmapreduce(+, +, zero, (A1, A4), (2,3,4))
 vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3,4))
 
 # A rather absurd performance difference
@@ -89,18 +107,21 @@ vvmapreduce_vararg(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, di
 @benchmark mapreduce((x,y,z,w) -> x*y*z*w, +, 1:10, 11:20, 21:30, 31:40)
 @benchmark vvmapreduce((x,y,z,w,u) -> x*y*z*w*u, +, zero, 1:10, 11:20, 21:30, 31:40, 41:50)
 @benchmark mapreduce((x,y,z,w,u) -> x*y*z*w*u, +, 1:10, 11:20, 21:30, 31:40, 41:50)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, 1:10, 11:20, 21:30, 31:40)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, (1:10, 11:20, 21:30, 31:40))
 
 # interface tests
 @benchmark vvmapreduce(*, +, zero, A1, A2, A3)
 @benchmark vvmapreduce(*, +, A1, A2, A3)
 @benchmark vvmapreduce(*, +, A1, A2, A3, dims=:)
-@benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=1)
+@benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=0)
 @benchmark vvmapreduce(*, +, A1, A2, A3, dims=:, init=zero)
+@benchmark vvmapreduce(*, +, as)
 
 # Notably, if ≥ 4 slurped array args, then * slows down and allocates a lot for reasons unknown.
 # oddly, if one manually writes the operations, then the cost is as it should be.
 @benchmark vvmapreduce(*, +, A1, A2, A3, A4)
-@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, A1, A2, A3, A4)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, zero, A1, A2, A3, A4)
 @benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, A1, A2, A3, A4, dims=:, init=zero)
 @benchmark vvmapreduce(+, +, A1, A2, A3, A4)
 
@@ -253,32 +274,44 @@ function branches_mapreduce_vararg_quote(OP, I, N::Int, M::Int, P::Int, D)
     return staticdim_mapreduce_vararg_quote(OP, I, static_dims, N, P)
 end
 
-@generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
-    branches_mapreduce_vararg_quote(OP, I, N, M, P, D)
-end
-
 # In the case of rinds = ∅, this just corresponds to a map
-function map_vararg_quote(N::Int, P::Int)
+function map_vararg_quote(P::Int)
+    # t = Expr(:tuple)
+    # for p = 1:P
+    #     push!(t.args, Symbol(:A_, p))
+    # end
+    # f = Expr(:call, :f)
+    # for p = 1:P
+    #     A = Expr(:ref, Symbol(:A_, p), ntuple(d -> Symbol(:i_, d), N)...)
+    #     push!(f.args, A)
+    # end
+    # tc = copy(t)
+    # push!(tc.args, :B)
+    # block = Expr(:block)
+    # loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, tc, N)), block)
+    # for d = N-1:-1:1
+    #     newblock = Expr(:block)
+    #     push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, tc, d)), newblock))
+    #     block = newblock
+    # end
+    # # Push to inside innermost loop
+    # setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), f)
+    # push!(block.args, setb)
+    # Version using eachindex
     t = Expr(:tuple)
-    for p = 1:P
-        push!(t.args, Symbol(:A_, p))
-    end
     f = Expr(:call, :f)
+    ei = Expr(:call, :eachindex)
     for p = 1:P
-        A = Expr(:ref, Symbol(:A_, p), ntuple(d -> Symbol(:i_, d), N)...)
+        Asym = Symbol(:A_, p)
+        A = Expr(:ref, Asym, :i)
+        push!(t.args, Asym)
         push!(f.args, A)
+        push!(ei.args, Asym)
     end
-    tc = copy(t)
-    push!(tc.args, :B)
+    push!(ei.args, :B)
     block = Expr(:block)
-    loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, tc, N)), block)
-    for d = N-1:-1:1
-        newblock = Expr(:block)
-        push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, tc, d)), newblock))
-        block = newblock
-    end
-    # Push to inside innermost loop
-    setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), f)
+    loops = Expr(:for, Expr(:(=), :i, ei), block)
+    setb = Expr(:(=), Expr(:ref, :B, :i), f)
     push!(block.args, setb)
     return quote
         $t = As
@@ -287,10 +320,14 @@ function map_vararg_quote(N::Int, P::Int)
     end
 end
 
+# @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+#     branches_mapreduce_vararg_quote(OP, I, N, M, P, D)
+# end
+
 # Should technically just be map, as it is the case of rinds = ∅
-@generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
-    map_vararg_quote(N, P)
-end
+# @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
+#     map_vararg_quote(P)
+# end
 
 # Versions which cover arrays with different element types
 @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
@@ -298,19 +335,18 @@ end
 end
 
 @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, N, P}
-    map_vararg_quote(N, P)
+    map_vararg_quote(P)
 end
 
 # Reduction over all dims, i.e. if dims = :
 # Rather than check the dimensions, just leave it to `eachindex` to throw --
 # it gives an informative message, and there's no need to repeat it.
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, ::Colon) where {F, OP, I,T, N, S<:AbstractArray{T, N}, P}
+# function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, ::Colon) where {F, OP, I, T, N, S<:AbstractArray{T, N}, P}
+#     _mapreduceall_vararg(f, op, init, As)
+# end
+function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, ::Colon) where {F, OP, I, P}
     _mapreduceall_vararg(f, op, init, As)
 end
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, ::Colon) where {F, OP, I, M, P}
-    _mapreduceall_vararg(f, op, init, As)
-end
-vvmapreduce_vararg(f, op, init, As) = vvmapreduce_vararg(f, op, init, As, :)
 
 function mapreduceall_vararg_quote(OP, I, P::Int)
     t = Expr(:tuple)
@@ -336,9 +372,9 @@ function mapreduceall_vararg_quote(OP, I, P::Int)
     end
 end
 
-@generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}) where {F, OP, I, T, N, S<:AbstractArray{T, N}, P}
-    mapreduceall_vararg_quote(OP, I, P)
-end
+# @generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}) where {F, OP, I, T, N, S<:AbstractArray{T, N}, P}
+#     mapreduceall_vararg_quote(OP, I, P)
+# end
 
 @generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P}
     mapreduceall_vararg_quote(OP, I, P)
@@ -350,17 +386,17 @@ end
 # provided the generated functions matched the name _vvmapreduce_vararg!.
 # TO DO: test performance of above proposal.
 
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I<:Number, T, N, M, S<:AbstractArray{T, N}, P}
-    ax = axes(As[1])
-    for p = 2:P
-        axes(As[p]) == ax || throw(DimensionMismatch)
-    end
-    Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), Val(N))
-    B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(_ -> T, Val(P))...), Int), Dᴮ′)
-    _vvmapreduce_vararg_init!(f, op, init, B, As, dims)
-    return B
-end
-function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I<:Number, M, P}
+# function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, dims::NTuple{M, Int}) where {F, OP, I<:Number, T, N, M, S<:AbstractArray{T, N}, P}
+#     ax = axes(As[1])
+#     for p = 2:P
+#         axes(As[p]) == ax || throw(DimensionMismatch)
+#     end
+#     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), Val(N))
+#     B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(_ -> T, Val(P))...), Int), Dᴮ′)
+#     _vvmapreduce_vararg_init!(f, op, init, B, As, dims)
+#     return B
+# end
+function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I<:Number, M, P}
     ax = axes(As[1])
     for p = 2:P
         axes(As[p]) == ax || throw(DimensionMismatch)
@@ -500,12 +536,12 @@ function branches_mapreduce_vararg_init_quote(OP, N::Int, M::Int, P::Int, D)
     return staticdim_mapreduce_vararg_init_quote(OP, static_dims, N, P)
 end
 
-@generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
-    branches_mapreduce_vararg_init_quote(OP, N, M, P, D)
-end
-@generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
-    map_vararg_quote(N, P)
-end
+# @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+#     branches_mapreduce_vararg_init_quote(OP, N, M, P, D)
+# end
+# @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
+#     map_vararg_quote(P)
+# end
 
 # Versions which cover arrays with different element types
 @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
@@ -513,16 +549,16 @@ end
 end
 
 @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, N, P}
-    map_vararg_quote(N, P)
+    map_vararg_quote(P)
 end
 
 # Reduction over all dims, i.e. if dims = :
 # Rather than check the dimensions, just leave it to `eachindex` to throw --
 # it gives an informative message, and there's no need to repeat it.
-# function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, ::Colon) where {F, OP, I<:Number,T, N, S<:AbstractArray{T, N}, P}
+# function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}, ::Colon) where {F, OP, I<:Number,T, N, S<:AbstractArray{T, N}, P}
 #     _mapreduceall_vararg(f, op, init, As)
 # end
-# function vvmapreduce_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, ::Colon) where {F, OP, I<:Number, M, P}
+# function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, ::Colon) where {F, OP, I<:Number, M, P}
 #     _mapreduceall_vararg(f, op, init, As)
 # end
 
@@ -550,9 +586,9 @@ function mapreduceall_vararg_init_quote(OP, P::Int)
     end
 end
 
-@generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}) where {F, OP, I<:Number, T, N, S<:AbstractArray{T, N}, P}
-    mapreduceall_vararg_init_quote(OP, P)
-end
+# @generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{S, P}}) where {F, OP, I<:Number, T, N, S<:AbstractArray{T, N}, P}
+#     mapreduceall_vararg_init_quote(OP, P)
+# end
 
 @generated function _mapreduceall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I<:Number, P}
     mapreduceall_vararg_init_quote(OP, P)
