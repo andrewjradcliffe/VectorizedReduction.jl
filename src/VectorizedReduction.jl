@@ -2,8 +2,8 @@ module VectorizedReduction
 
 using LoopVectorization, Static
 
-export vvmapreduce, vvmapreduce!, vvsum, vvprod, vvmaximum, vvminimum, vvextrema,
-    vtmapreduce, vtmapreduce!, vtsum, vtprod, vtmaximum, vtminimum, vtextrema
+export vvmapreduce, vvmapreduce!, vvreduce, vvsum, vvprod, vvmaximum, vvminimum, vvextrema,
+    vtmapreduce, vtmapreduce!, vtreduce, vtsum, vtprod, vtmaximum, vtminimum, vtextrema
 
 include("vmapreduce.jl")
 
