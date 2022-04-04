@@ -265,17 +265,22 @@ end
 
 # This could likely be handled by eachindex, but for completeness:
 # this is the case of mapreduce on a single array when rinds = ∅
-function map_quote(N::Int)
-    A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
+function map_quote() #N::Int
+    # A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
+    # block = Expr(:block)
+    # loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
+    # for d = N-1:-1:1
+    #     newblock = Expr(:block)
+    #     push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, Expr(:tuple, :A, :B), d)), newblock))
+    #     block = newblock
+    # end
+    # # Push to inside innermost loop
+    # setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), Expr(:call, :f, A))
+    # push!(block.args, setb)
+    # Version using eachindex
     block = Expr(:block)
-    loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
-    for d = N-1:-1:1
-        newblock = Expr(:block)
-        push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, Expr(:tuple, :A, :B), d)), newblock))
-        block = newblock
-    end
-    # Push to inside innermost loop
-    setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), Expr(:call, :f, A))
+    loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, :A, :B)), block)
+    setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :f, Expr(:ref, :A, :i)))
     push!(block.args, setb)
     return quote
         @turbo $loops
@@ -284,7 +289,8 @@ function map_quote(N::Int)
 end
 
 @generated function _vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    map_quote(N)
+    # map_quote(N)
+    map_quote()
 end
 
 ################
@@ -432,7 +438,8 @@ end
     branches_mapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    map_quote(N)
+    # map_quote(N)
+    map_quote()
 end
 
 
@@ -797,17 +804,22 @@ end
     branches_tmapreduce_quote(OP, I, N, M, D)
 end
 
-function tmap_quote(N::Int)
-    A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
+function tmap_quote() #N::Int
+    # A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
+    # block = Expr(:block)
+    # loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
+    # for d = N-1:-1:1
+    #     newblock = Expr(:block)
+    #     push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, Expr(:tuple, :A, :B), d)), newblock))
+    #     block = newblock
+    # end
+    # # Push to inside innermost loop
+    # setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), Expr(:call, :f, A))
+    # push!(block.args, setb)
+    # Version using eachindex
     block = Expr(:block)
-    loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
-    for d = N-1:-1:1
-        newblock = Expr(:block)
-        push!(block.args, Expr(:for, Expr(:(=), Symbol(:i_, d), Expr(:call, :indices, Expr(:tuple, :A, :B), d)), newblock))
-        block = newblock
-    end
-    # Push to inside innermost loop
-    setb = Expr(:(=), Expr(:ref, :B, ntuple(d -> Symbol(:i_, d), N)...), Expr(:call, :f, A))
+    loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, :A, :B)), block)
+    setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :f, Expr(:ref, :A, :i)))
     push!(block.args, setb)
     return quote
         @tturbo $loops
@@ -816,7 +828,8 @@ function tmap_quote(N::Int)
 end
 
 @generated function _vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    tmap_quote(N)
+    # tmap_quote(N)
+    tmap_quote()
 end
 
 ################
@@ -960,5 +973,6 @@ end
     branches_tmapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    tmap_quote(N)
+    # tmap_quote(N)
+    tmap_quote()
 end
