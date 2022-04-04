@@ -279,6 +279,10 @@ vvmapreduce(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3
 @benchmark mapreduce((x,y,z,w,u) -> x*y*z*w*u, +, 1:10, 11:20, 21:30, 31:40, 41:50)
 @benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, 1:10, 11:20, 21:30, 31:40)
 @benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, (1:10, 11:20, 21:30, 31:40))
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, 1.:10, 11:20, 21:30, 31:40)
+@benchmark vvmapreduce((x,y,z,w) -> x*y*z*w, +, 1.:10, 11.:20, 21.:30, 31.:40)
+@benchmark vvmapreduce(abs2, +, 1:10)
+@benchmark mapreduce(abs2, +, 1:10)
 
 # interface tests
 @benchmark vvmapreduce(*, +, zero, A1, A2, A3)
@@ -315,3 +319,29 @@ vvmapreduce(≥, +, A1, A2) / length(A1)
 vvmapreduce((x, y) -> ≥(f(x), f(y)), +, A1, A2)
 # where `f` is the functional of interest, e.g.
 @benchmark vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2)
+@benchmark vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2, dims=(2,3,4))
+
+# multi-threading examples
+B1 = rand(20,20,20,20);
+B2 = rand(20,20,20,20);
+B3 = rand(20,20,20,20);
+B4 = rand(20,20,20,20);
+@benchmark vvmapreduce(*, +, zero, B1, B2, B3)
+@benchmark vvmapreduce(*, +, B1, B2, B3)
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=:)
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=:, init=0)
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=:, init=zero)
+@benchmark vtmapreduce(*, +, zero, B1, B2, B3)
+@benchmark vtmapreduce(*, +, B1, B2, B3)
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=:)
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=:, init=0)
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=:, init=zero)
+
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=(2,3,4))
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=(2,3,4))
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=(2,4))
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=(2,4))
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=(1,3))
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=(1,3))
+@benchmark vvmapreduce(*, +, B1, B2, B3, dims=(1,))
+@benchmark vtmapreduce(*, +, B1, B2, B3, dims=(1,))
