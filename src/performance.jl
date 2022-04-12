@@ -345,3 +345,12 @@ B4 = rand(20,20,20,20);
 @benchmark vtmapreduce(*, +, B1, B2, B3, dims=(1,3))
 @benchmark vvmapreduce(*, +, B1, B2, B3, dims=(1,))
 @benchmark vtmapreduce(*, +, B1, B2, B3, dims=(1,))
+
+################
+# Tests and example usage for vvmap, vtmap: as expected, slower than
+# the highly optimized versions provided in LoopVectorization.jl
+@benchmark vmap((x, y, z) -> x + y * z, A1, A2, A3)
+@benchmark vvmap((x, y, z) -> x + y * z, A1, A2, A3)
+h(x, y, z) = x + y * z
+@benchmark vmap(h, A1, A2, A3)
+@benchmark vvmap(h, A1, A2, A3)
