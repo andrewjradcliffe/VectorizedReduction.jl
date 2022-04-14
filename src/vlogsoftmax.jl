@@ -4,15 +4,6 @@
 #
 #
 ############################################################################################
-function vlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
-    Dᴬ = size(A)
-    B = vlogsumexp(A, dims)
-    C = similar(A, Base.promote_op(exp, T))
-    _vlogsoftmax!(C, A, B, dims)
-    return C
-end
-vlogsoftmax(A, dims::Int) = vlogsoftmax(A, (dims,))
-
 # reduction over all dims
 function vlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N}
     b = vlogsumexp(A)
@@ -23,10 +14,41 @@ function vlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N}
     C
 end
 # ::AbstractArray required in order for kwargs interface to work
+"""
+    vlogsoftmax(A::AbstractArray)
+
+Compute the log of the softmax function, treating the entire array as a single vector.
+Care is taken to ensure that the computation will not overflow/underflow, but the caller
+should be aware that `+Inf` and `NaN` are not handled.
+
+See also: [`vsoftmax`](@ref)
+"""
 vlogsoftmax(A::AbstractArray) = vlogsoftmax(A, :)
+
+
+"""
+    vlogsoftmax(A::AbstractArray, dims)
+
+Compute the log of the softmax function, treating each slice of `A` specified by `dims` as if
+it were a single vector; `dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Avoids overflow/underflow, but `+Inf` and `NaN` are not handled.
+"""
+function vlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+    Dᴬ = size(A)
+    B = vlogsumexp(A, dims)
+    C = similar(A, Base.promote_op(exp, T))
+    _vlogsoftmax!(C, A, B, dims)
+    return C
+end
+vlogsoftmax(A, dims::Int) = vlogsoftmax(A, (dims,))
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+"""
+    vlogsoftmax(A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vlogsoftmax(A; dims=:) = vlogsoftmax(A, dims)
 
 function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
@@ -146,16 +168,16 @@ end
 end
 
 ############################################################################################
-function vtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
-    Dᴬ = size(A)
-    B = vtlogsumexp(A, dims)
-    C = similar(A, Base.promote_op(exp, T))
-    _vtlogsoftmax!(C, A, B, dims)
-    return C
-end
-vtlogsoftmax(A, dims::Int) = vtlogsoftmax(A, (dims,))
-
 # reduction over all dims
+"""
+    vtlogsoftmax(A::AbstractArray)
+
+Compute the log of the softmax function, treating the entire array as a single vector. Threaded.
+Care is taken to ensure that the computation will not overflow/underflow, but the caller
+should be aware that `+Inf` and `NaN` are not handled.
+
+See also: [`vtsoftmax`](@ref)
+"""
 function vtlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N}
     b = vtlogsumexp(A)
     C = similar(A, Base.promote_op(exp, T))
@@ -167,8 +189,29 @@ end
 # ::AbstractArray required in order for kwargs interface to work
 vtlogsoftmax(A::AbstractArray) = vtlogsoftmax(A, :)
 
+"""
+    vtlogsoftmax(A::AbstractArray, dims)
+
+Compute the log of the softmax function, treating each slice of `A` specified by `dims` as if
+it were a single vector; `dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Threaded. Avoids overflow/underflow, but `+Inf` and `NaN` are not handled.
+"""
+function vtlogsoftmax(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
+    Dᴬ = size(A)
+    B = vtlogsumexp(A, dims)
+    C = similar(A, Base.promote_op(exp, T))
+    _vtlogsoftmax!(C, A, B, dims)
+    return C
+end
+vtlogsoftmax(A, dims::Int) = vtlogsoftmax(A, (dims,))
+
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+"""
+    vtlogsoftmax(A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtlogsoftmax(A; dims=:) = vtlogsoftmax(A, dims)
 
 function staticdim_tlogsoftmax_quote(static_dims::Vector{Int}, N::Int)
