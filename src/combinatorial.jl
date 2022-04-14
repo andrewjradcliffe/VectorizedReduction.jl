@@ -74,9 +74,29 @@ vvmapreduce(identity, min, typemin, A, (1,2,3)) == vvmapreduce(identity, min, ty
 @code_typed _vvmapreduce!(identity, +, zero, B, A, dims)
 
 ################
+#### Original note from inside vvmapreduce
+# One must ensure that the dims are sorted, as the type dispatch within and on
+# the generated branch functions AND work functions respects the order of permutations.
+# Consequently, given some N and M, in the most extreme case, a naive approach would
+# generate new functions for all the possible permutations which
+# could be generated from the combinations N choose (M - 1),
+# i.e. N! / (N - M + 1)! ≡ factorial(N) / factorial(N - M + 1)
+# M - 1 arises due to the fact that the Mᵗʰ branch of the function will
+# result in a work function call.
+# Conversely, if one ensures that permutations do not matter (by sorting dims),
+# then at most N choose M work functions will be compiled.
+# Alas, one is loathe to ensure that the dimensions will be sorted, as
+# it incurs overhead of approximately 90ns, which, for length(A) = 625,
+# is substantial (increase in time by factor of 1.33, and 80 bytes).
+# Perhaps one could just make it the caller's responsibility to avoid
+# this unnecessary compilation.
+# v = sort!(collect(dims))
+# newdims = ntuple(i -> v[i], Val(M))
+# _vvmapreduce!(f, op, init, B, A, newdims)
+################
 using Static
 using LoopVectorization
-include("/nfs/site/home/aradclif/aradclif/.julia/dev/VectorizedReduction/src/lvreduce_v3.jl");
+include("/nfs/site/home/aradclif/aradclif/.julia/dev/VectorizedReduction/src/vmapreduce.jl");
 include("/nfs/site/home/aradclif/aradclif/.julia/dev/VectorizedReduction/src/vlogsumexp.jl");
 using BenchmarkTools
 #### Demonstrative experiments of branching and work functions
