@@ -7,7 +7,7 @@
 # Version of findmin, findmax for `f`: ℝᴺ -> ℝ
 # Note: it is only defined with for such functions.
 
-# Actually useful
+# Necessary dispatches to define interface
 vfindmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
     vfindminmax(f, >, typemin, As, :)
 vfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
@@ -78,59 +78,11 @@ end
 @generated function _findminmaxall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P}
     findminmaxall_vararg_quote(OP, I, P)
 end
-# Most likely, not necessary
+# Not necessary either
 # vfindmax(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
 #     vfindminmax(f, >, typemin, As, :)
 # vfindmin(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
 #     vfindminmax(f, <, typemax, As, :)
-
-
-#### tests
-# over all
-A1 = rand(5,5);
-A2 = rand(5,5);
-A3 = rand(5,5);
-as = (A1, A2, A3);
-@benchmark vfindminmax(+, >, typemin, as, :)
-A′ = @. A1 + A2 + A3;
-findmax(A′)
-vfindmax(+, A1, A2, A3)
-vfindmax(+, as)
-
-v1 = rand(5);
-v2 = rand(5);
-v3 = rand(5);
-vs = (v1, v2, v3);
-@benchmark vfindminmax(+, >, typemin, vs, :)
-v′ = @. v1 + v2 + v3;
-findmax(v′)
-
-# on subset of dims
-vfindminmax(+, >, typemin, as, (2,)) == findmax(A′, dims=2)
-@benchmark vfindminmax(+, >, typemin, as, (2,))
-@benchmark findmax(A′, dims=2)
-vfindmax(+, A1, A2, A3, dims=2)
-vfindmax(+, as, dims=2)
-vfindmax(+, as, 2)
-vfindmax(as)
-
-# anonymous functions
-vfindmax((x, y, z) -> x * y + z, A1, A2, A3)
-A′ = @. A1 * A2 + A3;
-findmax(A′)
-
-# light performance tests
-B1 = rand(5,5,5,5);
-B2 = rand(5,5,5,5);
-B3 = rand(5,5,5,5);
-bs = (B1, B2, B3);
-@benchmark vfindminmax(+, >, typemin, bs, :)
-B′ = @. B1 + B2 + B3;
-findmax(B′)
-@benchmark vfindmax(+, B1, B2, B3)
-@benchmark vfindmax(+, bs)
-@benchmark vfindmax((x, y, z) -> x * y + z, B1, B2, B3)
-
 
 function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::Int, P::Int)
     t = Expr(:tuple)

@@ -354,3 +354,68 @@ B4 = rand(20,20,20,20);
 h(x, y, z) = x + y * z
 @benchmark vmap(h, A1, A2, A3)
 @benchmark vvmap(h, A1, A2, A3)
+
+################
+# Tests of varargs findmin, findmax
+
+#### tests
+# over all
+A1 = rand(5,5);
+A2 = rand(5,5);
+A3 = rand(5,5);
+as = (A1, A2, A3);
+@benchmark vfindminmax(+, >, typemin, as, :)
+A′ = @. A1 + A2 + A3;
+findmax(A′)
+vfindmax(+, A1, A2, A3)
+vfindmax(+, as)
+
+v1 = rand(5);
+v2 = rand(5);
+v3 = rand(5);
+vs = (v1, v2, v3);
+@benchmark vfindminmax(+, >, typemin, vs, :)
+v′ = @. v1 + v2 + v3;
+findmax(v′)
+
+# on subset of dims
+vfindminmax(+, >, typemin, as, (2,)) == findmax(A′, dims=2)
+@benchmark vfindminmax(+, >, typemin, as, (2,))
+@benchmark findmax(A′, dims=2)
+vfindmax(+, A1, A2, A3, dims=2)
+vfindmax(+, as, dims=2)
+vfindmax(+, as, 2)
+vfindmax(as)
+
+# anonymous functions
+vfindmax((x, y, z) -> x * y + z, A1, A2, A3)
+A′ = @. A1 * A2 + A3;
+findmax(A′)
+
+# light performance tests
+B1 = rand(5,5,5,5);
+B2 = rand(5,5,5,5);
+B3 = rand(5,5,5,5);
+bs = (B1, B2, B3);
+@benchmark vfindminmax(+, >, typemin, bs, :)
+B′ = @. B1 + B2 + B3;
+findmax(B′)
+@benchmark vfindmax(+, B1, B2, B3)
+@benchmark vfindmax(+, bs)
+@benchmark vfindmax((x, y, z) -> x * y + z, B1, B2, B3)
+
+
+# light performance tests
+C1 = rand(50,50,50,50);
+C2 = rand(50,50,50,50);
+C3 = rand(50,50,50,50);
+cs = (C1, C2, C3);
+@benchmark vfindminmax(+, >, typemin, cs, :)
+C′ = @. C1 + C2 + C3;
+findmax(C′)
+@benchmark vfindmax(+, C1, C2, C3)
+@benchmark vfindmax(+, cs)
+@benchmark vfindmax((x, y, z) -> x * y + z, C1, C2, C3)
+@benchmark vtfindmax(+, C1, C2, C3)
+@benchmark vtfindmax(+, cs)
+@benchmark vtfindmax((x, y, z) -> x * y + z, C1, C2, C3)
