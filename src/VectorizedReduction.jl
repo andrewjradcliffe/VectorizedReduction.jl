@@ -16,6 +16,11 @@ include("vfindminmax.jl")
 include("vfindminmax_vararg.jl")
 include("vargminmax.jl")
 
+export vfindmin1, vfindmax1, vargmin1, vargmax1,
+    vtfindmin1, vtfindmax1, vtargmin1, vtargmax1
+include("vfindminmax1.jl")
+include("vargminmax1.jl")
+
 export vlogsumexp, vtlogsumexp
 
 include("vlogsumexp.jl")
