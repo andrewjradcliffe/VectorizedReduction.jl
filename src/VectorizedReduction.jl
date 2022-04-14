@@ -6,11 +6,14 @@ export vvmapreduce, vvmapreduce!, vvreduce, vvsum, vvprod, vvmaximum, vvminimum,
     vtmapreduce, vtmapreduce!, vtreduce, vtsum, vtprod, vtmaximum, vtminimum, vtextrema
 
 include("vmapreduce.jl")
+include("vmapreduce_vararg.jl")
+include("vmap.jl")
 
 export vfindmin, vfindmax, vargmin, vargmax,
     vtfindmin, vtfindmax, vtargmin, vtargmax
 
 include("vfindminmax.jl")
+include("vfindminmax_vararg.jl")
 include("vargminmax.jl")
 
 export vlogsumexp, vtlogsumexp
