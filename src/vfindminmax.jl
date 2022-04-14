@@ -52,8 +52,8 @@ Expands upon the functionality provided in Julia Base.
 # Additional Notes
 Due to the current limitations of LoopVectorization, searches along the first dimension
 of an array are not well-supported. A workaround is possible by reshaping `A` but
-the resultant performance is often only on par with `findmax`. As a temporary convenience,
-`findmax1` is provided for explicit uses of the re-shaping strategy, though the user
+the resultant performance is often only on par with `findmin`. As a temporary convenience,
+`findmin1` is provided for explicit uses of the re-shaping strategy, though the user
 is cautioned as to the performance problems.
 """
 vfindmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims)
