@@ -61,6 +61,29 @@ vtargmax(A; dims=:) = vtargmax(identity, A, dims)
 vtargmin(f, A; dims=:) = vtargmin(f, A, dims)
 vtargmin(A; dims=:) = vtargmin(identity, A, dims)
 
+
+################
+# Varargs versions
+vargmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vfindminmax(f, >, typemin, As, :)[2]
+vargmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vfindminmax(f, <, typemax, As, :)[2]
+
+vargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
+    vfindminmax(f, >, typemin, As, dims)[2]
+vargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
+    vfindminmax(f, <, typemax, As, dims)[2]
+
+vtargmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vtargminmax(f, >, typemin, As, :)[2]
+vtargmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vtargminmax(f, <, typemax, As, :)[2]
+
+vtargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
+    vtargminmax(f, >, typemin, As, dims)[2]
+vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
+    vtargminmax(f, <, typemax, As, dims)[2]
+
 ################
 # function vargminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
 #     Dᴬ = size(A)
