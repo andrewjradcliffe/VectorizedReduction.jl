@@ -18,7 +18,7 @@ vfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
 """
     vfindmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
 
-Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. This expands upon the functionality which exists in Julia Base.
 """
 vfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, >, typemin, As, dims)
@@ -26,7 +26,7 @@ vfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, >, 
 """
     vfindmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
 
-Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. This expands upon the functionality which exists in Julia Base.
 """
 vfindmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, <, typemax, As, dims)
@@ -331,7 +331,7 @@ vtfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
 """
     vtfindmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
 
-Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. Threaded.
 """
 vtfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
@@ -340,7 +340,7 @@ vtfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 """
     vtfindmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
 
-Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. Threaded.
 """
 vtfindmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =

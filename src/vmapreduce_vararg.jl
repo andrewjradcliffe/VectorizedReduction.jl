@@ -62,7 +62,7 @@ end
 """
     vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
 
-Version of mapreduce for `f` : ℝᴺ → ℝ, with reduction along specified `dims`.
+Version of mapreduce for `f` : ℝᴺ → ℝ, with reduction over given `dims`.
 """
 function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     ax = axes(As[1])
@@ -531,7 +531,7 @@ vtmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I
 """
     vtmapreduce(f, op, init, As::Vararg{AbstractArray, N}; dims=:, init) where {N}
 
-Version for `f` : ℝᴺ → ℝ, with reduction along `dims`. Threaded.
+Version for `f` : ℝᴺ → ℝ, with reduction over `dims`. Threaded.
 """
 vtmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} = vtmapreduce(f, op, init, As, dims)
 
@@ -560,7 +560,7 @@ end
 """
     vtmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
 
-Version for `f` : ℝᴺ → ℝ, with reduction along `dims`. Threaded.
+Version for `f` : ℝᴺ → ℝ, with reduction over `dims`. Threaded.
 """
 function vtmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     ax = axes(As[1])

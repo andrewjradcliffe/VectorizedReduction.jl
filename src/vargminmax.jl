@@ -18,12 +18,12 @@ vargminmax(f::F, op::OP, init::I, A, dims) where {F, OP, I} = vfindminmax(f, op,
 """
     vargmax(f, A::AbstractArray, dims=:)
 
-Return the index of the argument which maximizes `f` along the
+Return the index of the argument which maximizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Expands upon the functionality provided in Julia Base.
 
 # Additional Notes
-Due to the current limitations of LoopVectorization, searches along the first dimension
+Due to the current limitations of LoopVectorization, searches over the first dimension
 of an array are not well-supported. A workaround is possible by reshaping `A` but
 the resultant performance is often only on par with `argmax`. As a temporary convenience,
 `vargmax1` is provided for explicit uses of the re-shaping strategy, though the user
@@ -34,12 +34,12 @@ vargmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims)
 """
     vargmin(f, A::AbstractArray, dims=:)
 
-Return the index of the argument which minimizes `f` along the
+Return the index of the argument which minimizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Expands upon the functionality provided in Julia Base.
 
 # Additional Notes
-Due to the current limitations of LoopVectorization, searches along the first dimension
+Due to the current limitations of LoopVectorization, searches over the first dimension
 of an array are not well-supported. A workaround is possible by reshaping `A` but
 the resultant performance is often only on par with `argmin`. As a temporary convenience,
 `vargmin1` is provided for explicit uses of the re-shaping strategy, though the user
@@ -51,14 +51,14 @@ vargmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims)
 """
     vargmax(A::AbstractArray, dims=:)
 
-Return the index of the maximal value of `A` along the dimensions `dims`.
+Return the index of the maximal value of `A` over the dimensions `dims`.
 """
 vargmax(A::AbstractArray, dims) = vargminmax(identity, >, typemin, A, dims)
 
 """
     vargmin(A::AbstractArray, dims=:)
 
-Return the index of the minimal value of `A` along the dimensions `dims`.
+Return the index of the minimal value of `A` over the dimensions `dims`.
 """
 vargmin(A::AbstractArray, dims) = vargminmax(identity, <, typemax, A, dims)
 
@@ -95,7 +95,7 @@ vtargminmax(f::F, op::OP, init::I, A, dims) where {F, OP, I} =
 """
     vtargmax(f, A::AbstractArray, dims=:)
 
-Return the index of the argument which maximizes `f` along the
+Return the index of the argument which maximizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Threaded.
 
@@ -106,7 +106,7 @@ vtargmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, dim
 """
     vtargmin(f, A::AbstractArray, dims=:)
 
-Return the index of the argument which minimizes `f` along the
+Return the index of the argument which minimizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Threaded.
 
@@ -118,14 +118,14 @@ vtargmin(f::F, A, dims) where {F<:Function} = vtfindminmax(f, <, typemax, A, dim
 """
     vtargmax(A::AbstractArray, dims=:)
 
-Return the index of the maximal element along the dimensions `dims`. Threaded.
+Return the index of the maximal element over the dimensions `dims`. Threaded.
 """
 vtargmax(A::AbstractArray, dims) = vtargminmax(identity, >, typemin, A, dims)
 
 """
     vtargmin(A::AbstractArray, dims=:)
 
-Return the index of the minimal element along the dimensions `dims`. Threaded.
+Return the index of the minimal element over the dimensions `dims`. Threaded.
 """
 vtargmin(A::AbstractArray, dims) = vtargminmax(identity, <, typemax, A, dims)
 
@@ -170,7 +170,7 @@ vargmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
 """
     vargmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N}
 
-Return the index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+Return the index of the arguments which maximize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. This expands upon the functionality which exists in Julia Base.
 """
 vargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
@@ -179,7 +179,7 @@ vargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 """
     vargmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N}
 
-Return the index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+Return the index of the arguments which minimize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. This expands upon the functionality which exists in Julia Base.
 """
 vargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
@@ -193,7 +193,7 @@ vtargmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
 """
     vargmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N}
 
-Return the index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+Return the index of the arguments which maximize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. Threaded.
 """
 vtargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
@@ -202,7 +202,7 @@ vtargmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 """
     vargmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N}
 
-Return the index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+Return the index of the arguments which minimize `f` : ℝᴺ → ℝ over the
 dimensions `dims`. Threaded.
 """
 vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =

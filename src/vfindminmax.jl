@@ -29,12 +29,12 @@ vfindminmax(f, op, init, A, dims::Int) = vfindminmax(f, op, init, A, (dims,))
 """
     vfindmax(f, A::AbstractArray, dims=:) -> (f(x), index)
 
-Return the value and the index of the argument which maximizes `f` along the
+Return the value and the index of the argument which maximizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Expands upon the functionality provided in Julia Base.
 
 # Additional Notes
-Due to the current limitations of LoopVectorization, searches along the first dimension
+Due to the current limitations of LoopVectorization, searches over the first dimension
 of an array are not well-supported. A workaround is possible by reshaping `A` but
 the resultant performance is often only on par with `findmax`. As a temporary convenience,
 `findmax1` is provided for explicit uses of the re-shaping strategy, though the user
@@ -45,12 +45,12 @@ vfindmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims
 """
     vfindmin(f, A::AbstractArray, dims=:) -> (f(x), index)
 
-Return the value and the index of the argument which minimizes `f` along the
+Return the value and the index of the argument which minimizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Expands upon the functionality provided in Julia Base.
 
 # Additional Notes
-Due to the current limitations of LoopVectorization, searches along the first dimension
+Due to the current limitations of LoopVectorization, searches over the first dimension
 of an array are not well-supported. A workaround is possible by reshaping `A` but
 the resultant performance is often only on par with `findmin`. As a temporary convenience,
 `findmin1` is provided for explicit uses of the re-shaping strategy, though the user
@@ -63,14 +63,14 @@ vfindmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims
 """
     vfindmax(A::AbstractArray, dims=:) -> (x, index)
 
-Return the maximal element and its index along the dimensions `dims`.
+Return the maximal element and its index over the dimensions `dims`.
 """
 vfindmax(A::AbstractArray, dims) = vfindminmax(identity, >, typemin, A, dims)
 
 """
     vfindmin(A::AbstractArray, dims=:) -> (x, index)
 
-Return the minimal element and its index along the dimensions `dims`.
+Return the minimal element and its index over the dimensions `dims`.
 """
 vfindmin(A::AbstractArray, dims) = vfindminmax(identity, <, typemax, A, dims)
 
@@ -640,7 +640,7 @@ vtfindminmax(f, op, init, A, dims::Int) = vtfindminmax(f, op, init, A, (dims,))
 """
     vtfindmax(f, A::AbstractArray, dims=:) -> (f(x), index)
 
-Return the value and the index of the argument which maximizes `f` along the
+Return the value and the index of the argument which maximizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Threaded.
 
@@ -651,7 +651,7 @@ vtfindmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, di
 """
     vtfindmin(f, A::AbstractArray, dims=:) -> (f(x), index)
 
-Return the value and the index of the argument which minimizes `f` along the
+Return the value and the index of the argument which minimizes `f` over the
 dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 Threaded.
 
@@ -662,14 +662,14 @@ vtfindmin(f::F, A, dims) where {F<:Function} = vtfindminmax(f, <, typemax, A, di
 """
     vtfindmax(A::AbstractArray, dims=:) -> (x, index)
 
-Return the maximal element and its index along the dimensions `dims`. Threaded.
+Return the maximal element and its index over the dimensions `dims`. Threaded.
 """
 vtfindmax(A::AbstractArray, dims) = vtfindminmax(identity, >, typemin, A, dims)
 
 """
     vtfindmin(A::AbstractArray, dims=:) -> (x, index)
 
-Return the minimal element and its index along the dimensions `dims`. Threaded.
+Return the minimal element and its index over the dimensions `dims`. Threaded.
 """
 vtfindmin(A::AbstractArray, dims) = vtfindminmax(identity, <, typemax, A, dims)
 

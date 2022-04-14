@@ -20,7 +20,7 @@ _dim(::Type{StaticInt{N}}) where {N} = N::Int
 """
     vvmapreduce(f, op, init, A::AbstractArray, dims=:)
 
-Apply function `f` to each element of `A`, then reduce the result along the dimensions
+Apply function `f` to each element of `A`, then reduce the result over the dimensions
 `dims` using the binary function `op`. The reduction necessitates an initial value `init`
 which may be `<:Number` or a function which accepts a single type argument (e.g. `zero`);
 `init` is optional for binary operators `+`, `*`, `min`, and `max`.
@@ -53,28 +53,28 @@ end
 """
     vvsum(f, A::AbstractArray, dims=:)
 
-Sum the results of calling `f` on each element of `A` over the specified `dims`.
+Sum the results of calling `f` on each element of `A` over the given `dims`.
 """
 vvsum(f::F, A, dims) where {F} = vvmapreduce(f, +, zero, A, dims)
 
 """
     vvprod(f, A::AbstractArray, dims=:)
 
-Multiply the results of calling `f` on each element of `A` over the specified `dims`.
+Multiply the results of calling `f` on each element of `A` over the given `dims`.
 """
 vvprod(f::F, A, dims) where {F} = vvmapreduce(f, *, one, A, dims)
 
 """
     vvmaximum(f, A::AbstractArray, dims=:)
 
-Compute the maximum value by calling `f` on each element of `A` over the specified `dims`.
+Compute the maximum value by calling `f` on each element of `A` over the given `dims`.
 """
 vvmaximum(f::F, A, dims) where {F} = vvmapreduce(f, max, typemin, A, dims)
 
 """
     vvminimum(f, A::AbstractArray, dims=:)
 
-Compute the minimum value by calling `f` on each element of `A` over the specified `dims`.
+Compute the minimum value by calling `f` on each element of `A` over the given `dims`.
 """
 vvminimum(f::F, A, dims) where {F} = vvmapreduce(f, min, typemax, A, dims)
 
@@ -82,28 +82,28 @@ vvminimum(f::F, A, dims) where {F} = vvmapreduce(f, min, typemax, A, dims)
 """
     vvsum(A::AbstractArray, dims=:)
 
-Sum the elements of `A` over the specified `dims`.
+Sum the elements of `A` over the given `dims`.
 """
 vvsum(A::AbstractArray, dims) = vvmapreduce(identity, +, zero, A, dims)
 
 """
     vvprod(A::AbstractArray, dims=:)
 
-Multiply the elements of `A` over the specified `dims`.
+Multiply the elements of `A` over the given `dims`.
 """
 vvprod(A::AbstractArray, dims) = vvmapreduce(identity, *, one, A, dims)
 
 """
     vvmaximum(A::AbstractArray, dims=:)
 
-Compute the maximum value of `A` over the specified `dims`.
+Compute the maximum value of `A` over the given `dims`.
 """
 vvmaximum(A::AbstractArray, dims) = vvmapreduce(identity, max, typemin, A, dims)
 
 """
     vvminimum(A::AbstractArray, dims=:)
 
-Compute the minimum value of `A` over the specified `dims`.
+Compute the minimum value of `A` over the given `dims`.
 """
 vvminimum(A::AbstractArray, dims) = vvmapreduce(identity, min, typemax, A, dims)
 
@@ -129,7 +129,7 @@ vvminimum(A::AbstractArray) = vvmapreduce(identity, min, typemax, A, :)
     vvextrema(f, A::AbstractArray, dims=:)
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the specified `dims`.
+over the given `dims`.
 """
 vvextrema(f::F, A, dims) where {F} = collect(zip(vvminimum(f, A, dims), vvmaximum(f, A, dims)))
 vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
@@ -139,7 +139,7 @@ vvextrema(f::F, A) where {F<:Function} = vvextrema(f, A, :)
 """
     vvextrema(A::AbstractArray, dims=:)
 
-Compute the minimum and maximum values of `A` over the specified `dims`.
+Compute the minimum and maximum values of `A` over the given `dims`.
 """
 vvextrema(A::AbstractArray, dims) = vvextrema(identity, A, dims)
 vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
@@ -148,7 +148,7 @@ vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
 """
     vvreduce(op, init, A::AbstractArray, dims=:)
 
-Reduce `A` along the dimensions `dims` using the binary function `op`.
+Reduce `A` over the dimensions `dims` using the binary function `op`.
 See `vvmapreduce` for description of `op`, `init`, `dims`.
 
 See also: [`vvsum`](@ref), [`vvprod`](@ref), [`vvminimum`](@ref), [`vvmaximum`](@ref)
@@ -181,7 +181,7 @@ vvreduce(op, A; dims=:, init) = vvreduce(op, init, A, dims)
 """
     vvsum(f, A; dims=:, init=zero)
 
-Sum the results of calling `f` on each element of `A` over the specified `dims`,
+Sum the results of calling `f` on each element of `A` over the given `dims`,
 with the sum initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -190,14 +190,14 @@ vvsum(f, A; dims=:, init=zero) = vvmapreduce(f, +, init, A, dims)
 """
     vvsum(A; dims=:, init=zero)
 
-Sum the elements of `A` over the specified `dims`, with the sum initialized by `init`.
+Sum the elements of `A` over the given `dims`, with the sum initialized by `init`.
 """
 vvsum(A; dims=:, init=zero) = vvmapreduce(identity, +, init, A, dims)
 
 """
     vvprod(f, A; dims=:, init=one)
 
-Multiply the results of calling `f` on each element of `A` over the specified `dims`,
+Multiply the results of calling `f` on each element of `A` over the given `dims`,
 with the product initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -206,14 +206,14 @@ vvprod(f, A; dims=:, init=one) = vvmapreduce(f, *, init, A, dims)
 """
     vvprod(A; dims=:, init=one)
 
-Multiply the elements of `A` over the specified `dims`, with the product initialized by `init`.
+Multiply the elements of `A` over the given `dims`, with the product initialized by `init`.
 """
 vvprod(A; dims=:, init=one) = vvmapreduce(identity, *, init, A, dims)
 
 """
     vvmaximum(f, A; dims=:, init=typemin)
 
-Compute the maximum value of calling `f` on each element of `A` over the specified `dims`,
+Compute the maximum value of calling `f` on each element of `A` over the given `dims`,
 with the max initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -222,14 +222,14 @@ vvmaximum(f, A; dims=:, init=typemin) = vvmapreduce(f, max, init, A, dims)
 """
     vvmaximum(A; dims=:, init=typemin)
 
-Compute the maximum value of `A` over the specified `dims`, with the max initialized by `init`.
+Compute the maximum value of `A` over the given `dims`, with the max initialized by `init`.
 """
 vvmaximum(A; dims=:, init=typemin) = vvmapreduce(identity, max, init, A, dims)
 
 """
     vvminimum(f, A; dims=:, init=typemax)
 
-Compute the minimum value of calling `f` on each element of `A` over the specified `dims`,
+Compute the minimum value of calling `f` on each element of `A` over the given `dims`,
 with the min initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -238,7 +238,7 @@ vvminimum(f, A; dims=:, init=typemax) = vvmapreduce(f, min, init, A, dims)
 """
     vvminimum(A; dims=:, init=typemax)
 
-Compute the minimum value of `A` over the specified `dims`, with the min initialized by `init`.
+Compute the minimum value of `A` over the given `dims`, with the min initialized by `init`.
 """
 vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
 
@@ -246,7 +246,7 @@ vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
     vvextrema(f, A::AbstractArray; dims=:, init=(typemax, typemin))
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the specified `dims`, with the min and max initialized by the respective arguments
+over the given `dims`, with the min and max initialized by the respective arguments
 of the 2-tuple `init`, which can be any combination of values `<:Number` or functions
 which accept a single type argument.
 """
@@ -256,7 +256,7 @@ vvextrema(f, A; dims=:, init=(typemax, typemin)) =
 """
     vvextrema(A::AbstractArray; dims=:, init=(typemax, typemin))
 
-Compute the minimum and maximum values of `A` over the specified `dims`,
+Compute the minimum and maximum values of `A` over the given `dims`,
 with the min and max initialized by `init`.
 """
 vvextrema(A; dims=:, init=(typemax, typemin)) =
@@ -745,7 +745,7 @@ end
 """
     vtmapreduce(f, op, init, A::AbstractArray, dims=:)
 
-Apply function `f` to each element of `A`, then reduce the result along the dimensions
+Apply function `f` to each element of `A`, then reduce the result over the dimensions
 `dims` using the binary function `op`. Threaded. See `vvmapreduce` for description of `dims`.
 `init` need not be provided when `op` is one of `+`, `*`, `min`, `max`.
 
@@ -776,28 +776,28 @@ end
 """
     vtsum(f, A::AbstractArray, dims=:)
 
-Sum the results of calling `f` on each element of `A` over the specified `dims`.
+Sum the results of calling `f` on each element of `A` over the given `dims`.
 """
 vtsum(f::F, A, dims) where {F} = vtmapreduce(f, +, zero, A, dims)
 
 """
     vtprod(f, A::AbstractArray, dims=:)
 
-Multiply the results of calling `f` on each element of `A` over the specified `dims`.
+Multiply the results of calling `f` on each element of `A` over the given `dims`.
 """
 vtprod(f::F, A, dims) where {F} = vtmapreduce(f, *, one, A, dims)
 
 """
     vtmaximum(f, A::AbstractArray, dims=:)
 
-Compute the maximum value by calling `f` on each element of `A` over the specified `dims`.
+Compute the maximum value by calling `f` on each element of `A` over the given `dims`.
 """
 vtmaximum(f::F, A, dims) where {F} = vtmapreduce(f, max, typemin, A, dims)
 
 """
     vtminimum(f, A::AbstractArray, dims=:)
 
-Compute the minimum value by calling `f` on each element of `A` over the specified `dims`.
+Compute the minimum value by calling `f` on each element of `A` over the given `dims`.
 """
 vtminimum(f::F, A, dims) where {F} = vtmapreduce(f, min, typemax, A, dims)
 
@@ -805,28 +805,28 @@ vtminimum(f::F, A, dims) where {F} = vtmapreduce(f, min, typemax, A, dims)
 """
     vtsum(A::AbstractArray, dims=:)
 
-Sum the elements of `A` over the specified `dims`.
+Sum the elements of `A` over the given `dims`.
 """
 vtsum(A::AbstractArray, dims) = vtmapreduce(identity, +, zero, A, dims)
 
 """
     vtprod(A::AbstractArray, dims=:)
 
-Multiply the elements of `A` over the specified `dims`.
+Multiply the elements of `A` over the given `dims`.
 """
 vtprod(A::AbstractArray, dims) = vtmapreduce(identity, *, one, A, dims)
 
 """
     vtmaximum(A::AbstractArray, dims=:)
 
-Compute the maximum value of `A` over the specified `dims`.
+Compute the maximum value of `A` over the given `dims`.
 """
 vtmaximum(A::AbstractArray, dims) = vtmapreduce(identity, max, typemin, A, dims)
 
 """
     vtminimum(A::AbstractArray, dims=:)
 
-Compute the minimum value of `A` over the specified `dims`.
+Compute the minimum value of `A` over the given `dims`.
 """
 vtminimum(A::AbstractArray, dims) = vtmapreduce(identity, min, typemax, A, dims)
 
@@ -846,7 +846,7 @@ vtminimum(A::AbstractArray) = vtmapreduce(identity, min, typemax, A, :)
     vtextrema(f, A::AbstractArray, dims=:)
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the specified `dims`.
+over the given `dims`.
 """
 vtextrema(f::F, A, dims) where {F} = collect(zip(vtminimum(f, A, dims), vtmaximum(f, A, dims)))
 vtextrema(f::F, A, ::Colon) where {F} = (vtminimum(f, A, :), vtmaximum(f, A, :))
@@ -856,7 +856,7 @@ vtextrema(f::F, A) where {F<:Function} = vtextrema(f, A, :)
 """
     vtextrema(A::AbstractArray, dims=:)
 
-Compute the minimum and maximum values of `A` over the specified `dims`.
+Compute the minimum and maximum values of `A` over the given `dims`.
 """
 vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
 vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
@@ -864,7 +864,7 @@ vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
 """
     vtreduce(op, init, A::AbstractArray, dims=:)
 
-Reduce `A` along the dimensions `dims` using the binary function `op`.
+Reduce `A` over the dimensions `dims` using the binary function `op`.
 See `vtmapreduce` for description of `op`, `init`, `dims`.
 
 See also: [`vtsum`](@ref), [`vtprod`](@ref), [`vtminimum`](@ref), [`vtmaximum`](@ref)
@@ -894,7 +894,7 @@ vtreduce(op, A; dims=:, init) = vtreduce(op, init, A, dims)
 """
     vtsum(f, A; dims=:, init=zero)
 
-Sum the results of calling `f` on each element of `A` over the specified `dims`,
+Sum the results of calling `f` on each element of `A` over the given `dims`,
 with the sum initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -903,14 +903,14 @@ vtsum(f, A; dims=:, init=zero) = vtmapreduce(f, +, init, A, dims)
 """
     vtsum(A; dims=:, init=zero)
 
-Sum the elements of `A` over the specified `dims`, with the sum initialized by `init`.
+Sum the elements of `A` over the given `dims`, with the sum initialized by `init`.
 """
 vtsum(A; dims=:, init=zero) = vtmapreduce(identity, +, init, A, dims)
 
 """
     vtprod(f, A; dims=:, init=one)
 
-Multiply the results of calling `f` on each element of `A` over the specified `dims`,
+Multiply the results of calling `f` on each element of `A` over the given `dims`,
 with the product initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -919,14 +919,14 @@ vtprod(f, A; dims=:, init=one) = vtmapreduce(f, *, init, A, dims)
 """
     vtprod(A; dims=:, init=one)
 
-Multiply the elements of `A` over the specified `dims`, with the product initialized by `init`.
+Multiply the elements of `A` over the given `dims`, with the product initialized by `init`.
 """
 vtprod(A; dims=:, init=one) = vtmapreduce(identity, *, init, A, dims)
 
 """
     vtmaximum(f, A; dims=:, init=typemin)
 
-Compute the maximum value of calling `f` on each element of `A` over the specified `dims`,
+Compute the maximum value of calling `f` on each element of `A` over the given `dims`,
 with the max initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -935,14 +935,14 @@ vtmaximum(f, A; dims=:, init=typemin) = vtmapreduce(f, max, init, A, dims)
 """
     vtmaximum(A; dims=:, init=typemin)
 
-Compute the maximum value of `A` over the specified `dims`, with the max initialized by `init`.
+Compute the maximum value of `A` over the given `dims`, with the max initialized by `init`.
 """
 vtmaximum(A; dims=:, init=typemin) = vtmapreduce(identity, max, init, A, dims)
 
 """
     vtminimum(f, A; dims=:, init=typemax)
 
-Compute the minimum value of calling `f` on each element of `A` over the specified `dims`,
+Compute the minimum value of calling `f` on each element of `A` over the given `dims`,
 with the min initialized by `init`, which may be a value `<:Number`
 or a function which accepts a single type argument.
 """
@@ -951,7 +951,7 @@ vtminimum(f, A; dims=:, init=typemax) = vtmapreduce(f, min, init, A, dims)
 """
     vtminimum(A; dims=:, init=typemax)
 
-Compute the minimum value of `A` over the specified `dims`, with the min initialized by `init`.
+Compute the minimum value of `A` over the given `dims`, with the min initialized by `init`.
 """
 vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
 
@@ -959,7 +959,7 @@ vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
     vtextrema(f, A::AbstractArray; dims=:, init=(typemax, typemin))
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the specified `dims`, with the min and max initialized by the respective arguments
+over the given `dims`, with the min and max initialized by the respective arguments
 of the 2-tuple `init`, which can be any combination of values `<:Number` or functions
 which accept a single type argument.
 """
@@ -969,7 +969,7 @@ vtextrema(f, A; dims=:, init=(typemax, typemin)) =
 """
     vtextrema(A::AbstractArray; dims=:, init=(typemax, typemin))
 
-Compute the minimum and maximum values of `A` over the specified `dims`,
+Compute the minimum and maximum values of `A` over the given `dims`,
 with the min and max initialized by `init`.
 """
 vtextrema(A; dims=:, init=(typemax, typemin)) =
