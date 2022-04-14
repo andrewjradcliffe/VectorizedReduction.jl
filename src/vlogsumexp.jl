@@ -18,10 +18,25 @@ function vlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N}
     vmax + log(s)
 end
 # ::AbstractArray required in order for kwargs interface to work
+"""
+    vlogsumexp(A::AbstractArray)
+
+Compute the log of the sum of exponentials of each element of `A`. Care is taken
+to ensure that the computation will not overflow/underflow, but the caller should
+be aware that `+Inf` and `NaN` are not handled.
+"""
 vlogsumexp(A::AbstractArray) = vlogsumexp(A, :)
 
 ################
 # Single allocation version
+
+"""
+    vlogsumexp(A::AbstractArray, dims)
+
+Compute the log of the sum of exponentials of each element of `A` along the dimensions
+`dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`. Avoids
+overflow/underflow, but `+Inf` and `NaN` are not handled.
+"""
 function vlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -51,6 +66,11 @@ vlogsumexp(A, dims::Int) = vlogsumexp(A, (dims,))
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+"""
+    vlogsumexp(A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vlogsumexp(A; dims=:) = vlogsumexp(A, dims)
 
 function staticdim_logsumexp_quote(static_dims::Vector{Int}, N::Int)
@@ -333,10 +353,24 @@ function vtlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N}
     vmax + log(s)
 end
 # ::AbstractArray required in order for kwargs interface to work
+"""
+    vtlogsumexp(A::AbstractArray)
+
+Compute the log of the sum of exponentials of each element of `A`. Threaded. Care is taken
+to ensure that the computation will not overflow/underflow, but the caller should
+be aware that `+Inf` and `NaN` are not handled.
+"""
 vtlogsumexp(A::AbstractArray) = vtlogsumexp(A, :)
 
 ################
 # Single allocation version
+"""
+    vtlogsumexp(A::AbstractArray, dims)
+
+Compute the log of the sum of exponentials of each element of `A` along the dimensions
+`dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`. Threaded. Avoids
+overflow/underflow, but `+Inf` and `NaN` are not handled.
+"""
 function vtlogsumexp(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -364,6 +398,12 @@ vtlogsumexp(A, dims::Int) = vtlogsumexp(A, (dims,))
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+"""
+    vtlogsumexp(A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+Threaded.
+"""
 vtlogsumexp(A; dims=:) = vtlogsumexp(A, dims)
 
 function staticdim_tlogsumexp_quote(static_dims::Vector{Int}, N::Int)
