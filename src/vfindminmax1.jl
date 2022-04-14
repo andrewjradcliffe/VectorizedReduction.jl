@@ -4,8 +4,8 @@
 #
 #
 ############################################################################################
-# Version to handle search along first dimension; eliminate once LoopVectorization is
-# fixed. Almost assuredly, the varargs version would have terrible performance, thus
+# Version to handle search along first dimension; eliminate once LoopVectorization is fixed.
+# Almost assuredly, the varargs version would have terrible performance, thus
 # I do not even bother to include it.
 
 function vfindminmax1(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
