@@ -18,8 +18,21 @@
 # I leave the specialization code in-place, but commented out. If a future use warrants it,
 # it can simply be reactivated.
 
-vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} = vvmapreduce(f, op, init, As, :)
-vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} = vvmapreduce(f, op, init, As, dims)
+"""
+    vvmapreduce(f, op, init, As::Vararg{AbstractArray, N}) where {N}
+
+Version of mapreduce for `f` : ℝᴺ → ℝ, with reduction occurring over all dimensions.
+"""
+vvmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} =
+    vvmapreduce(f, op, init, As, :)
+
+"""
+    vvmapreduce(f, op, As::Vararg{AbstractArray, N}; dims=:, init) where {N}
+
+Keyword args version for `f` : ℝᴺ → ℝ.
+"""
+vvmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} =
+    vvmapreduce(f, op, init, As, dims)
 
 # While this is a nice convenience, it does add 16 dispatches to the user-visible method table.
 # On the other hand, it does not cause any issues.
@@ -45,6 +58,12 @@ end
 # end
 # One approach to handle differently typed arrays is have an additional method as below,
 # and to provide generated functions that also accept Vararg{AbstractArray}
+
+"""
+    vvmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
+
+Version of mapreduce for `f` : ℝᴺ → ℝ, with reduction along specified `dims`.
+"""
 function vvmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     ax = axes(As[1])
     for p = 2:P

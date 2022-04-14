@@ -17,6 +17,19 @@ _dim(::Type{StaticInt{N}}) where {N} = N::Int
 # Moreover, it is always a slight advantage to use a named function over an anonymous...
 # In fact, having changed it over, it is a beautiful thing -- same behavior as Julia Base.
 
+
+"""
+    vvmapreduce(f, op, init, A::AbstractArray, dims=:)
+
+Apply function `f` to each element of `A`, then reduce the result along the dimensions
+`dims` using the binary function `op`. The reduction necessitates an initial value `init`
+which may be `<:Number` or a function which accepts a single type argument (e.g. `zero`);
+`init` is optional for binary operators `+`, `*`, `min`, and `max`.
+`dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`; if not specified, the
+reduction takes place over all dimensions.
+
+See also: [`vvsum`](@ref), [`vvprod`](@ref), [`vvminimum`](@ref), [`vvmaximum`](@ref)
+"""
 function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -111,6 +124,18 @@ vvextrema(A::AbstractArray, dims) = vvextrema(identity, A, dims)
 vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
 
 # Define reduce
+"""
+    vvreduce(f, op, init, A::AbstractArray, dims=:)
+
+Reduce `A` along the dimensions `dims` using the binary function `op`.
+The reduction necessitates an initial value `init` which may be `<:Number` or a
+function which accepts a single type argument (e.g. `zero`); `init` is optional for
+binary operators `+`, `*`, `min`, and `max`.
+`dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`; if not specified, the
+reduction takes place over all dimensions.
+
+See also: [`vvsum`](@ref), [`vvprod`](@ref), [`vvminimum`](@ref), [`vvmaximum`](@ref)
+"""
 vvreduce(op::OP, init::I, A, dims) where {OP, I} = vvmapreduce(identity, op, init, A, dims)
 vvreduce(op::OP, init::I, A) where {OP, I} = vvmapreduce(identity, op, init, A, :)
 
@@ -122,7 +147,18 @@ end
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+"""
+    vvmapreduce(f, op, A; dims=:, init)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vvmapreduce(f, op, A; dims=:, init) = vvmapreduce(f, op, init, A, dims)
+
+"""
+    vvreduce(op, A; dims=:, init)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vvreduce(op, A; dims=:, init) = vvreduce(op, init, A, dims)
 vvsum(f, A; dims=:, init=zero) = vvmapreduce(f, +, init, A, dims)
 vvsum(A; dims=:, init=zero) = vvmapreduce(identity, +, init, A, dims)
