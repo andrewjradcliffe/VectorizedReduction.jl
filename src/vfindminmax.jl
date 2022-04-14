@@ -26,11 +26,52 @@ function vfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple
 end
 vfindminmax(f, op, init, A, dims::Int) = vfindminmax(f, op, init, A, (dims,))
 
-# Convenience defintions
+"""
+    vfindmax(f, A::AbstractArray, dims=:) -> (f(x), index)
+
+Return the value and the index of the argument which maximizes `f` along the
+dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Expands upon the functionality provided in Julia Base.
+
+# Additional Notes
+Due to the current limitations of LoopVectorization, searches along the first dimension
+of an array are not well-supported. A workaround is possible by reshaping `A` but
+the resultant performance is often only on par with `findmax`. As a temporary convenience,
+`findmax1` is provided for explicit uses of the re-shaping strategy, though the user
+is cautioned as to the performance problems.
+"""
 vfindmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims)
+
+"""
+    vfindmin(f, A::AbstractArray, dims=:) -> (f(x), index)
+
+Return the value and the index of the argument which minimizes `f` along the
+dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Expands upon the functionality provided in Julia Base.
+
+# Additional Notes
+Due to the current limitations of LoopVectorization, searches along the first dimension
+of an array are not well-supported. A workaround is possible by reshaping `A` but
+the resultant performance is often only on par with `findmax`. As a temporary convenience,
+`findmax1` is provided for explicit uses of the re-shaping strategy, though the user
+is cautioned as to the performance problems.
+"""
 vfindmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims)
+
 # ::AbstractArray required in order for kwargs interface to work
+
+"""
+    vfindmax(A::AbstractArray, dims=:) -> (x, index)
+
+Return the maximal element and its index along the dimensions `dims`.
+"""
 vfindmax(A::AbstractArray, dims) = vfindminmax(identity, >, typemin, A, dims)
+
+"""
+    vfindmin(A::AbstractArray, dims=:) -> (x, index)
+
+Return the minimal element and its index along the dimensions `dims`.
+"""
 vfindmin(A::AbstractArray, dims) = vfindminmax(identity, <, typemax, A, dims)
 
 # over all dims
@@ -75,10 +116,21 @@ vfindmin(f::F, A) where {F<:Function} = vfindminmax(f, <, typemax, A, :)
 vfindmax(A::AbstractArray) = vfindmax(identity, A)
 vfindmin(A::AbstractArray) = vfindmin(identity, A)
 
-# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
-# indicated above.
+"""
+    vfindmax(f, A; dims) -> (f(x), index)
+    vfindmax(A; dims) -> (x, index)
+
+Identical to non-keywords args version; slightly less performant due to use of kwargs.
+"""
 vfindmax(f, A; dims=:) = vfindmax(f, A, dims)
 vfindmax(A; dims=:) = vfindmax(identity, A, dims)
+
+"""
+    vfindmin(f, A; dims) -> (f(x), index)
+    vfindmin(A; dims) -> (x, index)
+
+Identical to non-keywords args versions; slightly less performant due to use of kwargs.
+"""
 vfindmin(f, A; dims=:) = vfindmin(f, A, dims)
 vfindmin(A; dims=:) = vfindmin(identity, A, dims)
 

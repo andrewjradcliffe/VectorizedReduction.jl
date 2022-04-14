@@ -8,12 +8,27 @@
 # Note: it is only defined with for such functions.
 
 # Necessary dispatches to define interface
+
 vfindmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
     vfindminmax(f, >, typemin, As, :)
+
 vfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
     vfindminmax(f, <, typemax, As, :)
 
+"""
+    vfindmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
+
+Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+dimensions `dims`. This expands upon the functionality which exists in Julia Base.
+"""
 vfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, >, typemin, As, dims)
+
+"""
+    vfindmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
+
+Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+dimensions `dims`. This expands upon the functionality which exists in Julia Base.
+"""
 vfindmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, <, typemax, As, dims)
 
 function vfindminmax(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
