@@ -409,7 +409,7 @@ end
 
 # This could likely be handled by eachindex, but for completeness:
 # this is the case of mapreduce on a single array when rinds = ∅
-function map_quote() #N::Int
+function map_quote()
     # A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     # block = Expr(:block)
     # loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
@@ -433,7 +433,6 @@ function map_quote() #N::Int
 end
 
 @generated function _vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # map_quote(N)
     map_quote()
 end
 
@@ -582,7 +581,6 @@ end
     branches_mapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # map_quote(N)
     map_quote()
 end
 
@@ -1108,7 +1106,7 @@ end
     branches_tmapreduce_quote(OP, I, N, M, D)
 end
 
-function tmap_quote() #N::Int
+function tmap_quote()
     # A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
     # block = Expr(:block)
     # loops = Expr(:for, Expr(:(=), Symbol(:i_, N), Expr(:call, :indices, Expr(:tuple, :A, :B), N)), block)
@@ -1132,7 +1130,6 @@ function tmap_quote() #N::Int
 end
 
 @generated function _vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # tmap_quote(N)
     tmap_quote()
 end
 
@@ -1277,6 +1274,5 @@ end
     branches_tmapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
-    # tmap_quote(N)
     tmap_quote()
 end
