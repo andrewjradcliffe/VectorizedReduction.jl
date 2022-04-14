@@ -42,7 +42,7 @@ vfindmin(A::AbstractArray, dims) = vfindminmax(identity, <, typemax, A, dims)
     quote
         # m = $initsym($Tₒ)
         m = $initsym(Base.promote_op(f, $T))
-        j = 0
+        j = 1
         @turbo for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
@@ -59,7 +59,7 @@ end
     initsym = I.instance
     quote
         m = $initsym(Base.promote_op(f, $T))
-        j = 0
+        j = 1
         @turbo for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
@@ -335,8 +335,11 @@ end
 @generated function _vfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, Tₗ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_findminmax_quote(OP, I, N, M, D)
 end
+
+# In the case of rinds = ∅, this just corresponds to a map
 @generated function _vfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, Tₗ, T, N}
-    :(copyto!(B, A); copyto!(C, LinearIndices(A)); return B, C)
+    # :(copyto!(B, A); copyto!(C, LinearIndices(A)); return B, C)
+    :(vvmap!(f, B, A); copyto!(C, LinearIndices(A)); return B, C)
 end
 
 
@@ -594,7 +597,7 @@ vtfindmin(A::AbstractArray, dims) = vtfindminmax(identity, <, typemax, A, dims)
     initsym = I.instance
     quote
         m = $initsym(Base.promote_op(f, $T))
-        j = 0
+        j = 1
         @tturbo for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
@@ -611,7 +614,7 @@ end
     initsym = I.instance
     quote
         m = $initsym(Base.promote_op(f, $T))
-        j = 0
+        j = 1
         @tturbo for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
@@ -849,5 +852,6 @@ end
     branches_tfindminmax_quote(OP, I, N, M, D)
 end
 @generated function _vtfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, Tₗ, T, N}
-    :(copyto!(B, A); copyto!(C, LinearIndices(A)); return B, C)
+    # :(copyto!(B, A); copyto!(C, LinearIndices(A)); return B, C)
+    :(vtmap!(f, B, A); copyto!(C, LinearIndices(A)); return B, C)
 end
