@@ -636,11 +636,41 @@ function vtfindminmax(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTupl
 end
 vtfindminmax(f, op, init, A, dims::Int) = vtfindminmax(f, op, init, A, (dims,))
 
-# Convenience defintions
+
+"""
+    vtfindmax(f, A::AbstractArray, dims=:) -> (f(x), index)
+
+Return the value and the index of the argument which maximizes `f` along the
+dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Threaded.
+
+See also: [`vfindmax`](@ref)
+"""
 vtfindmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, dims)
+
+"""
+    vtfindmin(f, A::AbstractArray, dims=:) -> (f(x), index)
+
+Return the value and the index of the argument which minimizes `f` along the
+dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
+Threaded.
+
+See also: [`vfindmin`](@ref)
+"""
 vtfindmin(f::F, A, dims) where {F<:Function} = vtfindminmax(f, <, typemax, A, dims)
 # ::AbstractArray required in order for kwargs interface to work
+"""
+    vtfindmax(A::AbstractArray, dims=:) -> (x, index)
+
+Return the maximal element and its index along the dimensions `dims`. Threaded.
+"""
 vtfindmax(A::AbstractArray, dims) = vtfindminmax(identity, >, typemin, A, dims)
+
+"""
+    vtfindmin(A::AbstractArray, dims=:) -> (x, index)
+
+Return the minimal element and its index along the dimensions `dims`. Threaded.
+"""
 vtfindmin(A::AbstractArray, dims) = vtfindminmax(identity, <, typemax, A, dims)
 
 # over all dims
@@ -684,8 +714,22 @@ vtfindmin(A::AbstractArray) = vtfindmin(identity, A)
 
 # Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
 # indicated above.
+
+"""
+    vtfindmax(f, A; dims) -> (f(x), index)
+    vtfindmax(A; dims) -> (x, index)
+
+Identical to non-keywords args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtfindmax(f, A; dims=:) = vtfindmax(f, A, dims)
 vtfindmax(A; dims=:) = vtfindmax(identity, A, dims)
+
+"""
+    vtfindmin(f, A; dims) -> (f(x), index)
+    vtfindmin(A; dims) -> (x, index)
+
+Identical to non-keywords args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtfindmin(f, A; dims=:) = vtfindmin(f, A, dims)
 vtfindmin(A; dims=:) = vtfindmin(identity, A, dims)
 

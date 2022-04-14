@@ -328,8 +328,21 @@ vtfindmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
 vtfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
     vtfindminmax(f, <, typemax, As, :)
 
+"""
+    vtfindmax(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
+
+Return the value and index of the arguments which maximize `f` : ℝᴺ → ℝ along the
+dimensions `dims`. Threaded.
+"""
 vtfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
     vtfindminmax(f, >, typemin, As, dims)
+
+"""
+    vtfindmin(f, As::Vararg{AbstractArray, N}; dims=:) where {N} -> (f(x,y,z,...), index)
+
+Return the value and index of the arguments which minimize `f` : ℝᴺ → ℝ along the
+dimensions `dims`. Threaded.
+"""
 vtfindmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
     vtfindminmax(f, <, typemax, As, dims)
 
