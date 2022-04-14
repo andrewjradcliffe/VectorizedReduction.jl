@@ -527,6 +527,12 @@ end
 # Threaded version
 
 vtmapreduce(f::F, op::OP, init::I, As::Vararg{AbstractArray, P}) where {F, OP, I, P} = vtmapreduce(f, op, init, As, :)
+
+"""
+    vtmapreduce(f, op, init, As::Vararg{AbstractArray, N}; dims=:, init) where {N}
+
+Version for `f` : ℝᴺ → ℝ, with reduction along `dims`. Threaded.
+"""
 vtmapreduce(f, op, As::Vararg{AbstractArray, P}; dims=:, init) where {P} = vtmapreduce(f, op, init, As, dims)
 
 for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
@@ -551,6 +557,11 @@ end
 # end
 # One approach to handle differently typed arrays is have an additional method as below,
 # and to provide generated functions that also accept Vararg{AbstractArray}
+"""
+    vtmapreduce(f, op, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
+
+Version for `f` : ℝᴺ → ℝ, with reduction along `dims`. Threaded.
+"""
 function vtmapreduce(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     ax = axes(As[1])
     for p = 2:P

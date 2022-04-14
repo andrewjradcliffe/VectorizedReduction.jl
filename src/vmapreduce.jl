@@ -25,8 +25,7 @@ Apply function `f` to each element of `A`, then reduce the result along the dime
 `dims` using the binary function `op`. The reduction necessitates an initial value `init`
 which may be `<:Number` or a function which accepts a single type argument (e.g. `zero`);
 `init` is optional for binary operators `+`, `*`, `min`, and `max`.
-`dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`; if not specified, the
-reduction takes place over all dimensions.
+`dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`.
 
 See also: [`vvsum`](@ref), [`vvprod`](@ref), [`vvminimum`](@ref), [`vvmaximum`](@ref)
 """
@@ -125,14 +124,10 @@ vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
 
 # Define reduce
 """
-    vvreduce(f, op, init, A::AbstractArray, dims=:)
+    vvreduce(op, init, A::AbstractArray, dims=:)
 
 Reduce `A` along the dimensions `dims` using the binary function `op`.
-The reduction necessitates an initial value `init` which may be `<:Number` or a
-function which accepts a single type argument (e.g. `zero`); `init` is optional for
-binary operators `+`, `*`, `min`, and `max`.
-`dims` may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colon`; if not specified, the
-reduction takes place over all dimensions.
+See `vvmapreduce` for description of `op`, `init`, `dims`.
 
 See also: [`vvsum`](@ref), [`vvprod`](@ref), [`vvminimum`](@ref), [`vvmaximum`](@ref)
 """
@@ -635,6 +630,16 @@ end
 # end
 
 ############################################################################################
+
+"""
+    vtmapreduce(f, op, init, A::AbstractArray, dims=:)
+
+Apply function `f` to each element of `A`, then reduce the result along the dimensions
+`dims` using the binary function `op`. Threaded. See `vvmapreduce` for description of `dims`.
+`init` need not be provided when `op` is one of `+`, `*`, `min`, `max`.
+
+See also: [`vtsum`](@ref), [`vtprod`](@ref), [`vtminimum`](@ref), [`vtmaximum`](@ref)
+"""
 function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, OP, I, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -700,6 +705,14 @@ vtextrema(f::F, A) where {F<:Function} = vtextrema(f, A, :)
 vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
 vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
 
+"""
+    vtreduce(op, init, A::AbstractArray, dims=:)
+
+Reduce `A` along the dimensions `dims` using the binary function `op`.
+See `vvmapreduce` for description of `op`, `init`, `dims`.
+
+See also: [`vtsum`](@ref), [`vtprod`](@ref), [`vtminimum`](@ref), [`vtmaximum`](@ref)
+"""
 vtreduce(op::OP, init::I, A, dims) where {OP, I} = vtmapreduce(identity, op, init, A, dims)
 vtreduce(op::OP, init::I, A) where {OP, I} = vtmapreduce(identity, op, init, A, :)
 for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
@@ -708,9 +721,18 @@ for (op, init) ∈ zip((:+, :*, :max,:min), (:zero, :one, :typemin, :typemax))
     @eval vtreduce(::typeof($op), A::AbstractArray) = vtmapreduce(identity, $op, $init, A, :)
 end
 
-# Provide inherently inefficient kwargs interface. Requires ::AbstractArray in the locations
-# indicated above.
+"""
+    vtmapreduce(f, op, A; dims=:, init)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtmapreduce(f, op, A; dims=:, init) = vtmapreduce(f, op, init, A, dims)
+
+"""
+    vtreduce(op, A; dims=:, init)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtreduce(op, A; dims=:, init) = vtreduce(op, init, A, dims)
 vtsum(f, A; dims=:, init=zero) = vtmapreduce(f, +, init, A, dims)
 vtsum(A; dims=:, init=zero) = vtmapreduce(identity, +, init, A, dims)
