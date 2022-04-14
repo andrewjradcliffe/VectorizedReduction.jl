@@ -224,7 +224,7 @@ or a function which accepts a single type argument.
 vvprod(f, A; dims=:, init=one) = vvmapreduce(f, *, init, A, dims)
 
 """
-    vvsum(A; dims=:, init=one)
+    vvprod(A; dims=:, init=one)
 
 Multiply the elements of `A` over the specified `dims`, with the product initialized by `init`.
 """
@@ -796,30 +796,63 @@ function vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::Abstr
 end
 
 # Convenience definitions
+"""
+    vtsum(f, A::AbstractArray, dims=:)
+
+Sum the results of calling `f` on each element of `A` over the specified `dims`.
+"""
 vtsum(f::F, A, dims) where {F} = vtmapreduce(f, +, zero, A, dims)
+
+"""
+    vtprod(f, A::AbstractArray, dims=:)
+
+Multiply the results of calling `f` on each element of `A` over the specified `dims`.
+"""
 vtprod(f::F, A, dims) where {F} = vtmapreduce(f, *, one, A, dims)
+
+"""
+    vtmaximum(f, A::AbstractArray, dims=:)
+
+Compute the maximum value by calling `f` on each element of `A` over the specified `dims`.
+"""
 vtmaximum(f::F, A, dims) where {F} = vtmapreduce(f, max, typemin, A, dims)
+
+"""
+    vtminimum(f, A::AbstractArray, dims=:)
+
+Compute the minimum value by calling `f` on each element of `A` over the specified `dims`.
+"""
 vtminimum(f::F, A, dims) where {F} = vtmapreduce(f, min, typemax, A, dims)
 
 # ::AbstractArray required in order for kwargs interface to work
+"""
+    vtsum(A::AbstractArray, dims=:)
+
+Sum the elements of `A` over the specified `dims`.
+"""
 vtsum(A::AbstractArray, dims) = vtmapreduce(identity, +, zero, A, dims)
+
+"""
+    vtprod(A::AbstractArray, dims=:)
+
+Multiply the elements of `A` over the specified `dims`.
+"""
 vtprod(A::AbstractArray, dims) = vtmapreduce(identity, *, one, A, dims)
+
+"""
+    vtmaximum(A::AbstractArray, dims=:)
+
+Compute the maximum value of `A` over the specified `dims`.
+"""
 vtmaximum(A::AbstractArray, dims) = vtmapreduce(identity, max, typemin, A, dims)
+
+"""
+    vtminimum(A::AbstractArray, dims=:)
+
+Compute the minimum value of `A` over the specified `dims`.
+"""
 vtminimum(A::AbstractArray, dims) = vtmapreduce(identity, min, typemax, A, dims)
 
-# reduction over all dims
-@generated function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
-    opsym = OP.instance
-    initsym = I.instance
-    quote
-        ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
-        @tturbo for i ∈ eachindex(A)
-            ξ = $opsym(f(A[i]), ξ)
-        end
-        return ξ
-    end
-end
-vtmapreduce(f::F, op::OP, init::I, A) where {F, OP, I} = vtmapreduce(f, op, init, A, :)
 
 vtsum(f::F, A) where {F<:Function} = vtmapreduce(f, +, zero, A, :)
 vtprod(f::F, A) where {F<:Function} = vtmapreduce(f, *, one, A, :)
@@ -832,10 +865,22 @@ vtprod(A::AbstractArray) = vtmapreduce(identity, *, one, A, :)
 vtmaximum(A::AbstractArray) = vtmapreduce(identity, max, typemin, A, :)
 vtminimum(A::AbstractArray) = vtmapreduce(identity, min, typemax, A, :)
 
+"""
+    vtextrema(f, A::AbstractArray, dims=:)
+
+Compute the minimum and maximum values by calling `f`  on each element of of `A`
+over the specified `dims`.
+"""
 vtextrema(f::F, A, dims) where {F} = collect(zip(vtminimum(f, A, dims), vtmaximum(f, A, dims)))
 vtextrema(f::F, A, ::Colon) where {F} = (vtminimum(f, A, :), vtmaximum(f, A, :))
 vtextrema(f::F, A) where {F<:Function} = vtextrema(f, A, :)
 # ::AbstractArray required in order for kwargs interface to work
+
+"""
+    vtextrema(A::AbstractArray, dims=:)
+
+Compute the minimum and maximum values of `A` over the specified `dims`.
+"""
 vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
 vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
 
@@ -843,7 +888,7 @@ vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
     vtreduce(op, init, A::AbstractArray, dims=:)
 
 Reduce `A` along the dimensions `dims` using the binary function `op`.
-See `vvmapreduce` for description of `op`, `init`, `dims`.
+See `vtmapreduce` for description of `op`, `init`, `dims`.
 
 See also: [`vtsum`](@ref), [`vtprod`](@ref), [`vtminimum`](@ref), [`vtmaximum`](@ref)
 """
@@ -868,18 +913,106 @@ vtmapreduce(f, op, A; dims=:, init) = vtmapreduce(f, op, init, A, dims)
 Identical to non-keyword args version; slightly less performant due to use of kwargs. Threaded.
 """
 vtreduce(op, A; dims=:, init) = vtreduce(op, init, A, dims)
+
+"""
+    vtsum(f, A; dims=:, init=zero)
+
+Sum the results of calling `f` on each element of `A` over the specified `dims`,
+with the sum initialized by `init`, which may be a value `<:Number`
+or a function which accepts a single type argument.
+"""
 vtsum(f, A; dims=:, init=zero) = vtmapreduce(f, +, init, A, dims)
+
+"""
+    vtsum(A; dims=:, init=zero)
+
+Sum the elements of `A` over the specified `dims`, with the sum initialized by `init`.
+"""
 vtsum(A; dims=:, init=zero) = vtmapreduce(identity, +, init, A, dims)
+
+"""
+    vtprod(f, A; dims=:, init=one)
+
+Multiply the results of calling `f` on each element of `A` over the specified `dims`,
+with the product initialized by `init`, which may be a value `<:Number`
+or a function which accepts a single type argument.
+"""
 vtprod(f, A; dims=:, init=one) = vtmapreduce(f, *, init, A, dims)
+
+"""
+    vtprod(A; dims=:, init=one)
+
+Multiply the elements of `A` over the specified `dims`, with the product initialized by `init`.
+"""
 vtprod(A; dims=:, init=one) = vtmapreduce(identity, *, init, A, dims)
+
+"""
+    vtmaximum(f, A; dims=:, init=typemin)
+
+Compute the maximum value of calling `f` on each element of `A` over the specified `dims`,
+with the max initialized by `init`, which may be a value `<:Number`
+or a function which accepts a single type argument.
+"""
 vtmaximum(f, A; dims=:, init=typemin) = vtmapreduce(f, max, init, A, dims)
+
+"""
+    vtmaximum(A; dims=:, init=typemin)
+
+Compute the maximum value of `A` over the specified `dims`, with the max initialized by `init`.
+"""
 vtmaximum(A; dims=:, init=typemin) = vtmapreduce(identity, max, init, A, dims)
+
+"""
+    vtminimum(f, A; dims=:, init=typemax)
+
+Compute the minimum value of calling `f` on each element of `A` over the specified `dims`,
+with the min initialized by `init`, which may be a value `<:Number`
+or a function which accepts a single type argument.
+"""
 vtminimum(f, A; dims=:, init=typemax) = vtmapreduce(f, min, init, A, dims)
+
+"""
+    vtminimum(A; dims=:, init=typemax)
+
+Compute the minimum value of `A` over the specified `dims`, with the min initialized by `init`.
+"""
 vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
+
+"""
+    vtextrema(f, A::AbstractArray; dims=:, init=(typemax, typemin))
+
+Compute the minimum and maximum values by calling `f`  on each element of of `A`
+over the specified `dims`, with the min and max initialized by the respective arguments
+of the 2-tuple `init`, which can be any combination of values `<:Number` or functions
+which accept a single type argument.
+"""
 vtextrema(f, A; dims=:, init=(typemax, typemin)) =
     collect(zip(vtmapreduce(f, min, init[1], A, dims), vtmapreduce(f, max, init[2], A, dims)))
+
+"""
+    vtextrema(A::AbstractArray; dims=:, init=(typemax, typemin))
+
+Compute the minimum and maximum values of `A` over the specified `dims`,
+with the min and max initialized by `init`.
+"""
 vtextrema(A; dims=:, init=(typemax, typemin)) =
     collect(zip(vtmapreduce(identity, min, init[1], A, dims), vtmapreduce(identity, max, init[2], A, dims)))
+
+# reduction over all dims
+@generated function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
+    opsym = OP.instance
+    initsym = I.instance
+    quote
+        ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
+        @tturbo for i ∈ eachindex(A)
+            ξ = $opsym(f(A[i]), ξ)
+        end
+        return ξ
+    end
+end
+vtmapreduce(f::F, op::OP, init::I, A) where {F, OP, I} = vtmapreduce(f, op, init, A, :)
+
+# mixed dimensions reduction
 
 function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
