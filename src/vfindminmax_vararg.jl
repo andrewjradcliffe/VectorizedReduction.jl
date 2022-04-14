@@ -7,6 +7,15 @@
 # Version of findmin, findmax for `f`: ℝᴺ -> ℝ
 # Note: it is only defined with for such functions.
 
+# Actually useful
+vfindmax(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vfindminmax(f, >, typemin, As, :)
+vfindmin(f::F, As::Vararg{AbstractArray, P}) where {F<:Function, P} =
+    vfindminmax(f, <, typemax, As, :)
+
+vfindmax(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, >, typemin, As, dims)
+vfindmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} = vfindminmax(f, <, typemax, As, dims)
+
 function vfindminmax(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, I, M, P}
     A₁ = As[1]
     ax = axes(A₁)
@@ -34,9 +43,6 @@ end
 function vfindminmax(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractVector, P}}, ::Colon) where {F, OP, I, P}
     ξ, CI = _findminmaxall_vararg(f, op, init, As)
     return ξ, CI[1] # LinearIndices(As[1])[CI]
-end
-@generated function _findminmaxall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P}
-    findminmaxall_vararg_quote(OP, I, P)
 end
 
 function findminmaxall_vararg_quote(OP, I, P::Int)
@@ -68,11 +74,18 @@ function findminmaxall_vararg_quote(OP, I, P::Int)
         return ξ, CartesianIndices(A_1)[indmax]
     end
 end
-vfindmax(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
-    vfindminmax(f, >, typemin, As, :)
-vfindmin(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
-    vfindminmax(f, <, typemax, As, :)
 
+@generated function _findminmaxall_vararg(f::F, op::OP, init::I, As::Tuple{Vararg{AbstractArray, P}}) where {F, OP, I, P}
+    findminmaxall_vararg_quote(OP, I, P)
+end
+# Most likely, not necessary
+# vfindmax(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
+#     vfindminmax(f, >, typemin, As, :)
+# vfindmin(f::F, As::Tuple{Vararg{AbstractArray, P}}) where {F<:Function, P} =
+#     vfindminmax(f, <, typemax, As, :)
+
+
+#### tests
 # over all
 A1 = rand(5,5);
 A2 = rand(5,5);
@@ -81,6 +94,8 @@ as = (A1, A2, A3);
 @benchmark vfindminmax(+, >, typemin, as, :)
 A′ = @. A1 + A2 + A3;
 findmax(A′)
+vfindmax(+, A1, A2, A3)
+vfindmax(+, as)
 
 v1 = rand(5);
 v2 = rand(5);
@@ -94,6 +109,28 @@ findmax(v′)
 vfindminmax(+, >, typemin, as, (2,)) == findmax(A′, dims=2)
 @benchmark vfindminmax(+, >, typemin, as, (2,))
 @benchmark findmax(A′, dims=2)
+vfindmax(+, A1, A2, A3, dims=2)
+vfindmax(+, as, dims=2)
+vfindmax(+, as, 2)
+vfindmax(as)
+
+# anonymous functions
+vfindmax((x, y, z) -> x * y + z, A1, A2, A3)
+A′ = @. A1 * A2 + A3;
+findmax(A′)
+
+# light performance tests
+B1 = rand(5,5,5,5);
+B2 = rand(5,5,5,5);
+B3 = rand(5,5,5,5);
+bs = (B1, B2, B3);
+@benchmark vfindminmax(+, >, typemin, bs, :)
+B′ = @. B1 + B2 + B3;
+findmax(B′)
+@benchmark vfindmax(+, B1, B2, B3)
+@benchmark vfindmax(+, bs)
+@benchmark vfindmax((x, y, z) -> x * y + z, B1, B2, B3)
+
 
 function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::Int, P::Int)
     t = Expr(:tuple)
