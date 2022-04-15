@@ -21,6 +21,9 @@ export vfindmin1, vfindmax1, vargmin1, vargmax1,
 include("vfindminmax1.jl")
 include("vargminmax1.jl")
 
+export vcount, vtcount, vany, vall, vtany, vtall
+include("vboolean.jl")
+
 export vlogsumexp, vtlogsumexp
 
 include("vlogsumexp.jl")
