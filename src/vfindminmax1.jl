@@ -55,8 +55,6 @@ function vtfindminmax1(f::F, op::OP, init::I, A::AbstractArray{T, N}, dims::NTup
 end
 vtfindminmax1(f, op, init, A, dims::Int) = vtfindminmax1(f, op, init, A, (dims,))
 
-vtfindminmax1(f, op, init, A, dims::Int) = vtfindminmax1(f, op, init, A, (dims,))
-
 vtfindmax1(f::F, A, dims) where {F<:Function} = vtfindminmax1(f, >, typemin, A, dims)
 vtfindmin1(f::F, A, dims) where {F<:Function} = vtfindminmax1(f, <, typemax, A, dims)
 vtfindmax1(A::AbstractArray, dims) = vtfindminmax1(identity, >, typemin, A, dims)
