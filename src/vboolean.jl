@@ -5,6 +5,13 @@
 #
 ############################################################################################
 
+"""
+    vcount([f=identity,] A::AbstractArray, dims=:)
+
+Count the number of elements in `A` for which `f` return true over the given `dims`.
+If `f` is omitted, count the number of `true` elements in `A`
+(which should be `AbstractArray{Bool}`).
+"""
 function vcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -25,6 +32,11 @@ vcount(A::AbstractArray{Bool, N}, dims) where {N} = vcount(identity, A, dims)
 vcount(A::AbstractArray{Bool, N}) where {N} = vcount(identity, A)
 
 # kwargs interface
+"""
+    vcount([f=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vcount(f, A; dims=:) = vcount(f, A, dims)
 vcount(A; dims=:) = vcount(A, dims)
 
@@ -49,6 +61,19 @@ vcount(A; dims=:) = vcount(A, dims)
 # Unfortunately, this results in worse performance than just calling
 # `any` from Julia Base. It would probably be faster to do vcount
 # and then compare...
+"""
+    vany([p=identity,] A::AbstractArray, dims=:)
+
+Determine whether predicate `p` returns true for any elements over the given `dims`.
+If `p` is omitted, test whether any values along the given `dims` are `true`
+(in which case `A` should be `AbstractArray{Bool}`).
+
+# Additional Notes
+This function suffers from the same issue as `vfindmax` and friends -- reductions
+which include the first dimension with zero masks are not yet supported by LoopVectorization.
+Notably, this function still works as intended for any reduction which does not involve
+the first dimension.
+"""
 function vany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -57,6 +82,20 @@ function vany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N
     return B
 end
 vany(f, A, dims::Int) = vany(f, A, (dims,))
+
+"""
+    vall([p=identity,] A::AbstractArray, dims=:)
+
+Determine whether predicate `p` returns true for all elements over the given `dims`.
+If `p` is omitted, test whether all values along the given `dims` are `true`
+(in which case `A` should be `AbstractArray{Bool}`).
+
+# Additional Notes
+This function suffers from the same issue as `vfindmax` and friends -- reductions
+which include the first dimension with max masks are not yet supported by LoopVectorization.
+Notably, this function still works as intended for any reduction which does not involve
+the first dimension.
+"""
 function vall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -70,9 +109,20 @@ vany(A::AbstractArray, dims) = vany(identity, A, dims)
 vall(A::AbstractArray, dims) = vall(identity, A, dims)
 
 # kwargs interface
+"""
+    vany([p=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vany(f, A; dims=:) = vany(f, A, dims)
-vall(f, A; dims=:) = vall(f, A, dims)
 vany(A; dims=:) = vany(identity, A, dims)
+
+"""
+    vall([p=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
+vall(f, A; dims=:) = vall(f, A, dims)
 vall(A; dims=:) = vall(identity, A, dims)
 
 # Realistically, I would not recommend these, as they
@@ -82,7 +132,7 @@ vall(A; dims=:) = vall(identity, A, dims)
 # to be checked in order to exit. If one suspects that the any/all
 # is likely to short-circuit, then I recommend against vany/vall.
 function vany(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
-    # # The proper implementation, but, alas, zero_mask problems in LoopVectorization
+    # The proper implementation, but, alas, zero_mask problems in LoopVectorization
     # ξ = false
     # @turbo for i ∈ eachindex(A)
     #     ξ |= f(A[i])
@@ -129,6 +179,13 @@ vfindall(f::F, A::AbstractVector{T}) where {F, T} = LinearIndices(A)[vmask(f, A)
 
 ############################################################################################
 
+"""
+    vtcount([f=identity,] A::AbstractArray, dims=:)
+
+Count the number of elements in `A` for which `f` return true over the given `dims`.
+If `f` is omitted, count the number of `true` elements in `A`
+(which should be `AbstractArray{Bool}`). Threaded.
+"""
 function vtcount(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -149,9 +206,27 @@ vtcount(A::AbstractArray{Bool, N}, dims) where {N} = vtcount(identity, A, dims)
 vtcount(A::AbstractArray{Bool, N}) where {N} = vtcount(identity, A)
 
 # kwargs interface
+"""
+    vtcount([f=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs. Threaded.
+"""
 vtcount(f, A; dims=:) = vtcount(f, A, dims)
 vtcount(A; dims=:) = vtcount(A, dims)
 
+"""
+    vtany([p=identity,] A::AbstractArray, dims=:)
+
+Determine whether predicate `p` returns true for any elements over the given `dims`.
+If `p` is omitted, test whether any values along the given `dims` are `true`
+(in which case `A` should be `AbstractArray{Bool}`). Threaded.
+
+# Additional Notes
+This function suffers from the same issue as `vfindmax` and friends -- reductions
+which include the first dimension with zero masks are not yet supported by LoopVectorization.
+Notably, this function still works as intended for any reduction which does not involve
+the first dimension.
+"""
 function vtany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -160,6 +235,20 @@ function vtany(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, 
     return B
 end
 vtany(f, A, dims::Int) = vtany(f, A, (dims,))
+
+"""
+    vtall([p=identity,] A::AbstractArray, dims=:)
+
+Determine whether predicate `p` returns true for all elements over the given `dims`.
+If `p` is omitted, test whether all values along the given `dims` are `true`
+(in which case `A` should be `AbstractArray{Bool}`). Threaded.
+
+# Additional Notes
+This function suffers from the same issue as `vfindmax` and friends -- reductions
+which include the first dimension with max masks are not yet supported by LoopVectorization.
+Notably, this function still works as intended for any reduction which does not involve
+the first dimension.
+"""
 function vtall(f::F, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, T, N, M}
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
@@ -173,9 +262,20 @@ vtany(A::AbstractArray, dims) = vtany(identity, A, dims)
 vtall(A::AbstractArray, dims) = vtall(identity, A, dims)
 
 # kwargs interface
+"""
+    vtany([p=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
 vtany(f, A; dims=:) = vtany(f, A, dims)
-vtall(f, A; dims=:) = vtall(f, A, dims)
 vtany(A; dims=:) = vtany(identity, A, dims)
+
+"""
+    vtall([p=identity,] A::AbstractArray; dims=:)
+
+Identical to non-keyword args version; slightly less performant due to use of kwargs.
+"""
+vtall(f, A; dims=:) = vtall(f, A, dims)
 vtall(A; dims=:) = vtall(identity, A, dims)
 
 function vtany(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
