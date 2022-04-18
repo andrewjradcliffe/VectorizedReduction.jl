@@ -76,6 +76,7 @@ However, due to the current implementation details of Base `any`/`all`, early br
 
 <details>
  <summaryClick me! ></summary>
+<p>
 ```julia
 julia> @btime mapreduce(abs2, +, A1, dims=(1,2,4))
 BenchmarkTools.Trial: 10000 samples with 159 evaluations.
@@ -126,6 +127,7 @@ BenchmarkTools.Trial: 10000 samples with 202 evaluations.
 
  Memory estimate: 1.19 KiB, allocs estimate: 8.
 ```
+</p>
 </details>
 
 ## Acknowledgments
