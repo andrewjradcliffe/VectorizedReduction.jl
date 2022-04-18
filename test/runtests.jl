@@ -71,7 +71,6 @@ using Test
         v3 = rand(5)
         v′ = @. v1 + v2 + v3;
         @test findmin(v′) == vfindmin(+, v1, v2, v3)
-        # Varargs
     end
     @testset "vfindminmax_vararg" begin
         A′ = @. A1 * A2 + A3;
