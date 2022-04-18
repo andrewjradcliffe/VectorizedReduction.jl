@@ -245,7 +245,6 @@ dims3 = (2,3,4)
 @benchmark newdims4($as4_2, $dims3)
 
 ################
-# Tests and example use for varargs mapreduce
 A1 = rand(5,5,5,5);
 A2 = rand(5,5,5,5);
 A3 = rand(5,5,5,5);
@@ -253,9 +252,37 @@ A4 = rand(5,5,5,5);
 A5 = rand(5,5,5,5);
 A6 = rand(1:10, 5,5,5,5);
 as = (A1, A2, A3);
+################
+# Simple tests
+@benchmark mapreduce(abs2, +, A1, dims=(1,2,4))
+@benchmark vvmapreduce(abs2, +, A1, dims=(1,2,4))
+@benchmark prod(A1, dims=1)
+@benchmark vvprod(A1, dims=1)
+@benchmark extrema(log, A1, dims=(1,2))
+@benchmark vvextrema(log, A1, dims=(1,2))
+@benchmark extrema(A1, dims=(1,2))
+@benchmark vvextrema(A1, dims=(1,2))
+
+# In README
+@benchmark mapreduce($abs2, $+, $A1, dims=$(1,2,4))
+@benchmark vvmapreduce($abs2, $+, $A1, dims=$(1,2,4))
+@benchmark extrema($A1, dims=$(1,2))
+@benchmark vvextrema($A1, dims=$(1,2))
+@benchmark extrema($A1, dims=$(3,4))
+@benchmark vvextrema($A1, dims=$(3,4))
+
+################
+# Tests and example use for varargs mapreduce
 @benchmark vvmapreduce(+, +, zero, as, (1,2,4))
 @benchmark vvmapreduce(+, +, as, dims=(1,2,4), init=zero)
-@benchmark mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
+@benchmark mapreduce(+, +, A1, A2, A3, dims=(1,2,4))
+@benchmark vvmapreduce(+, +, A1, A2, A3, dims=(1,2,4))
+@tullio out[1, 1, i_3, 1] := A1[i_1, i_2, i_3, i_4] + A2[i_1, i_2, i_3, i_4] + A3[i_1, i_2, i_3, i_4]
+@benchmark mapreduce($+, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
+@benchmark vvmapreduce($+, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
+h(w, x, y, z) = w * x + y * z
+@benchmark mapreduce($h, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
+@benchmark vvmapreduce($h, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
 vvmapreduce(+, +, zero, as, (1,2,4)) ≈ mapreduce(+, +, A1, A2, A3, dims=(1, 2,4))
 g(x, y, z) = x * y + z
 @benchmark vvmapreduce(g, +, zero, as, (1,2,4))
@@ -284,6 +311,13 @@ vvmapreduce(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3
 @benchmark vvmapreduce(abs2, +, 1:10)
 @benchmark mapreduce(abs2, +, 1:10)
 
+@benchmark mapreduce($h, $+, $1:10, $11:20, $21:30, $31:40)
+@benchmark vvmapreduce($h, $+, $1:10, $11:20, $21:30, $31:40)
+@benchmark mapreduce($h, $+, $1:100, $101:200, $201:300, $301:400)
+@benchmark vvmapreduce($h, $+, $1:100, $101:200, $201:300, $301:400)
+@benchmark mapreduce($h, $+, $1:1000, $1001:2000, $2001:3000, $3001:4000)
+@benchmark vvmapreduce($h, $+, $1:1000, $1001:2000, $2001:3000, $3001:4000)
+
 # interface tests
 @benchmark vvmapreduce(*, +, zero, A1, A2, A3)
 @benchmark vvmapreduce(*, +, A1, A2, A3)
@@ -300,11 +334,11 @@ vvmapreduce(+, +, zero, (A1, A4), (2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3
 @benchmark vvmapreduce(+, +, A1, A2, A3, A4)
 
 # And for really strange stuff (e.g. posterior predictive transformations)
-@benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, A1, A2, A3)
+@benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, $A1, $A2, $A3)
 @benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, A1, A2, A3, dims=(2,3,4))
 # using ifelse for just a boolean is quite slow, but the above is just for demonstration
 @benchmark vvmapreduce(≥, +, A1, A2)
-@benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3)
+@benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, $A1, $A2, $A3)
 @benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3, dims=(2,3,4))
 @benchmark mapreduce((x,y,z) -> ≥(x*y+z, 1), +, A1, A2, A3)
 # What I mean by posterior predictive transformation? Well, one might encounter
@@ -317,9 +351,19 @@ vvmapreduce(≥, +, A1, A2) / length(A1)
 # Or, if only the probability is of interest, and we do not wish to use the functionals
 # for any other purpose, we could compute it as:
 vvmapreduce((x, y) -> ≥(f(x), f(y)), +, A1, A2)
+mapreduce((x, y) -> ≥(f(x), f(y)), +, A1, A2)
 # where `f` is the functional of interest, e.g.
 @benchmark vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2)
 @benchmark vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2, dims=(2,3,4))
+
+# One can also express commonly encountered reductions with ease;
+# these will be fused once a post-reduction operator can be specified
+# MSE
+@benchmark vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)) ./ (size(A1, 2) * size(A1, 4) )
+@benchmark mapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)) ./ (size(A1, 2) * size(A1, 4) )
+# Euclidean distance
+B = (√).(vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)))
+@test B ≈ (√).(mapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)))
 
 # multi-threading examples
 B1 = rand(20,20,20,20);
@@ -399,8 +443,16 @@ B3 = rand(5,5,5,5);
 bs = (B1, B2, B3);
 @benchmark vfindminmax(+, >, typemin, bs, :)
 B′ = @. B1 + B2 + B3;
-findmax(B′)
-@benchmark vfindmax(+, B1, B2, B3)
+findmin(B′) == vfindmin(+, B1, B2, B3)
+@benchmark findmin(@. $B1 + $B2 + $B3)
+@benchmark vfindmin(+, $B1, $B2, $B3)
+
+@benchmark findmin((@. $B1 + $B2 + $B3), dims=(2,4))
+@benchmark vfindmin(+, $B1, $B2, $B3, dims=(2,4))
+
+@benchmark findmin((@. abs2($B1) * $B2 + $B3), dims=$(3,4))
+@benchmark vfindmin((x, y, z) -> abs2(x) * y + z, $B1, $B2, $B3, dims=$(3,4))
+
 @benchmark vfindmax(+, bs)
 @benchmark vfindmax((x, y, z) -> x * y + z, B1, B2, B3)
 
