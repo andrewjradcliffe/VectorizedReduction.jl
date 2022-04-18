@@ -189,7 +189,7 @@ vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)) ./ (size(A1, 2) * size
  <summaryClick me! ></summary>
 <p>
 
-Examples of extended syntax  using `findmin(f, A; dims)`, `findmin(f, A...; dims)`. In the former case, `f` : ℝ → ℝ; in the latter, `f` : ℝᴺ → ℝ. Also applies to  `findmax`, `argmin, `argmax`.
+Examples of extended syntax  using `findmin(f, A; dims)`, `findmin(f, A...; dims)`. In the former case, `f` : ℝ → ℝ; in the latter, `f` : ℝᴺ → ℝ. Also applies to  `findmax`, `argmin`, `argmax`.
 
 ```julia
 # Easy to express without the extended syntax, but not efficient.
