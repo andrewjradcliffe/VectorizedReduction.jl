@@ -47,3 +47,28 @@ t_{0} n (1 - p)^n
 ```
 <img src="https://render.githubusercontent.com/render/math?math={t_{0} n (1 - p)^{n}}#gh-light-mode-only">
 <img src="https://render.githubusercontent.com/render/math?math={\color{white}t_{0} n (1 - p)^{n}}#gh-dark-mode-only">
+Thus, the point at which non-vectorized evaluation is optimal is
+```julia
+t₀ * (1 - p)^n < tᵥ
+```
+Or, rearranging: non-vectorized is optimal when `p > 1 - (tᵥ/t₀)^(1/n)`. Intuitively, as `(tᵥ/t₀)` becomes smaller, larger `p` is needed to make the non-vectorized option optimal.
+Holding `(tᵥ/t₀)` constant, increasing `n` results in a rapid decrease in the `p` required for the non-vectorized option to be optimal. Consider the following examples, denoting `r = (tᵥ/t₀)`
+```julia
+julia> p(r, n) = 1 - r^(1/n)
+p (generic function with 1 method)
+
+julia> p.(.1, 10 .^ (1:4))
+4-element Vector{Float64}:
+ 0.2056717652757185
+ 0.02276277904418933
+ 0.0022999361774467264
+ 0.0002302320018434667
+
+julia> p.(.01, 10 .^ (1:4))
+4-element Vector{Float64}:
+ 0.36904265551980675
+ 0.045007413978564004
+ 0.004594582648473011
+ 0.0004604109969121861
+```
+However, due to the current implementation details of Base `any`/`all`, early breakout occurs only when the reduction is being carried out across the entire array (i.e. does not occur when reducing over a subset of dimensions). Thus, the current advice is to use `vany`/`vall` unless one is reducing over the entire array, and even then, one should consider the `p` and `n` for one's problem.
