@@ -228,10 +228,10 @@ BenchmarkTools.Trial: 10000 samples with 7 evaluations.
  Memory estimate: 6.55 KiB, allocs estimate: 12.
 
 julia> @benchmark vfindmin((x, y, z) -> abs2(x) * y + z, $B1, $B2, $B3, dims=$(3,4))
-BenchmarkTools.Trial: 10000 samples with 168 evaluations.
- Range (min … max):  623.071 ns … 118.436 μs  ┊ GC (min … max):  0.00% … 99.10%
- Time  (median):       1.053 μs               ┊ GC (median):     0.00%
- Time  (mean ± σ):     1.101 μs ±   4.003 μs  ┊ GC (mean ± σ):  12.56% ±  3.43%
+BenchmarkTools.Trial: 10000 samples with 173 evaluations.
+ Range (min … max):  615.145 ns … 27.463 μs  ┊ GC (min … max):  0.00% … 95.61%
+ Time  (median):     635.491 ns              ┊ GC (median):     0.00%
+ Time  (mean ± σ):   850.233 ns ±  1.487 μs  ┊ GC (mean ± σ):  10.58% ±  5.89%
 
  Memory estimate: 1.62 KiB, allocs estimate: 9.
 ```
