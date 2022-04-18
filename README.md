@@ -13,7 +13,7 @@ This library provides "vectorized" (with/without multithreading) versions of the
 1. `mapreduce` and common derived functions: `reduce`, `sum`, `prod`, `minimum`, `maximum`, `extrema`
 2. `count`, `any`, `all`
 3. `findmin`, `findmin`, `argmin`, `argmax`
-4. `logsumexp`, `softmax`, `logsoftmax`
+4. `logsumexp`, `softmax`, `logsoftmax` ("safe" versions: avoid underflow/overflow)
 
 The naming convention is as follows: a vectorized (without threading) version is prefixed by `v`, and a vectorized with threading version is prefixed by `vt`.
 There is a single exception to this rule: vectorized (without threading) versions of the functions listen in 1. are prefixed by `vv` in order to avoid name collisions with LoopVectorization and VectorizedStatistics.
@@ -33,10 +33,10 @@ To define a multi-dimensional mapreduce, one specifies a index set of dimensions
 
 ### When to consider replacing any/all with vectorized versions
 Assumptions: x is inherently unordered, such that the probablilty of a "success" is independent of the index (i.e. independent of a random permutation of the effective vector over which the reduction occurs).
-This is a very reasonable assumption for certain types of data, e.g. Monte Carlo simulations. However, for cases in which there is some inherent order (e.g. a solution to an ODE, or even very simply, `map(exp, 0.0:0.1:10.0)`), then the analysis below does not hold. If inherent order exists, then the probability of success depends on said ordering -- the caller must then exercise judgment based on where the first success might land (if at all); as this is inevitably problem-specific, I am unable to offer general advice.
+This is a very reasonable assumption for certain types of data, e.g. Monte Carlo simulations. However, for cases in which there is some inherent order (e.g. a solution to an ODE, or even very simply, `cos.(-2π:0.1:2π)`), then the analysis below does not hold. If inherent order exists, then the probability of success depends on said ordering -- the caller must then exercise judgment based on where the first success might land (if at all); as this is inevitably problem-specific, I am unable to offer general advice.
 
 For inherently unordered data:
-Define `p` as the probability of success, i.e. the probability of `true` w.r.t. `any` and the probability of `false` w.r.t. `all`.
+Define `p` as the probability of "success", i.e. the probability of `true` w.r.t. `any` and the probability of `false` w.r.t. `all`.
 The cumulative probability of evaluating all elements, `Pr(x ≤ 0)` is
 ```julia
 binomial(n, 0) * p^0 * (1 - p)^(n - 0) # (1 - p)^n
@@ -71,9 +71,70 @@ julia> p.(.01, 10 .^ (1:4))
 ```
 However, due to the current implementation details of Base `any`/`all`, early breakout occurs only when the reduction is being carried out across the entire array (i.e. does not occur when reducing over a subset of dimensions). Thus, the current advice is to use `vany`/`vall` unless one is reducing over the entire array, and even then, one should consider the `p` and `n` for one's problem.
 
+## Examples
+### Simple examples
+
+<details>
+ <summaryClick me! ></summary>
+```julia
+julia> @btime mapreduce(abs2, +, A1, dims=(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 159 evaluations.
+ Range (min … max):  663.723 ns … 115.200 μs  ┊ GC (min … max): 0.00% … 99.07%
+ Time  (median):     823.692 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   833.701 ns ±   1.614 μs  ┊ GC (mean ± σ):  2.73% ±  1.40%
+
+                        ▇█▁                                      
+  ▂▂▃▂▂▂▂▁▁▁▁▁▁▁▂▂▂▂▃▄▄▇███▄▃▃▃▂▂▂▂▃▃▃▄▄▅▇▇██▇▆▆▆▆▇▆▅▅▄▄▄▃▃▃▃▃▃ ▃
+  664 ns           Histogram: frequency by time          908 ns <
+
+ Memory estimate: 368 bytes, allocs estimate: 8.
+
+julia> @btime vvmapreduce(abs2, +, A1, dims=(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 792 evaluations.
+ Range (min … max):  158.871 ns …  24.821 μs  ┊ GC (min … max):  0.00% … 98.82%
+ Time  (median):     203.812 ns               ┊ GC (median):     0.00%
+ Time  (mean ± σ):   210.932 ns ± 733.001 ns  ┊ GC (mean ± σ):  10.39% ±  2.97%
+
+   █▇                                                            
+  ▂██▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▃▅▆▅▄▂▂▃▅▆▅▄▃▂▂▁▁▁▁▁▁▁▁▁▁ ▂
+  159 ns           Histogram: frequency by time          234 ns <
+
+ Memory estimate: 240 bytes, allocs estimate: 6.
+
+julia> @benchmark extrema($A1, dims=$(1,2))
+@benchmark vvextrema($A1, dims=$(1,2))
+BenchmarkTools.Trial: 10000 samples with 9 evaluations.
+ Range (min … max):  2.813 μs …   5.827 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     2.990 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   3.039 μs ± 149.676 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+         ▅█▅                                                   
+  ▂▂▂▂▂▂▅████▆▄▅▇▆▆▅▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁▂▁▂▂▂▁▁▂▂▂▂▂▂▂▂▂▂ ▃
+  2.81 μs         Histogram: frequency by time        3.84 μs <
+
+ Memory estimate: 960 bytes, allocs estimate: 14.
+
+julia> @benchmark vvextrema($A1, dims=$(1,2))
+BenchmarkTools.Trial: 10000 samples with 202 evaluations.
+ Range (min … max):  381.743 ns … 86.288 μs  ┊ GC (min … max):  0.00% … 99.05%
+ Time  (median):     689.658 ns              ┊ GC (median):     0.00%
+ Time  (mean ± σ):   712.113 ns ±  2.851 μs  ┊ GC (mean ± σ):  13.84% ±  3.43%
+
+   ▄▁                                                  ▃█▇▂     
+  ▅██▅▃▂▂▂▂▂▂▂▁▂▂▁▁▂▂▁▁▁▁▁▂▂▂▂▁▁▁▂▁▂▁▁▁▂▂▁▁▁▂▁▁▂▂▃▄▆▅▄▅████▅▃▂ ▃
+  382 ns          Histogram: frequency by time          726 ns <
+
+ Memory estimate: 1.19 KiB, allocs estimate: 8.
+```
+</details>
+
 ## Acknowledgments
-The motivation for this package arose from my own experiences, but my initial attempt (visible in the /attic) did not deliver all the performance possible -- this was ony apparent through comparison to C. Elrod's approach to multidimensional forms in VectorizedStatistics. Having fully appreciated the beauty of branching through @generated functions, I decided to take a tour of osme low-hanging fruit -- this package is the result.
+The original motivation for this work was a vectorized & multithreaded multi-dimensional findmin, taking a variable number of array arguments -- it's a long story, but the similarity between findmin and mapreduce motivated a broad approach. My initial attempt (visible in the /attic) did not deliver all the performance possible -- this was only apparent through comparison to C. Elrod's approach to multidimensional forms in VectorizedStatistics. Having fully appreciated the beauty of branching through @generated functions, I decided to take a tour of some low-hanging fruit -- this package is the result.
 
 ## Future work
 1. post-reduction operators
 2. reductions over index subsets within a dimension.
+
+## Elsewhere
+* [LoopVectorization.jl](https://github.com/chriselrod/LoopVectorization.jl) back-end for this package.
+* [Tullio.jl](https://github.com/mcabbott/Tullio.jl) express any of the reductions using index notation
