@@ -170,33 +170,29 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
         push!(rblock.args, setb)
         # Potential loop-carried dependency
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
+        # Version which precomputes the unchanging components of setc.
+        tl = Expr(:tuple)
+        tr = Expr(:tuple)
+        for d = 3:N
+            push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
+            push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         setc = Expr(:call, :+)
         for d ∈ rinds
             push!(setc.args, d == 1 ? :j_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
         end
         for d ∈ nrinds
             push!(setc.args, d == 1 ? :i_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
         end
-        # These complete the expression: 1 + ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)(Iₖ - 1)
         push!(setc.args, 1, :Dstar)
         postj = Expr(:(=), Cᵥ′, setc)
         push!(rblock.args, postj)
-        # strides, offsets
-        td = Expr(:tuple)
-        for d = 1:N
-            push!(td.args, Symbol(:D_, d))
-        end
-        sz = Expr(:(=), td, Expr(:call, :size, :A_1))
-        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
-        dstar = Expr(:call, :+, 1)
-        for d = 2:N
-            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        end
         return quote
             $t = As
             $sz
+            $tl = $tr
             Dstar = $dstar
             Dstar = -Dstar
             Bᵥ = $Bᵥ
@@ -474,33 +470,29 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
         push!(rblock.args, setb)
         # Potential loop-carried dependency
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
+        # Version which precomputes the unchanging components of setc.
+        tl = Expr(:tuple)
+        tr = Expr(:tuple)
+        for d = 3:N
+            push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
+            push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         setc = Expr(:call, :+)
         for d ∈ rinds
             push!(setc.args, d == 1 ? :j_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
         end
         for d ∈ nrinds
             push!(setc.args, d == 1 ? :i_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
         end
-        # These complete the expression: 1 + ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)(Iₖ - 1)
         push!(setc.args, 1, :Dstar)
         postj = Expr(:(=), Cᵥ′, setc)
         push!(rblock.args, postj)
-        # strides, offsets
-        td = Expr(:tuple)
-        for d = 1:N
-            push!(td.args, Symbol(:D_, d))
-        end
-        sz = Expr(:(=), td, Expr(:call, :size, :A_1))
-        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
-        dstar = Expr(:call, :+, 1)
-        for d = 2:N
-            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        end
         return quote
             $t = As
             $sz
+            $tl = $tr
             Dstar = $dstar
             Dstar = -Dstar
             Bᵥ = $Bᵥ

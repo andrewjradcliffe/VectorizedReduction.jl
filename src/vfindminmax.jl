@@ -192,67 +192,55 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         # Push to after reduction loop
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
-        # # Simplest variety
-        # postj = Expr(:(=), Cᵥ′)
-        # if length(rinds) == 1
-        #     push!(postj.args, d == 1 ? :j_1 :
-        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
-        # else
-        #     setc = Expr(:call, :+)
-        #     for d ∈ rinds
-        #         push!(setc.args, d == 1 ? :j_1 :
-        #             Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
-        #     end
-        #     push!(postj.args, setc)
-        # end
         # Potential loop-carried dependency
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
-        setc = Expr(:call, :+)
-        for d ∈ rinds
-            push!(setc.args, d == 1 ? :j_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
-        end
-        for d ∈ nrinds
-            push!(setc.args, d == 1 ? :i_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
-        end
-        # These complete the expression: 1 + ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)(Iₖ - 1)
-        push!(setc.args, 1, :Dstar)
-        postj = Expr(:(=), Cᵥ′, setc)
-        push!(rblock.args, postj)
-        # strides, offsets
-        t = Expr(:tuple)
-        for d = 1:N
-            push!(t.args, Symbol(:D_, d))
-        end
-        sz = Expr(:(=), t, Expr(:call, :size, :A))
-        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
-        dstar = Expr(:call, :+, 1)
-        for d = 2:N
-            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        end
-        # # One might pre-compute the unchanging components of setc, but in actuality,
-        # it has very little effect on performance.
-        # tl = Expr(:tuple)
-        # tr = Expr(:tuple)
-        # for d = 3:N
-        #     push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
-        #     push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        # end
+        # # The less efficient version (good for visualizing, though)
         # setc = Expr(:call, :+)
         # for d ∈ rinds
         #     push!(setc.args, d == 1 ? :j_1 :
-        #         Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
+        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
         # end
         # for d ∈ nrinds
         #     push!(setc.args, d == 1 ? :i_1 :
-        #         Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
+        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
         # end
+        # # These complete the expression: 1 + ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)(Iₖ - 1)
         # push!(setc.args, 1, :Dstar)
         # postj = Expr(:(=), Cᵥ′, setc)
         # push!(rblock.args, postj)
+        # # strides, offsets
+        # t = Expr(:tuple)
+        # for d = 1:N
+        #     push!(t.args, Symbol(:D_, d))
+        # end
+        # sz = Expr(:(=), t, Expr(:call, :size, :A))
+        # # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
+        # dstar = Expr(:call, :+, 1)
+        # for d = 2:N
+        #     push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        # end
+        # Version which precomputes the unchanging components of setc.
+        tl = Expr(:tuple)
+        tr = Expr(:tuple)
+        for d = 3:N
+            push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
+            push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
+        setc = Expr(:call, :+)
+        for d ∈ rinds
+            push!(setc.args, d == 1 ? :j_1 :
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
+        end
+        for d ∈ nrinds
+            push!(setc.args, d == 1 ? :i_1 :
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
+        end
+        push!(setc.args, 1, :Dstar)
+        postj = Expr(:(=), Cᵥ′, setc)
+        push!(rblock.args, postj)
         return quote
             $sz
+            $tl = $tr
             Dstar = $dstar
             Dstar = -Dstar
             Bᵥ = $Bᵥ
@@ -282,10 +270,14 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, Expr(:call, :f, A), :ξ))
         push!(block.args, setmax)
         for d ∈ rinds
-            setj = Expr(:(=), Symbol(:j_, d), Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
+            setj = Expr(:(=), Symbol(:j_, d),
+                        Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
             # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
+        # The less efficient version (good for visualizing, though). It does not matter
+        # here, as this just handles the reduction over all dimensions specified via dims.
+        # In other words, the computation of the linear index only happens once.
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
         setc = Expr(:call, :+)
         for d ∈ rinds
@@ -309,24 +301,6 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         for d = 2:N
             push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
         end
-        # # One might pre-compute the unchanging components of setc, but in actuality,
-        # it has very little effect on performance.
-        # tl = Expr(:tuple)
-        # tr = Expr(:tuple)
-        # for d = 3:N
-        #     push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
-        #     push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        # end
-        # setc = Expr(:call, :+)
-        # for d ∈ rinds
-        #     push!(setc.args, d == 1 ? :j_1 :
-        #         Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
-        # end
-        # for d ∈ nrinds
-        #     push!(setc.args, d == 1 ? :i_1 :
-        #         Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
-        # end
-        # push!(setc.args, 1, :Dstar)
         return quote
             $js
             $sz
@@ -793,44 +767,53 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         # Push to after reduction loop
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
-        # # Simplest variety
-        # postj = Expr(:(=), Cᵥ′)
-        # if length(rinds) == 1
-        #     push!(postj.args, d == 1 ? :j_1 :
-        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
-        # else
-        #     setc = Expr(:call, :+)
-        #     for d ∈ rinds
-        #         push!(setc.args, d == 1 ? :j_1 :
-        #             Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
-        #     end
-        #     push!(postj.args, setc)
-        # end
         # Potential loop-carried dependency
+        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
+        # # The less efficient version (good for visualizing, though)
+        # setc = Expr(:call, :+)
+        # for d ∈ rinds
+        #     push!(setc.args, d == 1 ? :j_1 :
+        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
+        # end
+        # for d ∈ nrinds
+        #     push!(setc.args, d == 1 ? :i_1 :
+        #         Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
+        # end
+        # push!(setc.args, 1, :Dstar)
+        # postj = Expr(:(=), Cᵥ′, setc)
+        # push!(rblock.args, postj)
+        # # strides, offsets
+        # t = Expr(:tuple)
+        # for d = 1:N
+        #     push!(t.args, Symbol(:D_, d))
+        # end
+        # sz = Expr(:(=), t, Expr(:call, :size, :A))
+        # dstar = Expr(:call, :+, 1)
+        # for d = 2:N
+        #     push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        # end
+        # Version which precomputes the unchanging components of setc.
+        tl = Expr(:tuple)
+        tr = Expr(:tuple)
+        for d = 3:N
+            push!(tl.args, Symbol(:D_, ntuple(identity, d - 1)...))
+            push!(tr.args, Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         setc = Expr(:call, :+)
         for d ∈ rinds
             push!(setc.args, d == 1 ? :j_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:j_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:j_, d)))
         end
         for d ∈ nrinds
             push!(setc.args, d == 1 ? :i_1 :
-                Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)..., Symbol(:i_, d)))
+                Expr(:call, :*, Symbol(:D_, ntuple(identity, d - 1)...), Symbol(:i_, d)))
         end
         push!(setc.args, 1, :Dstar)
         postj = Expr(:(=), Cᵥ′, setc)
         push!(rblock.args, postj)
-        # strides, offsets
-        t = Expr(:tuple)
-        for d = 1:N
-            push!(t.args, Symbol(:D_, d))
-        end
-        sz = Expr(:(=), t, Expr(:call, :size, :A))
-        dstar = Expr(:call, :+, 1)
-        for d = 2:N
-            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        end
         return quote
             $sz
+            $tl = $tr
             Dstar = $dstar
             Dstar = -Dstar
             Bᵥ = $Bᵥ
@@ -855,10 +838,8 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        # cmpr = Expr(:(=), :newmax, Expr(:call, :(>), A, :ξ))
         cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
         push!(block.args, cmpr)
-        # setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, A, :ξ))
         setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, Expr(:call, :f, A), :ξ))
         push!(block.args, setmax)
         for d ∈ rinds
@@ -867,6 +848,10 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
+        # The less efficient version (good for visualizing, though). It does not matter
+        # here, as this just handles the reduction over all dimensions specified via dims.
+        # In other words, the computation of the linear index only happens once.
+        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
         setc = Expr(:call, :+)
         for d ∈ rinds
             push!(setc.args, d == 1 ? :j_1 :
