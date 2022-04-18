@@ -72,11 +72,11 @@ function findminmaxall_vararg_quote(OP, I, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+    cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
     push!(block.args, cmpr)
-    setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-    push!(block.args, setmax)
-    setindmax = Expr(:(=), :indmax, Expr(:call, :ifelse, :newmax, :i, :indmax))
+    setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+    push!(block.args, setm)
+    setindmax = Expr(:(=), :indmax, Expr(:call, :ifelse, :newm, :i, :indmax))
     push!(block.args, setindmax)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance),
@@ -155,14 +155,14 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             block = newblock
         end
         # Push to inside innermost loop
-        cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+        cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
         push!(block.args, cmpr)
-        setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-        push!(block.args, setmax)
+        setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+        push!(block.args, setm)
         for d ∈ rinds
             setj = Expr(:(=), Symbol(:j_, d),
-                        Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
-            # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
+                        Expr(:call, :ifelse, :newm, Symbol(:i_, d), Symbol(:j_, d)))
+            # setj = :($(Symbol(:j_, d)) = ifelse(newm, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
         # Push to after reduction loop
@@ -228,14 +228,14 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             block = newblock
         end
         # Push to inside innermost loop
-        cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+        cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
         push!(block.args, cmpr)
-        setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-        push!(block.args, setmax)
+        setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+        push!(block.args, setm)
         for d ∈ rinds
             setj = Expr(:(=), Symbol(:j_, d),
-                        Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
-            # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
+                        Expr(:call, :ifelse, :newm, Symbol(:i_, d), Symbol(:j_, d)))
+            # setj = :($(Symbol(:j_, d)) = ifelse(newm, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
@@ -388,11 +388,11 @@ function tfindminmaxall_vararg_quote(OP, I, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+    cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
     push!(block.args, cmpr)
-    setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-    push!(block.args, setmax)
-    setindmax = Expr(:(=), :indmax, Expr(:call, :ifelse, :newmax, :i, :indmax))
+    setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+    push!(block.args, setm)
+    setindmax = Expr(:(=), :indmax, Expr(:call, :ifelse, :newm, :i, :indmax))
     push!(block.args, setindmax)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance),
@@ -466,14 +466,14 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
             block = newblock
         end
         # Push to inside innermost loop
-        cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+        cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
         push!(block.args, cmpr)
-        setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-        push!(block.args, setmax)
+        setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+        push!(block.args, setm)
         for d ∈ rinds
             setj = Expr(:(=), Symbol(:j_, d),
-                        Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
-            # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
+                        Expr(:call, :ifelse, :newm, Symbol(:i_, d), Symbol(:j_, d)))
+            # setj = :($(Symbol(:j_, d)) = ifelse(newm, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
         # Push to after reduction loop
@@ -539,14 +539,14 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
             block = newblock
         end
         # Push to inside innermost loop
-        cmpr = Expr(:(=), :newmax, Expr(:call, Symbol(OP.instance), f, :ξ))
+        cmpr = Expr(:(=), :newm, Expr(:call, Symbol(OP.instance), f, :ξ))
         push!(block.args, cmpr)
-        setmax = Expr(:(=), :ξ, Expr(:call, :ifelse, :newmax, f, :ξ))
-        push!(block.args, setmax)
+        setm = Expr(:(=), :ξ, Expr(:call, :ifelse, :newm, f, :ξ))
+        push!(block.args, setm)
         for d ∈ rinds
             setj = Expr(:(=), Symbol(:j_, d),
-                        Expr(:call, :ifelse, :newmax, Symbol(:i_, d), Symbol(:j_, d)))
-            # setj = :($(Symbol(:j_, d)) = ifelse(newmax, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
+                        Expr(:call, :ifelse, :newm, Symbol(:i_, d), Symbol(:j_, d)))
+            # setj = :($(Symbol(:j_, d)) = ifelse(newm, $(Symbol(:i_, d)), $(Symbol(:j_, d))))
             push!(block.args, setj)
         end
         # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)Iₖ    : I₁ + D₁I₂ + D₁D₂I₃ + ⋯ + D₁D₂⋯Dₖ₋₁Iₖ
