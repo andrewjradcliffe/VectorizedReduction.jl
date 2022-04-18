@@ -471,3 +471,15 @@ findmax(C′)
 @benchmark vtfindmax(+, C1, C2, C3)
 @benchmark vtfindmax(+, cs)
 @benchmark vtfindmax((x, y, z) -> x * y + z, C1, C2, C3)
+
+@benchmark findmin(@. $C1 + $C2 + $C3)
+@benchmark vfindmin(+, $C1, $C2, $C3)
+@benchmark vtfindmin(+, $C1, $C2, $C3)
+
+@benchmark findmin((@. $C1 + $C2 + $C3), dims=(2,4))
+@benchmark vfindmin(+, $C1, $C2, $C3, dims=(2,4))
+@benchmark vtfindmin(+, $C1, $C2, $C3, dims=(2,4))
+
+@benchmark findmin((@. abs2($C1) * $C2 + $C3), dims=$(3,4))
+@benchmark vfindmin((x, y, z) -> abs2(x) * y + z, $C1, $C2, $C3, dims=$(3,4))
+@benchmark vtfindmin((x, y, z) -> abs2(x) * y + z, $C1, $C2, $C3, dims=$(3,4))

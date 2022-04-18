@@ -66,17 +66,38 @@ using Test
         A′ = @. A1 + A2 + A3
         @test findmin(A′) == vfindmin(+, A1, A2, A3)
         @test findmin(A′, dims=2) == vfindmin(+, A1, A2, A3, dims=2)
+        #
         v1 = rand(5)
         v2 = rand(5)
         v3 = rand(5)
         v′ = @. v1 + v2 + v3;
         @test findmin(v′) == vfindmin(+, v1, v2, v3)
+        #
+        A = rand(5,5,5,5)
+        A′ = cos.(A)
+        val1, ind1 = findmax(A′, dims=(2,4))
+        val2, ind2 = vfindmax(cos, A, dims=(2,4))
+        @test ind1 == ind2 && val1 ≈ val2
+        #
+        g(x) = ifelse(abs(x) ≥ 2, 100, 1)
+        A = randn(5,5,5,5)
+        A′ = g.(A)
+        val1, ind1 = findmax(A′, dims=(2,4))
+        val2, ind2 = vfindmax(g, A, dims=(2,4))
+        @test ind1 == ind2 && val1 ≈ val2
     end
     @testset "vfindminmax_vararg" begin
         A′ = @. A1 * A2 + A3;
         @test findmin(A′) == vfindmin((x, y, z) -> x * y + z, A1, A2, A3)
         val1, ind1 = findmin(A′, dims=2)
         val2, ind2 = vfindmin((x, y, z) -> x * y + z, A1, A2, A3, dims=2)
+        @test ind1 == ind2 && val1 ≈ val2
+        #
+        B1, B2, B3 = randn(5,5,5,5), randn(5,5,5,5), randn(5,5,5,5);
+        h(x, y, z) = ifelse(x ≥ .5, 100, 1) * y + √abs(z)
+        B′ = h.(B1, B2, B3)
+        val1, ind1 = findmax(B′, dims=(2,4))
+        val2, ind2 = vfindmax(h, B1, B2, B3, dims=(2,4))
         @test ind1 == ind2 && val1 ≈ val2
     end
 end
