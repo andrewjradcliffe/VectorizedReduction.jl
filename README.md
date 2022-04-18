@@ -37,13 +37,13 @@ This is a very reasonable assumption for certain types of data, e.g. Monte Carlo
 
 For inherently unordered data:
 Define `p` as the probability of success, i.e. the probability of `true` w.r.t. `any` and the probability of `false` w.r.t. `all`.
-The cumulative probability of evaluating all elements:
-```math
-Pr(x \leq 0) = {n \\choose 0} p^0 (1 - p)^{n-0} = (1 - p)^n
+The cumulative probability of evaluating all elements, `Pr(x ≤ 0)` is
+```julia
+binomial(n, 0) * p^0 * (1 - p)^(n - 0) # (1 - p)^n
 ```
-Define a linearized cost model, with `t` the time required to evaluate one element, and `n` the length of the vector. Denote `t_0` as the non-vectorized evaluation time per element, and `t_v` as the vectorized evaluation time per element. A crude estimate for the expected cost of the call is therefore
-```math
-t_{0} n (1 - p)^n
+Define a linearized cost model, with `t` the time required to evaluate one element, and `n` the length of the vector. Denote `t₀` as the non-vectorized evaluation time per element, and `tᵥ` as the vectorized evaluation time per element. A crude estimate for the expected cost of the call is therefore
+```julia
+t₀ * n * (1 - p)^n
 ```
 Thus, the point at which non-vectorized evaluation is optimal is
 ```julia
