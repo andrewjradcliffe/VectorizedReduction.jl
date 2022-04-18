@@ -189,6 +189,17 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
         push!(setc.args, 1, :Dstar)
         postj = Expr(:(=), Cᵥ′, setc)
         push!(rblock.args, postj)
+        # strides, offsets
+        td = Expr(:tuple)
+        for d = 1:N
+            push!(td.args, Symbol(:D_, d))
+        end
+        sz = Expr(:(=), td, Expr(:call, :size, :A_1))
+        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
+        dstar = Expr(:call, :+, 1)
+        for d = 2:N
+            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         return quote
             $t = As
             $sz
@@ -489,6 +500,17 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
         push!(setc.args, 1, :Dstar)
         postj = Expr(:(=), Cᵥ′, setc)
         push!(rblock.args, postj)
+        # strides, offsets
+        td = Expr(:tuple)
+        for d = 1:N
+            push!(td.args, Symbol(:D_, d))
+        end
+        sz = Expr(:(=), td, Expr(:call, :size, :A_1))
+        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
+        dstar = Expr(:call, :+, 1)
+        for d = 2:N
+            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         return quote
             $t = As
             $sz

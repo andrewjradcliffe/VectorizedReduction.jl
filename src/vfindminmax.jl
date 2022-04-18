@@ -209,16 +209,16 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         # postj = Expr(:(=), Cᵥ′, setc)
         # push!(rblock.args, postj)
         # # strides, offsets
-        # t = Expr(:tuple)
-        # for d = 1:N
-        #     push!(t.args, Symbol(:D_, d))
-        # end
-        # sz = Expr(:(=), t, Expr(:call, :size, :A))
-        # # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
-        # dstar = Expr(:call, :+, 1)
-        # for d = 2:N
-        #     push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        # end
+        t = Expr(:tuple)
+        for d = 1:N
+            push!(t.args, Symbol(:D_, d))
+        end
+        sz = Expr(:(=), t, Expr(:call, :size, :A))
+        # ∑ₖ₌₁ᴺ(∏ᵢ₌₁ᵏ⁻¹Dᵢ)    : 1 + D₁ + D₁D₂ + ⋯ + D₁D₂⋯Dₖ₋₁
+        dstar = Expr(:call, :+, 1)
+        for d = 2:N
+            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         # Version which precomputes the unchanging components of setc.
         tl = Expr(:tuple)
         tr = Expr(:tuple)
@@ -783,15 +783,15 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
         # postj = Expr(:(=), Cᵥ′, setc)
         # push!(rblock.args, postj)
         # # strides, offsets
-        # t = Expr(:tuple)
-        # for d = 1:N
-        #     push!(t.args, Symbol(:D_, d))
-        # end
-        # sz = Expr(:(=), t, Expr(:call, :size, :A))
-        # dstar = Expr(:call, :+, 1)
-        # for d = 2:N
-        #     push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
-        # end
+        t = Expr(:tuple)
+        for d = 1:N
+            push!(t.args, Symbol(:D_, d))
+        end
+        sz = Expr(:(=), t, Expr(:call, :size, :A))
+        dstar = Expr(:call, :+, 1)
+        for d = 2:N
+            push!(dstar.args, d == 2 ? :D_1 : Expr(:call, :*, ntuple(i -> Symbol(:D_, i), d - 1)...))
+        end
         # Version which precomputes the unchanging components of setc.
         tl = Expr(:tuple)
         tr = Expr(:tuple)
