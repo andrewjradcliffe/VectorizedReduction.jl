@@ -80,57 +80,113 @@ However, due to the current implementation details of Base `any`/`all`, early br
 
 A very simple comparison.
 ```julia
-julia> @benchmark mapreduce($abs2, $+, $A1, dims=$(1,2,4))
+julia> A = rand(5,5,5,5);
+
+julia> @benchmark mapreduce($abs2, $+, $A, dims=$(1,2,4))
 BenchmarkTools.Trial: 10000 samples with 133 evaluations.
  Range (min … max):  661.038 ns … 139.234 μs  ┊ GC (min … max): 0.00% … 99.24%
  Time  (median):     746.880 ns               ┊ GC (median):    0.00%
  Time  (mean ± σ):   798.069 ns ±   1.957 μs  ┊ GC (mean ± σ):  3.46% ±  1.40%
 
-   ▄               █▄                                            
-  ▃█▇▃▂▁▁▁▁▁▁▁▁▁▂▂▅██▅▄▄▃▂▂▁▁▁▁▁▁▁▁▂▂▃▄▄▄▄▄▅▅▅▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁ ▂
-  661 ns           Histogram: frequency by time          906 ns <
-
  Memory estimate: 368 bytes, allocs estimate: 8.
 
-julia> @benchmark vvmapreduce($abs2, $+, $A1, dims=$(1,2,4))
+julia> @benchmark vvmapreduce($abs2, $+, $A, dims=$(1,2,4))
 BenchmarkTools.Trial: 10000 samples with 788 evaluations.
  Range (min … max):  160.538 ns …  29.430 μs  ┊ GC (min … max):  0.00% … 99.11%
  Time  (median):     203.479 ns               ┊ GC (median):     0.00%
  Time  (mean ± σ):   212.916 ns ± 761.848 ns  ┊ GC (mean ± σ):  10.68% ±  2.97%
 
-  ▄██▄▃▃▁▂▁               ▁▁       ▁▄▅▆▆▄▃▂▄▅▆▅▄▃▂▁▁▁▁          ▂
-  ███████████▇█▇▇▇▇▆▆▆▆▅▆████▇▅▆▅▆▇████████████████████▇▇▆▆▆▇██ █
-  161 ns        Histogram: log(frequency) by time        235 ns <
-
  Memory estimate: 240 bytes, allocs estimate: 6.
 
-julia> @benchmark extrema($A1, dims=$(1,2))
-@benchmark vvextrema($A1, dims=$(1,2))
+julia> @benchmark extrema($A, dims=$(1,2))
 BenchmarkTools.Trial: 10000 samples with 9 evaluations.
  Range (min … max):  2.813 μs …   5.827 μs  ┊ GC (min … max): 0.00% … 0.00%
  Time  (median):     2.990 μs               ┊ GC (median):    0.00%
  Time  (mean ± σ):   3.039 μs ± 149.676 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-         ▅█▅                                                   
-  ▂▂▂▂▂▂▅████▆▄▅▇▆▆▅▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁▂▁▂▂▂▁▁▂▂▂▂▂▂▂▂▂▂ ▃
-  2.81 μs         Histogram: frequency by time        3.84 μs <
-
  Memory estimate: 960 bytes, allocs estimate: 14.
 
-julia> @benchmark vvextrema($A1, dims=$(1,2))
+julia> @benchmark vvextrema($A, dims=$(1,2))
 BenchmarkTools.Trial: 10000 samples with 202 evaluations.
  Range (min … max):  381.743 ns … 86.288 μs  ┊ GC (min … max):  0.00% … 99.05%
  Time  (median):     689.658 ns              ┊ GC (median):     0.00%
  Time  (mean ± σ):   712.113 ns ±  2.851 μs  ┊ GC (mean ± σ):  13.84% ±  3.43%
 
-   ▄▁                                                  ▃█▇▂     
-  ▅██▅▃▂▂▂▂▂▂▂▁▂▂▁▁▂▂▁▁▁▁▁▂▂▂▂▁▁▁▂▁▂▁▁▁▂▂▁▁▁▂▁▁▂▂▃▄▆▅▄▅████▅▃▂ ▃
-  382 ns          Histogram: frequency by time          726 ns <
-
  Memory estimate: 1.19 KiB, allocs estimate: 8.
 ```
 </p>
 </details>
+
+### Varargs examples
+<details>
+ <summaryClick me! ></summary>
+<p>
+
+These are somewhat standard fare, but can be quite convenient for expressing
+certain Bayesian computations.
+```julia
+julia> A1, A2, A3, A4 = rand(5,5,5,5), rand(5,5,5,5), rand(5,5,5,5), rand(5,5,5,5);
+
+julia> @benchmark mapreduce($+, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 10 evaluations.
+ Range (min … max):  1.597 μs …  1.181 ms  ┊ GC (min … max): 0.00% … 97.71%
+ Time  (median):     1.867 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   2.257 μs ± 14.216 μs  ┊ GC (mean ± σ):  8.56% ±  1.38%
+
+ Memory estimate: 5.66 KiB, allocs estimate: 14.
+
+julia> @benchmark vvmapreduce($+, $+, $A1, $A2, $A3, $A4, dims=$(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 203 evaluations.
+ Range (min … max):  384.768 ns … 150.041 μs  ┊ GC (min … max): 0.00% … 99.57%
+ Time  (median):     437.601 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   478.179 ns ±   2.117 μs  ┊ GC (mean ± σ):  7.50% ±  1.72%
+
+ Memory estimate: 304 bytes, allocs estimate: 6.
+
+# And for really strange stuff (e.g. posterior predictive transformations)
+julia> @benchmark vvmapreduce((x,y,z) -> ifelse(x*y+z ≥ 1, 1, 0), +, $A1, $A2, $A3)
+BenchmarkTools.Trial: 10000 samples with 198 evaluations.
+ Range (min … max):  438.126 ns …  5.704 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     439.995 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   442.020 ns ± 63.038 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+
+# using ifelse for just a boolean is quite slow, but the above is just for demonstration
+julia> @benchmark vvmapreduce((x,y,z) -> ≥(x*y+z, 1), +, $A1, $A2, $A3)
+BenchmarkTools.Trial: 10000 samples with 975 evaluations.
+ Range (min … max):  70.558 ns …  2.085 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     70.888 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   71.425 ns ± 23.489 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+
+# What I mean by posterior predictive transformation? Well, one might encounter
+# this in Bayesian model checking, which provides a convenient example.
+# If one wishes to compute the Pr = ∫∫𝕀(T(yʳᵉᵖ, θ) ≥ T(y, θ))p(yʳᵉᵖ|θ)p(θ|y)dyʳᵉᵖdθ
+# Let's imagine that A1 represents T(yʳᵉᵖ, θ) and A2 represents T(y, θ)
+# i.e. the test variable samples computed as a functional of the Markov chain (samples of θ)
+# Then, Pr is computed as
+vvmapreduce(≥, +, A1, A2) / length(A1)
+# Or, if only the probability is of interest, and we do not wish to use the functionals
+# for any other purpose, we could compute it as:
+vvmapreduce((x, y) -> ≥(f(x), f(y)), +, A1, A2) / length(A1)
+# where `f` is the functional of interest, e.g.
+vvmapreduce((x, y) -> ≥(abs2(x), abs2(y)), +, A1, A2) / length(A1)
+
+# One can also express commonly encountered reductions with ease;
+# these will be fused once a post-reduction operator can be specified
+# Mean squared error
+vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)) ./ (size(A1, 2) * size(A1, 4))
+# Euclidean distance
+(√).(vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)))
+```
+</p>
+</details>
+
+### `findmin`/`findmax` examples
+
+
 
 ## Acknowledgments
 The original motivation for this work was a vectorized & multithreaded multi-dimensional findmin, taking a variable number of array arguments -- it's a long story, but the similarity between findmin and mapreduce motivated a broad approach. My initial attempt (visible in the /attic) did not deliver all the performance possible -- this was only apparent through comparison to C. Elrod's approach to multidimensional forms in VectorizedStatistics. Having fully appreciated the beauty of branching through @generated functions, I decided to take a tour of some low-hanging fruit -- this package is the result.
