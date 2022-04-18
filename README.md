@@ -77,28 +77,30 @@ However, due to the current implementation details of Base `any`/`all`, early br
 <details>
  <summaryClick me! ></summary>
 <p>
-```julia
-julia> @btime mapreduce(abs2, +, A1, dims=(1,2,4))
-BenchmarkTools.Trial: 10000 samples with 159 evaluations.
- Range (min … max):  663.723 ns … 115.200 μs  ┊ GC (min … max): 0.00% … 99.07%
- Time  (median):     823.692 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   833.701 ns ±   1.614 μs  ┊ GC (mean ± σ):  2.73% ±  1.40%
 
-                        ▇█▁                                      
-  ▂▂▃▂▂▂▂▁▁▁▁▁▁▁▂▂▂▂▃▄▄▇███▄▃▃▃▂▂▂▂▃▃▃▄▄▅▇▇██▇▆▆▆▆▇▆▅▅▄▄▄▃▃▃▃▃▃ ▃
-  664 ns           Histogram: frequency by time          908 ns <
+A very simple comparison.
+```julia
+julia> @benchmark mapreduce($abs2, $+, $A1, dims=$(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 133 evaluations.
+ Range (min … max):  661.038 ns … 139.234 μs  ┊ GC (min … max): 0.00% … 99.24%
+ Time  (median):     746.880 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   798.069 ns ±   1.957 μs  ┊ GC (mean ± σ):  3.46% ±  1.40%
+
+   ▄               █▄                                            
+  ▃█▇▃▂▁▁▁▁▁▁▁▁▁▂▂▅██▅▄▄▃▂▂▁▁▁▁▁▁▁▁▂▂▃▄▄▄▄▄▅▅▅▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁ ▂
+  661 ns           Histogram: frequency by time          906 ns <
 
  Memory estimate: 368 bytes, allocs estimate: 8.
 
-julia> @btime vvmapreduce(abs2, +, A1, dims=(1,2,4))
-BenchmarkTools.Trial: 10000 samples with 792 evaluations.
- Range (min … max):  158.871 ns …  24.821 μs  ┊ GC (min … max):  0.00% … 98.82%
- Time  (median):     203.812 ns               ┊ GC (median):     0.00%
- Time  (mean ± σ):   210.932 ns ± 733.001 ns  ┊ GC (mean ± σ):  10.39% ±  2.97%
+julia> @benchmark vvmapreduce($abs2, $+, $A1, dims=$(1,2,4))
+BenchmarkTools.Trial: 10000 samples with 788 evaluations.
+ Range (min … max):  160.538 ns …  29.430 μs  ┊ GC (min … max):  0.00% … 99.11%
+ Time  (median):     203.479 ns               ┊ GC (median):     0.00%
+ Time  (mean ± σ):   212.916 ns ± 761.848 ns  ┊ GC (mean ± σ):  10.68% ±  2.97%
 
-   █▇                                                            
-  ▂██▅▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▃▅▆▅▄▂▂▃▅▆▅▄▃▂▂▁▁▁▁▁▁▁▁▁▁ ▂
-  159 ns           Histogram: frequency by time          234 ns <
+  ▄██▄▃▃▁▂▁               ▁▁       ▁▄▅▆▆▄▃▂▄▅▆▅▄▃▂▁▁▁▁          ▂
+  ███████████▇█▇▇▇▇▆▆▆▆▅▆████▇▅▆▅▆▇████████████████████▇▇▆▆▆▇██ █
+  161 ns        Histogram: log(frequency) by time        235 ns <
 
  Memory estimate: 240 bytes, allocs estimate: 6.
 
