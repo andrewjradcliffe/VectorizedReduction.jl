@@ -10,8 +10,8 @@ Pkg.add("VectorizedReduction")
 ## Usage
 
 This library provides "vectorized" (with/without multithreading) versions of the following functions
-1. `mapreduce` and common derived functions: `reduce`, `sum`, `prod`, `minimum`, `maximum`, `extrema`, `count`
-2. `any`, `all` (listed separately to emphasize theoretical considerations on applicability)
+1. `mapreduce` and common derived functions: `reduce`, `sum`, `prod`, `minimum`, `maximum`, `extrema`
+2. `count`, `any`, `all`
 3. `findmin`, `findmin`, `argmin`, `argmax`
 4. `logsumexp`, `softmax`, `logsoftmax`
 
@@ -70,3 +70,10 @@ julia> p.(.01, 10 .^ (1:4))
  0.0004604109969121861
 ```
 However, due to the current implementation details of Base `any`/`all`, early breakout occurs only when the reduction is being carried out across the entire array (i.e. does not occur when reducing over a subset of dimensions). Thus, the current advice is to use `vany`/`vall` unless one is reducing over the entire array, and even then, one should consider the `p` and `n` for one's problem.
+
+## Acknowledgments
+The motivation for this package arose from my own experiences, but my initial attempt (visible in the /attic) did not deliver all the performance possible -- this was ony apparent through comparison to C. Elrod's approach to multidimensional forms in VectorizedStatistics. Having fully appreciated the beauty of branching through @generated functions, I decided to take a tour of osme low-hanging fruit -- this package is the result.
+
+## Future work
+1. post-reduction operators
+2. reductions over index subsets within a dimension.
