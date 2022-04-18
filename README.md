@@ -45,8 +45,6 @@ Define a linearized cost model, with `t` the time required to evaluate one eleme
 ```math
 t_{0} n (1 - p)^n
 ```
-<img src="https://render.githubusercontent.com/render/math?math={t_{0} n (1 - p)^{n}}#gh-light-mode-only">
-<img src="https://render.githubusercontent.com/render/math?math={\color{white}t_{0} n (1 - p)^{n}}#gh-dark-mode-only">
 Thus, the point at which non-vectorized evaluation is optimal is
 ```julia
 t₀ * (1 - p)^n < tᵥ
