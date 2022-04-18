@@ -185,7 +185,56 @@ vvmapreduce((x, y) -> abs2(x - y), +, A1, A2, dims=(2,4)) ./ (size(A1, 2) * size
 </details>
 
 ### `findmin`/`findmax` examples
+<details>
+ <summaryClick me! ></summary>
+<p>
+# Examples of extended syntax (applies to `findmin`, `findmax`, `argmin, `argmax`): `findmin(f, A; dims)`, `findmin(f, A...; dims)`. In the former case, `f` : ℝ → ℝ; in the latter, `f` : ℝᴺ → ℝ.
+```julia
+# Easy to express without the extended syntax, but not efficient.
+julia> B1, B2, B3 = rand(5,5,5,5), rand(5,5,5,5), rand(5,5,5,5);
 
+julia> B′ = @. B1 + B2 + B3;
+
+julia> findmax(B′) == vfindmax(+, B1, B2, B3)
+true
+
+julia> @benchmark findmin(@. $B1 + $B2 + $B3)
+@benchmark vfindmin(+, $B1, $B2, $B3)
+BenchmarkTools.Trial: 10000 samples with 8 evaluations.
+ Range (min … max):  3.905 μs … 943.922 μs  ┊ GC (min … max): 0.00% … 94.06%
+ Time  (median):     4.011 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   4.128 μs ±   9.418 μs  ┊ GC (mean ± σ):  2.15% ±  0.94%
+
+ Memory estimate: 5.11 KiB, allocs estimate: 2.
+
+julia> @benchmark vfindmin(+, $B1, $B2, $B3)
+BenchmarkTools.Trial: 10000 samples with 943 evaluations.
+ Range (min … max):  100.346 ns … 151.376 ns  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     100.821 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   100.866 ns ±   0.651 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+ Memory estimate: 0 bytes, allocs estimate: 0.
+
+# A multidimensional example
+
+julia> @benchmark findmin((@. abs2($B1) * $B2 + $B3), dims=$(3,4))
+BenchmarkTools.Trial: 10000 samples with 7 evaluations.
+ Range (min … max):  4.026 μs …  1.132 ms  ┊ GC (min … max): 0.00% … 94.30%
+ Time  (median):     4.311 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   4.494 μs ± 11.335 μs  ┊ GC (mean ± σ):  2.37% ±  0.94%
+
+ Memory estimate: 6.55 KiB, allocs estimate: 12.
+
+julia> @benchmark vfindmin((x, y, z) -> abs2(x) * y + z, $B1, $B2, $B3, dims=$(3,4))
+BenchmarkTools.Trial: 10000 samples with 168 evaluations.
+ Range (min … max):  623.071 ns … 118.436 μs  ┊ GC (min … max):  0.00% … 99.10%
+ Time  (median):       1.053 μs               ┊ GC (median):     0.00%
+ Time  (mean ± σ):     1.101 μs ±   4.003 μs  ┊ GC (mean ± σ):  12.56% ±  3.43%
+
+ Memory estimate: 1.62 KiB, allocs estimate: 9.
+```
+</p>
+</details>
 
 
 ## Acknowledgments
