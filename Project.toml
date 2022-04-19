@@ -8,7 +8,9 @@ LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 
 [compat]
-julia = "1"
+julia = "1.5"
+LoopVectorization = "0.12.108"
+Static = "0.4.1, 0.4, 0.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
