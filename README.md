@@ -16,7 +16,7 @@ This library provides "vectorized" (with/without multithreading) versions of the
 4. `logsumexp`, `softmax`, `logsoftmax` ("safe" versions: avoid underflow/overflow)
 
 The naming convention is as follows: a vectorized (without threading) version is prefixed by `v`, and a vectorized with threading version is prefixed by `vt`.
-There is a single exception to this rule: vectorized (without threading) versions of the functions listen in 1. are prefixed by `vv` in order to avoid name collisions with LoopVectorization and VectorizedStatistics.
+There is a single exception to this rule: vectorized (without threading) versions of the functions listed in 1. are prefixed by `vv` in order to avoid name collisions with LoopVectorization and VectorizedStatistics.
 
 ## Motivation
 
