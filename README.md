@@ -20,7 +20,7 @@ There is a single exception to this rule: vectorized (without threading) version
 
 ## Motivation
 
-When writing numerical code, one may with to perform a reduction, perhaps across multiple dimensions, as the most natural means of expressing the relevant mathematical operation.
+When writing numerical code, one may wish to perform a reduction, perhaps across multiple dimensions, as the most natural means of expressing the relevant mathematical operation.
 For readers well-acquainted with LoopVectorization.jl, the thought immediately comes to mind: writing out the loops will inevitably be a large performance gain. Thus, in that neverending pursuit of fast code, we write the loops -- but this produces specific code, tailored to the dimensions of the problem.
 Instead, we might have liked to write generic code, parameterizing our function with an index set of dimensions. This package attempts to resolve this perpetual dilemma using metaprogramming. The hope is that the next time one asks the question: is it worthwhile to write the loops (gain performance, lose genericity), or can I make do with the Base implementation? that one can confidently reach for one of the "vectorized" versions provided by this package.
 
@@ -201,7 +201,6 @@ julia> findmax(B′) == vfindmax(+, B1, B2, B3)
 true
 
 julia> @benchmark findmin(@. $B1 + $B2 + $B3)
-@benchmark vfindmin(+, $B1, $B2, $B3)
 BenchmarkTools.Trial: 10000 samples with 8 evaluations.
  Range (min … max):  3.905 μs … 943.922 μs  ┊ GC (min … max): 0.00% … 94.06%
  Time  (median):     4.011 μs               ┊ GC (median):    0.00%
@@ -245,6 +244,7 @@ The original motivation for this work was a vectorized & multithreaded multi-dim
 ## Future work
 1. post-reduction operators
 2. reductions over index subsets within a dimension.
+3. actual documentation
 
 ## Elsewhere
 * [LoopVectorization.jl](https://github.com/chriselrod/LoopVectorization.jl) back-end for this package.
