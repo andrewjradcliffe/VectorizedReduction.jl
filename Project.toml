@@ -9,7 +9,7 @@ Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 
 [compat]
 julia = "1.6"
-LoopVectorization = "0.12.113"
+LoopVectorization = "0.12.110"
 Static = "0.4.1, 0.4, 0.6"
 
 [extras]
