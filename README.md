@@ -12,7 +12,7 @@ Pkg.add("VectorizedReduction")
 This library provides "vectorized" (with/without multithreading) versions of the following functions
 1. `mapreduce` and common derived functions: `reduce`, `sum`, `prod`, `minimum`, `maximum`, `extrema`
 2. `count`, `any`, `all`
-3. `findmin`, `findmin`, `argmin`, `argmax`
+3. `findmin`, `findmax`, `argmin`, `argmax`
 4. `logsumexp`, `softmax`, `logsoftmax` ("safe" versions: avoid underflow/overflow)
 
 The naming convention is as follows: a vectorized (without threading) version is prefixed by `v`, and a vectorized with threading version is prefixed by `vt`.
