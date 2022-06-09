@@ -68,6 +68,9 @@ vvprod(f::F, A, dims) where {F} = vvmapreduce(f, *, one, A, dims)
     vvmaximum(f, A::AbstractArray, dims=:)
 
 Compute the maximum value by calling `f` on each element of `A` over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vvmaximum(f::F, A, dims) where {F} = vvmapreduce(f, max, typemin, A, dims)
 
@@ -75,6 +78,9 @@ vvmaximum(f::F, A, dims) where {F} = vvmapreduce(f, max, typemin, A, dims)
     vvminimum(f, A::AbstractArray, dims=:)
 
 Compute the minimum value by calling `f` on each element of `A` over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vvminimum(f::F, A, dims) where {F} = vvmapreduce(f, min, typemax, A, dims)
 
@@ -130,6 +136,9 @@ vvminimum(A::AbstractArray) = vvmapreduce(identity, min, typemax, A, :)
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
 over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vvextrema(f::F, A, dims) where {F} = collect(zip(vvminimum(f, A, dims), vvmaximum(f, A, dims)))
 vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
@@ -632,6 +641,9 @@ vtprod(f::F, A, dims) where {F} = vtmapreduce(f, *, one, A, dims)
     vtmaximum(f, A::AbstractArray, dims=:)
 
 Compute the maximum value by calling `f` on each element of `A` over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vtmaximum(f::F, A, dims) where {F} = vtmapreduce(f, max, typemin, A, dims)
 
@@ -639,6 +651,9 @@ vtmaximum(f::F, A, dims) where {F} = vtmapreduce(f, max, typemin, A, dims)
     vtminimum(f, A::AbstractArray, dims=:)
 
 Compute the minimum value by calling `f` on each element of `A` over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vtminimum(f::F, A, dims) where {F} = vtmapreduce(f, min, typemax, A, dims)
 
@@ -688,6 +703,9 @@ vtminimum(A::AbstractArray) = vtmapreduce(identity, min, typemax, A, :)
 
 Compute the minimum and maximum values by calling `f`  on each element of of `A`
 over the given `dims`.
+
+# Warning
+`NaN` values are not handled!
 """
 vtextrema(f::F, A, dims) where {F} = collect(zip(vtminimum(f, A, dims), vtmaximum(f, A, dims)))
 vtextrema(f::F, A, ::Colon) where {F} = (vtminimum(f, A, :), vtmaximum(f, A, :))

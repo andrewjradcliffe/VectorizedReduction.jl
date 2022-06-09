@@ -39,6 +39,9 @@ of an array are not well-supported. A workaround is possible by reshaping `A` bu
 the resultant performance is often only on par with `findmax`. As a temporary convenience,
 `findmax1` is provided for explicit uses of the re-shaping strategy, though the user
 is cautioned as to the performance problems.
+
+# Warning
+`NaN` values are not handled!
 """
 vfindmax(f::F, A, dims) where {F<:Function} = vfindminmax(f, >, typemin, A, dims)
 
@@ -55,6 +58,9 @@ of an array are not well-supported. A workaround is possible by reshaping `A` bu
 the resultant performance is often only on par with `findmin`. As a temporary convenience,
 `findmin1` is provided for explicit uses of the re-shaping strategy, though the user
 is cautioned as to the performance problems.
+
+# Warning
+`NaN` values are not handled!
 """
 vfindmin(f::F, A, dims) where {F<:Function} = vfindminmax(f, <, typemax, A, dims)
 
@@ -384,6 +390,10 @@ dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colo
 Threaded.
 
 See also: [`vfindmax`](@ref)
+
+# Warning
+`NaN` values are not handled!
+
 """
 vtfindmax(f::F, A, dims) where {F<:Function} = vtfindminmax(f, >, typemin, A, dims)
 
@@ -395,6 +405,9 @@ dimensions `dims`, which may be `::Int`, `::NTuple{M, Int} where {M}` or `::Colo
 Threaded.
 
 See also: [`vfindmin`](@ref)
+
+# Warning
+`NaN` values are not handled!
 """
 vtfindmin(f::F, A, dims) where {F<:Function} = vtfindminmax(f, <, typemax, A, dims)
 # ::AbstractArray required in order for kwargs interface to work
