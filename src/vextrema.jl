@@ -4,6 +4,17 @@
 #
 #
 ############################################################################################
+# interface
+vextrema(f, A; dims=:, init=(typemax, typemin)) = vextrema(f, init[1], init[2], A, dims)
+vextrema(A; dims=:, init=(typemax, typemin)) = vextrema(identity, init[1], init[2], A, dims)
+
+# handle convenience cases
+vextrema(f, A, initmin, initmax, dims::Int) = vextrema(f, A, initmin, initmax, (dims,))
+vextrema(f, A, dims) = vextrema(f, typemax, typemin, A, dims)
+vextrema(A::AbstractArray, dims) = vextrema(identity, A, dims)
+
+################
+
 function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ, Iₘₐₓ, T, N}
     Tₒ = Base.promote_op(f, T)
     mn = initmin(Tₒ)
