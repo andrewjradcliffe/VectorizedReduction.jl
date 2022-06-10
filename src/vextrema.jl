@@ -13,6 +13,9 @@ over the given `dims`, with the `mn` and `mx` initialized by the respective argu
 of the 2-tuple `init`, which can be any combination of values (`<:Number`) or functions
 which accept a single type argument.
 
+# Warning
+`NaN` values are not handled!
+
 # Examples
 ```jldoctest
 julia> A = reshape(Vector(1:2:16), (2,2,2))
@@ -558,6 +561,9 @@ Compute the minimum and maximum values by calling `f` on each element of of `A`
 over the given `dims`, with the `mn` and `mn` initialized by the respective arguments
 of the 2-tuple `init`, which can be any combination of values (`<:Number`) or functions
 which accept a single type argument. Threaded.
+
+# Warning
+`NaN` values are not handled!
 
 # Examples
 ```jldoctest
