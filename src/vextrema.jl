@@ -6,7 +6,7 @@
 ############################################################################################
 # interface
 """
-    vextrema([f=identity], A::AbstractArray; [dims=:], [init=(mn,mx)])
+    vvextrema([f=identity], A::AbstractArray; [dims=:], [init=(mn,mx)])
 
 Compute the minimum and maximum values by calling `f` on each element of of `A`
 over the given `dims`, with the `mn` and `mx` initialized by the respective arguments
@@ -25,7 +25,7 @@ julia> A = reshape(Vector(1:2:16), (2,2,2))
   9  13
  11  15
 
-julia> vextrema(abs2, A, dims=(1,2), init=(typemax, 100))
+julia> vvextrema(abs2, A, dims=(1,2), init=(typemax, 100))
 1×1×2 Array{Tuple{Int64, Int64}, 3}:
 [:, :, 1] =
  (1, 100)
@@ -33,36 +33,36 @@ julia> vextrema(abs2, A, dims=(1,2), init=(typemax, 100))
 [:, :, 2] =
  (81, 225)
 
-julia> vextrema(abs2, A, init=(typemax, 100))
+julia> vvextrema(abs2, A, init=(typemax, 100))
 (1, 225)
 ```
 """
-vextrema(f, A; dims=:, init=(typemax, typemin)) = vextrema(f, init[1], init[2], A, dims)
-vextrema(A; dims=:, init=(typemax, typemin)) = vextrema(identity, init[1], init[2], A, dims)
+vvextrema(f, A; dims=:, init=(typemax, typemin)) = vvextrema(f, init[1], init[2], A, dims)
+vvextrema(A; dims=:, init=(typemax, typemin)) = vvextrema(identity, init[1], init[2], A, dims)
 
 # handle convenience cases
-vextrema(f, initmin, initmax, A, dims::Int) = vextrema(f, initmin, initmax, A, (dims,))
+vvextrema(f, initmin, initmax, A, dims::Int) = vvextrema(f, initmin, initmax, A, (dims,))
 
 """
-    vextrema([f=identity], A::AbstractArray, dims=:)
+    vvextrema([f=identity], A::AbstractArray, dims=:)
 
 Compute the minimum and maximum values by calling `f` on each element of of `A`
 over the given `dims`.
 """
-vextrema(f, A, dims) = vextrema(f, typemax, typemin, A, dims)
-vextrema(A::AbstractArray, dims) = vextrema(identity, A, dims)
+vvextrema(f, A, dims) = vvextrema(f, typemax, typemin, A, dims)
+vvextrema(A::AbstractArray, dims) = vvextrema(identity, A, dims)
 
 # support any kind of init args -- this necessitates Iₘᵢₙ<:Function, Iₘₐₓ<:Function
 # for the function-initialized version. It would be nice to support functors, but
 # LoopVectorization would likely throw anyway.
-vextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Function, Iₘₐₓ<:Number} =
-    vextrema(f, initmin(Base.promote_op(f, eltype(A))), initmax, A, dims)
-vextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
-    vextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, dims)
+vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Function, Iₘₐₓ<:Number} =
+    vvextrema(f, initmin(Base.promote_op(f, eltype(A))), initmax, A, dims)
+vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
+    vvextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, dims)
 
 ################
 
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N}
+function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N}
     Tₒ = Base.promote_op(f, T)
     mn = initmin(Tₒ)
     mx = initmax(Tₒ)
@@ -73,13 +73,13 @@ function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArr
     mn, mx
 end
 
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N, M}
+function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N, M}
     Dᴬ = size(A)
     Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     Tₒ = Base.promote_op(f, T)
     B = similar(A, Tₒ, Dᴮ)
     C = similar(A, Tₒ, Dᴮ)
-    _vextrema!(f, initmin, initmax, B, C, A, dims)
+    _vvextrema!(f, initmin, initmax, B, C, A, dims)
     return collect(zip(B, C))
 end
 
@@ -188,7 +188,7 @@ function branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N::Int, M::Int, D)
                 n ∈ static_dims && continue
                 tc = copy(t)
                 push!(tc.args, :(StaticInt{$n}()))
-                qnew = Expr(ifsym, :(dimm == $n), :(return _vextrema!(f, initmin, initmax, B, C, A, $tc)))
+                qnew = Expr(ifsym, :(dimm == $n), :(return _vvextrema!(f, initmin, initmax, B, C, A, $tc)))
                 for r ∈ m+1:M
                     push!(tc.args, :(dims[$r]))
                 end
@@ -201,14 +201,14 @@ function branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N::Int, M::Int, D)
             for r ∈ m+1:M
                 push!(tc.args, :(dims[$r]))
             end
-            push!(qold.args, Expr(:block, :(return _vextrema!(f, initmin, initmax, B, C, A, $tc))))
+            push!(qold.args, Expr(:block, :(return _vvextrema!(f, initmin, initmax, B, C, A, $tc))))
             return q
         end
     end
     return staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims, N)
 end
 
-@generated function _vextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N, M, D)
 end
 
@@ -230,17 +230,17 @@ function extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
     end
 end
 
-@generated function _vextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
     extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
 end
 
 ################
-# function vextrema_nonzip(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ, Iₘₐₓ, T, N, M}
+# function vvextrema_nonzip(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ, Iₘₐₓ, T, N, M}
 #     Dᴬ = size(A)
 #     Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
 #     Tₒ = Base.promote_op(f, T)
 #     B = similar(A, Tuple{Tₒ, Tₒ}, Dᴮ)
-#     _vextrema_nonzip!(f, initmin, initmax, B, A, dims)
+#     _vvextrema_nonzip!(f, initmin, initmax, B, A, dims)
 #     return B
 # end
 
@@ -346,7 +346,7 @@ end
 #                 n ∈ static_dims && continue
 #                 tc = copy(t)
 #                 push!(tc.args, :(StaticInt{$n}()))
-#                 qnew = Expr(ifsym, :(dimm == $n), :(return _vextrema_nonzip!(f, initmin, initmax, B, A, $tc)))
+#                 qnew = Expr(ifsym, :(dimm == $n), :(return _vvextrema_nonzip!(f, initmin, initmax, B, A, $tc)))
 #                 for r ∈ m+1:M
 #                     push!(tc.args, :(dims[$r]))
 #                 end
@@ -359,7 +359,7 @@ end
 #             for r ∈ m+1:M
 #                 push!(tc.args, :(dims[$r]))
 #             end
-#             push!(qold.args, Expr(:block, :(return _vextrema_nonzip!(f, initmin, initmax, B, A, $tc))))
+#             push!(qold.args, Expr(:block, :(return _vvextrema_nonzip!(f, initmin, initmax, B, A, $tc))))
 #             return q
 #         end
 #     end
@@ -367,13 +367,13 @@ end
 # end
 
 
-# @generated function _vextrema_nonzip!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tuple{Tₒ, Tₒ}, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vvextrema_nonzip!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tuple{Tₒ, Tₒ}, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
 #     branches_extrema_nonzip_quote(Iₘᵢₙ, Iₘₐₓ, N, M, D)
 # end
 
 ############################################################################################
 # Version wherein an initial value is supplied
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Number, Iₘₐₓ<:Number, T, N}
+function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Number, Iₘₐₓ<:Number, T, N}
     Tₒ = Base.promote_op(f, T)
     mn = convert(Tₒ, initmin)
     mx = convert(Tₒ, initmax)
@@ -384,13 +384,13 @@ function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArr
     mn, mx
 end
 
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ<:Number, Iₘₐₓ<:Number, T, N, M}
+function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ<:Number, Iₘₐₓ<:Number, T, N, M}
     Dᴬ = size(A)
     Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     Tₒ = Base.promote_op(f, T)
     B = similar(A, Tₒ, Dᴮ)
     C = similar(A, Tₒ, Dᴮ)
-    _vextrema_init!(f, initmin, initmax, B, C, A, dims)
+    _vvextrema_init!(f, initmin, initmax, B, C, A, dims)
     return collect(zip(B, C))
 end
 
@@ -503,7 +503,7 @@ function branches_extrema_init_quote(N::Int, M::Int, D)
                 n ∈ static_dims && continue
                 tc = copy(t)
                 push!(tc.args, :(StaticInt{$n}()))
-                qnew = Expr(ifsym, :(dimm == $n), :(return _vextrema_init!(f, initmin, initmax, B, C, A, $tc)))
+                qnew = Expr(ifsym, :(dimm == $n), :(return _vvextrema_init!(f, initmin, initmax, B, C, A, $tc)))
                 for r ∈ m+1:M
                     push!(tc.args, :(dims[$r]))
                 end
@@ -516,7 +516,7 @@ function branches_extrema_init_quote(N::Int, M::Int, D)
             for r ∈ m+1:M
                 push!(tc.args, :(dims[$r]))
             end
-            push!(qold.args, Expr(:block, :(return _vextrema_init!(f, initmin, initmax, B, C, A, $tc))))
+            push!(qold.args, Expr(:block, :(return _vvextrema_init!(f, initmin, initmax, B, C, A, $tc))))
             return q
         end
     end
@@ -524,7 +524,7 @@ function branches_extrema_init_quote(N::Int, M::Int, D)
 end
 
 
-@generated function _vextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_extrema_init_quote(N, M, D)
 end
 
@@ -546,7 +546,7 @@ function extrema_init_map_quote()
     end
 end
 
-@generated function _vextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
     extrema_init_map_quote()
 end
 
