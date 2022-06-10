@@ -5,17 +5,57 @@
 #
 ############################################################################################
 # interface
+"""
+    vvextrema([f=identity], A::AbstractArray; [dims=:], [init=(mn,mx)])
+
+Compute the minimum and maximum values by calling `f` on each element of of `A`
+over the given `dims`, with the `mn` and `mn` initialized by the respective arguments
+of the 2-tuple `init`, which can be any combination of values (`<:Number`) or functions
+which accept a single type argument.
+
+# Examples
+```jldoctest
+julia> A = reshape(Vector(1:2:16), (2,2,2))
+2×2×2 Array{Int64, 3}:
+[:, :, 1] =
+ 1  5
+ 3  7
+
+[:, :, 2] =
+  9  13
+ 11  15
+
+julia> vextrema(abs2, A, dims=(1,2), init=(typemax, 100))
+1×1×2 Array{Tuple{Int64, Int64}, 3}:
+[:, :, 1] =
+ (1, 100)
+
+[:, :, 2] =
+ (81, 225)
+
+julia> vextrema(abs2, A, init=(typemax, 100))
+(1, 225)
+```
+"""
 vextrema(f, A; dims=:, init=(typemax, typemin)) = vextrema(f, init[1], init[2], A, dims)
 vextrema(A; dims=:, init=(typemax, typemin)) = vextrema(identity, init[1], init[2], A, dims)
 
 # handle convenience cases
-vextrema(f, A, initmin, initmax, dims::Int) = vextrema(f, A, initmin, initmax, (dims,))
+vextrema(f, initmin, initmax, A, dims::Int) = vextrema(f, initmin, initmax, A, (dims,))
 vextrema(f, A, dims) = vextrema(f, typemax, typemin, A, dims)
 vextrema(A::AbstractArray, dims) = vextrema(identity, A, dims)
 
+# support any kind of init args -- this necessitates Iₘᵢₙ<:Function, Iₘₐₓ<:Function
+# for the function-initialized version. It would be nice to support functors, but
+# LoopVectorization would likely throw anyway.
+vextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Function, Iₘₐₓ<:Number} =
+    vextrema(f, initmin(Base.promote_op(f, eltype(A))), initmax, A, dims)
+vextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
+    vextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, dims)
+
 ################
 
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ, Iₘₐₓ, T, N}
+function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N}
     Tₒ = Base.promote_op(f, T)
     mn = initmin(Tₒ)
     mx = initmax(Tₒ)
@@ -26,7 +66,7 @@ function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArr
     mn, mx
 end
 
-function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ, Iₘₐₓ, T, N, M}
+function vextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N, M}
     Dᴬ = size(A)
     Dᴮ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     Tₒ = Base.promote_op(f, T)
