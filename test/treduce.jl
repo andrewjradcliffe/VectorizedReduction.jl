@@ -120,9 +120,9 @@ fz = float(z)
 @test vtminimum(Int[]; init=-1) == -1
 @test vtextrema(Int[]; init=(1, -1)) == (1, -1) # needs fixed
 
-@test vtmaximum(sin, []; init=-1) == -1
-@test vtminimum(sin, []; init=1) == 1
-@test vtextrema(sin, []; init=(1, -1)) == (1, -1)
+@test vtmaximum(sin, Int[]; init=-1) == -1
+@test vtminimum(sin, Int[]; init=1) == 1
+@test vtextrema(sin, Int[]; init=(1, -1)) == (1, -1)
 
 # @test vtmaximum(5) == 5
 # @test vtminimum(5) == 5
