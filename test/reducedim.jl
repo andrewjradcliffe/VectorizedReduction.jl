@@ -37,9 +37,9 @@
 
     @test @inferred(vvsum(abs, A, dims=region)) ≈ sum(abs, A, dims=region)
     @test @inferred(vvsum(abs2, A, dims=region)) ≈ sum(abs2, A, dims=region)
+    @test @inferred(vvprod(abs2, A, dims=region)) ≈ prod(abs2, A, dims=region)
     @test @inferred(vvmaximum(abs, A, dims=region)) ≈ maximum(abs, A, dims=region)
     @test @inferred(vvminimum(abs, A, dims=region)) ≈ minimum(abs, A, dims=region)
-
 end
 
 # Small integers
