@@ -39,8 +39,9 @@ A = rand(10,10,10,10);
 @benchmark vextrema(abs2, typemax, typemin, A, (2,4))
 @benchmark vvextrema(abs2, A, (2,4))
 
-# B = similar(A, (3, 1, 3, 1));
-# C = similar(A, (3, 1, 3, 1));
+B = similar(A, (10, 1, 10, 1));
+C = similar(A, (10, 1, 10, 1));
+@benchmark collect(zip($B, $C))
 
 function staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{Int}, N::Int)
     A = Expr(:ref, :A, ntuple(d -> Symbol(:i_, d), N)...)
