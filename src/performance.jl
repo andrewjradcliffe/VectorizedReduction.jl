@@ -523,4 +523,3 @@ for tup ∈ tups
     @btime vvextrema($A, $tup)
     @btime extrema($A, dims=$tup)
 end
-
