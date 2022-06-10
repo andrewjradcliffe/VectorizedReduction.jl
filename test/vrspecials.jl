@@ -2,11 +2,20 @@
 
 @testset "vvmapreduce" begin
     A = rand(5,5,5,5)
-    @test vvmapreduce(abs2, +, A, dims=(1,3)) ≈ mapreduce(abs2, +, A, dims=(1,3))
-    @test vvmapreduce(cos, *, A, dims=(2,4)) ≈ mapreduce(cos, *, A, dims=(2,4))
-    @test vvprod(log, A, dims=1) ≈ prod(log, A, dims=1)
-    @test vvminimum(sin, A, dims=(3,4)) ≈ minimum(sin, A, dims=(3,4))
-    @test vvmaximum(sin, A, dims=(3,4)) ≈ maximum(sin, A, dims=(3,4))
+    @testset "test reductions over region: $region" for region in Any[
+        1, 2, 3, 4, 5, (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4),
+        (1, 2, 3), (1, 3, 4), (2, 3, 4), (1, 2, 3, 4), :]
+        @test vvmapreduce(abs2, +, A, dims=region) ≈ mapreduce(abs2, +, A, dims=region)
+        @test vvmapreduce(cos, *, A, dims=region) ≈ mapreduce(cos, *, A, dims=region)
+        @test vvprod(log, A, dims=region) ≈ prod(log, A, dims=region)
+        @test vvminimum(sin, A, dims=region) ≈ minimum(sin, A, dims=region)
+        @test vvmaximum(sin, A, dims=region) ≈ maximum(sin, A, dims=region)
+        if region !== Colon()
+            @test all((((x1, y1), (x2, y2)),) -> x1 ≈ x2 && y1 ≈ y2, zip(vvextrema(sin, A, dims=region), extrema(sin, A, dims=region)))
+        else
+            @test all(vvextrema(sin, A, dims=region) .≈ extrema(sin, A, dims=region))
+        end
+    end
 end
 @testset "vvmapreduce_vararg" begin
     A1 = rand(5,5,5,5)
@@ -14,10 +23,28 @@ end
     A3 = rand(5,5,5,5)
     A4 = rand(1:10, 5,5,5,5)
     as = (A1, A2, A3)
-    @test vvmapreduce(+, +, as, dims=(1,2,4)) ≈ mapreduce(+, +, A1, A2, A3, dims=(1,2,4))
-    # Tests of variably typed arrays
-    @test vvmapreduce(+, +, A1, A2, dims=(2,3,4)) ≈ mapreduce(+, +, A1, A2, dims=(2,3,4))
-    @test vvmapreduce(+, +, A1, A4, dims=(2,3,4)) ≈ mapreduce(+, +, A1, A4, dims=(2,3,4))
+    f3(x, y, z) = x * y + z
+    f4(w, x, y, z) = inv(w) * exp(abs2(x - y) * z)
+    @testset "test reductions over region: $region" for region in Any[
+        1, 2, 3, 4, 5, (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4),
+        (1, 2, 3), (1, 3, 4), (2, 3, 4), (1, 2, 3, 4), (1,2,3,4,5), :]
+        @test vvmapreduce(+, +, as, dims=region) ≈ mapreduce(+, +, A1, A2, A3, dims=region)
+        @test vvmapreduce(*, +, as, dims=region) ≈ mapreduce(*, +, A1, A2, A3, dims=region)
+        @test vvmapreduce(+, *, as, dims=region) ≈ mapreduce(+, *, A1, A2, A3, dims=region)
+        @test vvmapreduce(f3, *, as, dims=region) ≈ mapreduce(f3, *, A1, A2, A3, dims=region)
+
+        # slurping
+        @test vvmapreduce(+, +, A1, A2, A3, dims=region) ≈ mapreduce(+, +, A1, A2, A3, dims=region)
+        @test vvmapreduce(*, +, A1, A2, A3, dims=region) ≈ mapreduce(*, +, A1, A2, A3, dims=region)
+        @test vvmapreduce(+, *, A1, A2, A3, dims=region) ≈ mapreduce(+, *, A1, A2, A3, dims=region)
+        @test vvmapreduce(f3, *, A1, A2, A3, dims=region) ≈ mapreduce(f3, *, A1, A2, A3, dims=region)
+        @test vvmapreduce(f4, *, A1, A2, A3, A3, dims=region) ≈ mapreduce(f4, *, A1, A2, A3, A3, dims=region)
+        # Tests of variably typed arrays
+        @test vvmapreduce(+, +, A1, A2, dims=region) ≈ mapreduce(+, +, A1, A2, dims=region)
+        @test vvmapreduce(+, +, A1, A4, dims=region) ≈ mapreduce(+, +, A1, A4, dims=region)
+        @test vvmapreduce(*, +, A1, A2, dims=region) ≈ mapreduce(*, +, A1, A2, dims=region)
+        @test vvmapreduce(+, *, A1, A4, dims=region) ≈ mapreduce(+, *, A1, A4, dims=region)
+    end
     # interface tests
     r = mapreduce(*, +, A1, A2, A3)
     @test r ≈ vvmapreduce(*, +, zero, A1, A2, A3)
@@ -113,4 +140,14 @@ end
     val1, ind1 = findmax(B′, dims=(2,4))
     val2, ind2 = vfindmax(h, B1, B2, B3, dims=(2,4))
     @test ind1 == ind2 && val1 ≈ val2
+
+    f3(x, y, z) = x * y + z
+    @testset "test reductions over region: $region" for region in Any[
+        2, 3, 4, 5, (1, 2), (2, 3), (2, 4), (3, 4),
+        (2, 3), (3, 4), (2, 3, 4), (1, 2, 3, 4), (1,2,3,4,5), :]
+        rval, rind = findmin(A′, dims=region)
+        rval′, rind′ = vfindmin(f3, A1, A2, A3, dims=region)
+        @test rval ≈ rval′
+        @test rind == rind′
+    end
 end
