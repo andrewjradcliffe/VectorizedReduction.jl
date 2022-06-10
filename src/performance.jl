@@ -483,3 +483,44 @@ findmax(C′)
 @benchmark findmin((@. abs2($C1) * $C2 + $C3), dims=$(3,4))
 @benchmark vfindmin((x, y, z) -> abs2(x) * y + z, $C1, $C2, $C3, dims=$(3,4))
 @benchmark vtfindmin((x, y, z) -> abs2(x) * y + z, $C1, $C2, $C3, dims=$(3,4))
+
+################
+# Comparison of vextrema: with/without zip
+A = rand(3,3,3,3);
+A = rand(5,5,5,5);
+A = rand(10,10,10,10);
+A = rand(3,3,3,3,3);
+A = rand(5,5,5,5,5);
+
+# non-zip is faster only when the array is very small (length(A) < 100),
+# and/or when the reduction is taking place across a large chunk of the array.
+# If the dimensions are equal size, as in the examples above, this typically requires
+# > ndims(A) ÷ 2.
+# As one would expect, there is dependence on memory traversal order, i.e.
+# which dimensions are being reduced over, as they must appear in the innermost loop.
+# This is easier to elicit with equal size dimensions. For unequal size dimensions,
+# cost modeling is needed to determine what the optimal action -- out of scope for
+# this little note.
+# In any case, making all the loops available to LoopVectorization will yield
+# superior performance in most cases, despite the need to zip the result.
+
+# An aside: When the reduction occurs over all dimensions, there is clearly no penalty
+# to the non-zip method. It is an unfortunate side effect, but it goes un-used in such
+# a case.
+
+tups = [(1,), (2,), (1,3), (2,4), (1,2,4), (2,3,4), (1,2,3,4)]
+tup = tups[end]
+
+@benchmark vextrema(identity, typemax, typemin, $A, $tup)
+@benchmark vextrema_nonzip(identity, typemax, typemin, $A, $tup)
+@benchmark vvextrema($A, $tup)
+@benchmark extrema($A, dims=$tup)
+
+for tup ∈ tups
+    println("dims = ", tup, '\t', "size(A) = ", size(A))
+    @btime vextrema(identity, typemax, typemin, $A, $tup)
+    @btime vextrema_nonzip(identity, typemax, typemin, $A, $tup)
+    @btime vvextrema($A, $tup)
+    @btime extrema($A, dims=$tup)
+end
+
