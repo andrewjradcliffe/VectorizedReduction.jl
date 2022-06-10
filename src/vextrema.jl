@@ -6,10 +6,10 @@
 ############################################################################################
 # interface
 """
-    vvextrema([f=identity], A::AbstractArray; [dims=:], [init=(mn,mx)])
+    vextrema([f=identity], A::AbstractArray; [dims=:], [init=(mn,mx)])
 
 Compute the minimum and maximum values by calling `f` on each element of of `A`
-over the given `dims`, with the `mn` and `mn` initialized by the respective arguments
+over the given `dims`, with the `mn` and `mx` initialized by the respective arguments
 of the 2-tuple `init`, which can be any combination of values (`<:Number`) or functions
 which accept a single type argument.
 
@@ -42,6 +42,13 @@ vextrema(A; dims=:, init=(typemax, typemin)) = vextrema(identity, init[1], init[
 
 # handle convenience cases
 vextrema(f, initmin, initmax, A, dims::Int) = vextrema(f, initmin, initmax, A, (dims,))
+
+"""
+    vextrema([f=identity], A::AbstractArray, dims=:)
+
+Compute the minimum and maximum values by calling `f` on each element of of `A`
+over the given `dims`.
+"""
 vextrema(f, A, dims) = vextrema(f, typemax, typemin, A, dims)
 vextrema(A::AbstractArray, dims) = vextrema(identity, A, dims)
 
