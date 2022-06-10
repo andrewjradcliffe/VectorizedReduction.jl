@@ -71,11 +71,9 @@
     # @testset for T in [UInt8, UInt16, UInt32]
     #     @test vvsum(T[]) === UInt(0)
     # end
-    @testset for T in [Int, Int64, Int128, UInt, UInt64, UInt128,
-                       Float32, Float64]
+    @testset for T in [Int, Int64, UInt, UInt64, Float32, Float64]
         @test vvsum(T[]) === T(0)
     end
-    @test vvsum(BigInt[]) == big(0) && vvsum(BigInt[]) isa BigInt
 end
 
 @test vvsum(Bool[]) === vvsum(Bool[false]) === vvsum(Bool[false, false]) === 0
@@ -182,17 +180,6 @@ end
     end
 end
 
-@testset "maximum works on generic order #30320" begin
-    for n in [1:20;1500]
-        arr = randn(n)
-        @test GenericOrder(maximum(arr)) === maximum(map(GenericOrder, arr))
-        @test GenericOrder(minimum(arr)) === minimum(map(GenericOrder, arr))
-        f = x -> x
-        @test GenericOrder(maximum(f,arr)) === maximum(f,map(GenericOrder, arr))
-        @test GenericOrder(minimum(f,arr)) === minimum(f,map(GenericOrder, arr))
-    end
-end
-
 @testset "maximum no out of bounds access #30462" begin
     arr = fill(-Inf, 128,128)
     @test vvmaximum(arr) == -Inf
@@ -295,20 +282,20 @@ A = circshift(reshape(1:24,2,3,4), (0,1,1))
 @test @inferred vall(x->x>0, [4]) == true
 @test @inferred vall(x->x>0, [-3, 4, 5]) == false
 
-let f(x) = ifelse(x == 1, true, ifelse(x == 2, false, 1))
-    @test vany(Any[false,true,false])
-    @test @inferred vany(map(f, [2,1,2]))
-    @test @inferred vany([f(x) for x in [2,1,2]])
+# let f(x) = ifelse(x == 1, true, ifelse(x == 2, false, 1))
+#     @test vany(Any[false,true,false])
+#     @test @inferred vany(map(f, [2,1,2]))
+#     @test @inferred vany([f(x) for x in [2,1,2]])
 
-    @test vall(Any[true,true,true])
-    @test @inferred vall(map(f, [1,1,1]))
-    @test @inferred vall([f(x) for x in [1,1,1]])
+#     @test vall(Any[true,true,true])
+#     @test @inferred vall(map(f, [1,1,1]))
+#     @test @inferred vall([f(x) for x in [1,1,1]])
 
-    # @test_throws TypeError vany([1,true])
-    # @test_throws TypeError vall([true,1])
-    # @test_throws TypeError vany(map(f,[3,1]))
-    # @test_throws TypeError vall(map(f,[1,3]))
-end
+#     # @test_throws TypeError vany([1,true])
+#     # @test_throws TypeError vall([true,1])
+#     # @test_throws TypeError vany(map(f,[3,1]))
+#     # @test_throws TypeError vall(map(f,[1,3]))
+# end
 
 
 @test vcount(x -> x > 0, Int[]) == vcount(Bool[]) == 0
