@@ -63,6 +63,11 @@ vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢ�
 vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
     vvextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, dims)
 
+vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims::Int) where {Iₘᵢₙ<:Function, Iₘₐₓ<:Number} =
+    vvextrema(f, initmin(Base.promote_op(f, eltype(A))), initmax, A, (dims,))
+vvextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims::Int) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
+    vvextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, (dims,))
+
 ################
 
 function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N}
@@ -612,6 +617,10 @@ vtextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢ�
 vtextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
     vtextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, dims)
 
+vtextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims::Int) where {Iₘᵢₙ<:Function, Iₘₐₓ<:Number} =
+    vtextrema(f, initmin(Base.promote_op(f, eltype(A))), initmax, A, (dims,))
+vtextrema(f, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A, dims::Int) where {Iₘᵢₙ<:Number, Iₘₐₓ<:Function} =
+    vtextrema(f, initmin, initmax(Base.promote_op(f, eltype(A))), A, (dims,))
 ################
 
 function vtextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractArray{T, N}, ::Colon) where {F, Iₘᵢₙ<:Function, Iₘₐₓ<:Function, T, N}
