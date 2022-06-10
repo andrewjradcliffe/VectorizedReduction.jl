@@ -128,35 +128,6 @@ vvprod(A::AbstractArray) = vvmapreduce(identity, *, one, A, :)
 vvmaximum(A::AbstractArray) = vvmapreduce(identity, max, typemin, A, :)
 vvminimum(A::AbstractArray) = vvmapreduce(identity, min, typemax, A, :)
 
-# a custom implementation of extrema is not really worth it, as the time/memory
-# cost is approximately the same. Also, it suffers from first dimension reduction error.
-
-# Convenience to handle zipping of results
-_vvextrema_zip(a::Number, b::Number) = a, b
-_vvextrema_zip(a, b) = collect(zip(a, b))
-
-"""
-    vvextrema(f, A::AbstractArray, dims=:)
-
-Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the given `dims`.
-
-# Warning
-`NaN` values are not handled!
-"""
-vvextrema(f::F, A, dims) where {F} = _vvextrema_zip(vvminimum(f, A, dims), vvmaximum(f, A, dims))
-vvextrema(f::F, A, ::Colon) where {F} = (vvminimum(f, A, :), vvmaximum(f, A, :))
-vvextrema(f::F, A) where {F<:Function} = vvextrema(f, A, :)
-# ::AbstractArray required in order for kwargs interface to work
-
-"""
-    vvextrema(A::AbstractArray, dims=:)
-
-Compute the minimum and maximum values of `A` over the given `dims`.
-"""
-vvextrema(A::AbstractArray, dims) = vvextrema(identity, A, dims)
-vvextrema(A::AbstractArray) = (vvminimum(A), vvmaximum(A))
-
 # Define reduce
 """
     vvreduce(op, init, A::AbstractArray, dims=:)
@@ -254,27 +225,6 @@ vvminimum(f, A; dims=:, init=typemax) = vvmapreduce(f, min, init, A, dims)
 Compute the minimum value of `A` over the given `dims`, with the min initialized by `init`.
 """
 vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
-
-"""
-    vvextrema(f, A::AbstractArray; dims=:, init=(typemax, typemin))
-
-Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the given `dims`, with the min and max initialized by the respective arguments
-of the 2-tuple `init`, which can be any combination of values `<:Number` or functions
-which accept a single type argument.
-"""
-vvextrema(f, A; dims=:, init=(typemax, typemin)) =
-    _vvextrema_zip(vvmapreduce(f, min, init[1], A, dims), vvmapreduce(f, max, init[2], A, dims))
-
-"""
-    vvextrema(A::AbstractArray; dims=:, init=(typemax, typemin))
-
-Compute the minimum and maximum values of `A` over the given `dims`,
-with the min and max initialized by `init`.
-"""
-vvextrema(A; dims=:, init=(typemax, typemin)) =
-    _vvextrema_zip(vvmapreduce(identity, min, init[1], A, dims), vvmapreduce(identity, max, init[2], A, dims))
-
 
 # reduction over all dims
 @generated function vvmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
@@ -703,28 +653,6 @@ vtmaximum(A::AbstractArray) = vtmapreduce(identity, max, typemin, A, :)
 vtminimum(A::AbstractArray) = vtmapreduce(identity, min, typemax, A, :)
 
 """
-    vtextrema(f, A::AbstractArray, dims=:)
-
-Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the given `dims`.
-
-# Warning
-`NaN` values are not handled!
-"""
-vtextrema(f::F, A, dims) where {F} = _vvextrema_zip(vtminimum(f, A, dims), vtmaximum(f, A, dims))
-vtextrema(f::F, A, ::Colon) where {F} = (vtminimum(f, A, :), vtmaximum(f, A, :))
-vtextrema(f::F, A) where {F<:Function} = vtextrema(f, A, :)
-# ::AbstractArray required in order for kwargs interface to work
-
-"""
-    vtextrema(A::AbstractArray, dims=:)
-
-Compute the minimum and maximum values of `A` over the given `dims`.
-"""
-vtextrema(A::AbstractArray, dims) = vtextrema(identity, A, dims)
-vtextrema(A::AbstractArray) = (vtminimum(A), vtmaximum(A))
-
-"""
     vtreduce(op, init, A::AbstractArray, dims=:)
 
 Reduce `A` over the dimensions `dims` using the binary function `op`.
@@ -817,26 +745,6 @@ vtminimum(f, A; dims=:, init=typemax) = vtmapreduce(f, min, init, A, dims)
 Compute the minimum value of `A` over the given `dims`, with the min initialized by `init`.
 """
 vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
-
-"""
-    vtextrema(f, A::AbstractArray; dims=:, init=(typemax, typemin))
-
-Compute the minimum and maximum values by calling `f`  on each element of of `A`
-over the given `dims`, with the min and max initialized by the respective arguments
-of the 2-tuple `init`, which can be any combination of values `<:Number` or functions
-which accept a single type argument.
-"""
-vtextrema(f, A; dims=:, init=(typemax, typemin)) =
-    _vvextrema_zip(vtmapreduce(f, min, init[1], A, dims), vtmapreduce(f, max, init[2], A, dims))
-
-"""
-    vtextrema(A::AbstractArray; dims=:, init=(typemax, typemin))
-
-Compute the minimum and maximum values of `A` over the given `dims`,
-with the min and max initialized by `init`.
-"""
-vtextrema(A; dims=:, init=(typemax, typemin)) =
-    _vvextrema_zip(vtmapreduce(identity, min, init[1], A, dims), vtmapreduce(identity, max, init[2], A, dims))
 
 # reduction over all dims
 @generated function vtmapreduce(f::F, op::OP, init::I, A::AbstractArray{T, N}, ::Colon) where {F, OP, I, T, N}
