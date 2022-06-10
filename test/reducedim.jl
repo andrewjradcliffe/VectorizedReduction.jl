@@ -40,6 +40,15 @@
     @test @inferred(vvprod(abs2, A, dims=region)) ≈ prod(abs2, A, dims=region)
     @test @inferred(vvmaximum(abs, A, dims=region)) ≈ maximum(abs, A, dims=region)
     @test @inferred(vvminimum(abs, A, dims=region)) ≈ minimum(abs, A, dims=region)
+
+    # With numeric init
+    @test vvextrema(A, dims=region, init=(.1, .3)) == extrema(A, dims=region, init=(.1, .3))
+    @test vvextrema(abs2, A, dims=region, init=(.1, .3)) == extrema(abs2, A, dims=region, init=(.1, .3))
+    # With mixed init
+    @test vvextrema(A, dims=region, init=(typemin, .3)) == extrema(A, dims=region, init=(typemin(Float64), .3))
+    @test vvextrema(abs2, A, dims=region, init=(typemin, .3)) == extrema(abs2, A, dims=region, init=(typemin(Float64), .3))
+    @test vvextrema(A, dims=region, init=(3., zero)) == extrema(A, dims=region, init=(3., 0.))
+    @test vvextrema(abs2, A, dims=region, init=(3., zero)) == extrema(abs2, A, dims=region, init=(3., 0.))
 end
 
 # Small integers

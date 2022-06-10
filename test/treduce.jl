@@ -220,7 +220,7 @@ end
 @test !isnan(vtmaximum([1.:10000.; NaN]))
 @test !isnan(vtminimum([NaN; 1.:10000.]))
 @test !isnan(vtminimum([1.:10000.; NaN]))
-@test isequal(vtextrema([1.:10000.; NaN]), (1., 10000.))
+# @test isequal(vtextrema([1.:10000.; NaN]), (1., 10000.))
 @test isequal(vtextrema([NaN; 1.:10000.]), (1., 10000.))
 
 @test vtmaximum(abs2, 3:7) == 49

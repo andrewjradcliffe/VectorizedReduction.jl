@@ -40,6 +40,15 @@
     @test @inferred(vtprod(abs2, A, dims=region)) ≈ prod(abs2, A, dims=region)
     @test @inferred(vtmaximum(abs, A, dims=region)) ≈ maximum(abs, A, dims=region)
     @test @inferred(vtminimum(abs, A, dims=region)) ≈ minimum(abs, A, dims=region)
+
+    # With numeric init
+    @test vtextrema(A, dims=region, init=(.1, .3)) == extrema(A, dims=region, init=(.1, .3))
+    @test vtextrema(abs2, A, dims=region, init=(.1, .3)) == extrema(abs2, A, dims=region, init=(.1, .3))
+    # With mixed init
+    @test vtextrema(A, dims=region, init=(typemin, .3)) == extrema(A, dims=region, init=(typemin(Float64), .3))
+    @test vtextrema(abs2, A, dims=region, init=(typemin, .3)) == extrema(abs2, A, dims=region, init=(typemin(Float64), .3))
+    @test vtextrema(A, dims=region, init=(3., zero)) == extrema(A, dims=region, init=(3., 0.))
+    @test vtextrema(abs2, A, dims=region, init=(3., zero)) == extrema(abs2, A, dims=region, init=(3., 0.))
 end
 
 # Combining dims and init
