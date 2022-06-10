@@ -150,9 +150,30 @@ function branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N::Int, M::Int, D)
     return staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims, N)
 end
 
-
 @generated function _vextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N, M, D)
+end
+
+function extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
+    # Pre-reduction
+    mn = Expr(:(=), :mn, Expr(:call, Symbol(Iₘᵢₙ.instance), Expr(:call, :eltype, :B)))
+    mx = Expr(:(=), :mx, Expr(:call, Symbol(Iₘₐₓ.instance), Expr(:call, :eltype, :C)))
+    # Reduction loop
+    block = Expr(:block)
+    loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, :A, :B, :C)), block)
+    setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :min, :mn, Expr(:call, :f, Expr(:ref, :A, :i))))
+    setc = Expr(:(=), Expr(:ref, :C, :i), Expr(:call, :max, :mx, Expr(:call, :f, Expr(:ref, :A, :i))))
+    push!(block.args, setb, setc)
+    return quote
+        $mn
+        $mx
+        @turbo $loops
+        return B, C
+    end
+end
+
+@generated function _vextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+    extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
 end
 
 ################
@@ -447,4 +468,26 @@ end
 
 @generated function _vextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
     branches_extrema_init_quote(N, M, D)
+end
+
+function extrema_init_map_quote()
+    # Pre-reduction
+    mn₀ = Expr(:call, :convert, Expr(:call, :eltype, :B), :initmin)
+    mx₀ = Expr(:call, :convert, Expr(:call, :eltype, :C), :initmax)
+    # Reduction loop
+    block = Expr(:block)
+    loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, :A, :B, :C)), block)
+    setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :min, :mn, Expr(:call, :f, Expr(:ref, :A, :i))))
+    setc = Expr(:(=), Expr(:ref, :C, :i), Expr(:call, :max, :mx, Expr(:call, :f, Expr(:ref, :A, :i))))
+    push!(block.args, setb, setc)
+    return quote
+        mn = $mn₀
+        mx = $mx₀
+        @turbo $loops
+        return B, C
+    end
+end
+
+@generated function _vextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+    extrema_init_map_quote()
 end
