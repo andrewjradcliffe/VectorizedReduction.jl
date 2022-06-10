@@ -146,25 +146,29 @@ end
 @test vtminimum([0.,-0.]) === -0.0
 @test vtminimum([0.,-0.,0.]) === -0.0
 
-@testset "minimum/maximum checks all elements" begin
+@testset "minimum/maximum/extrema checks all elements" begin
     for N in [2:20;150;300]
         for i in 1:N
             arr = fill(0., N)
             truth = rand()
             arr[i] = truth
             @test vtmaximum(arr) == truth
+            @test vtextrema(arr) == (0., truth)
 
             truth = -rand()
             arr[i] = truth
             @test vtminimum(arr) == truth
+            @test vtextrema(arr) == (truth, 0.)
 
             arr[i] = NaN
             @test !isnan(vtmaximum(arr)) # NaN not handled
             @test !isnan(vtminimum(arr)) # NaN not handled
+            @test all(!isnan, vtextrema(arr))
 
             arr = zeros(N)
             @test vtminimum(arr) === 0.0
             @test vtmaximum(arr) === 0.0
+            @test vtextrema(arr) === (0.0, 0.0)
 
             # arr[i] = -0.0
             # @test vtminimum(arr) === 0.0 # opposite from base
@@ -173,6 +177,7 @@ end
             arr = -zeros(N)
             @test vtminimum(arr) === -0.0
             @test vtmaximum(arr) === -0.0
+            @test vvextrema(arr) === (-0.0, -0.0)
             # arr[i] = 0.0
             # @test vtminimum(arr) === -0.0
             # @test vtmaximum(arr) === -0.0 # opposite from base
@@ -183,8 +188,10 @@ end
 @testset "maximum no out of bounds access #30462" begin
     arr = fill(-Inf, 128,128)
     @test vtmaximum(arr) == -Inf
+    @test vtextrema(arr) == (-Inf, -Inf)
     arr = fill(Inf, 128^2)
     @test vtminimum(arr) == Inf
+    @test vtextrema(arr) == (Inf, Inf)
     for center in [256, 1024, 4096, 128^2]
         for offset in -10:10
             len = center + offset
@@ -192,6 +199,7 @@ end
             arr = fill(x, len)
             @test vtmaximum(arr) === x
             @test vtminimum(arr) === x
+            @test vtextrema(arr) === (x, x)
         end
     end
 end
