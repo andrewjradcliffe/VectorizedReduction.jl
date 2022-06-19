@@ -126,7 +126,7 @@ function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::In
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -149,7 +149,7 @@ function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::In
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         return quote
             $t = As
@@ -289,7 +289,7 @@ function mapreduceall_vararg_quote(OP, I, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
     push!(block.args, setξ)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance), :(Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int))))
@@ -387,7 +387,7 @@ function staticdim_mapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N::
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -411,7 +411,7 @@ function staticdim_mapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N::
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         return quote
             $t = As
@@ -503,7 +503,7 @@ function mapreduceall_vararg_init_quote(OP, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
     push!(block.args, setξ)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, :convert, :(Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)), :init))
@@ -624,7 +624,7 @@ function staticdim_tmapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -647,7 +647,7 @@ function staticdim_tmapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         return quote
             $t = As
@@ -787,7 +787,7 @@ function tmapreduceall_vararg_quote(OP, I, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
     push!(block.args, setξ)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, Symbol(I.instance), :(Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int))))
@@ -880,7 +880,7 @@ function staticdim_tmapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N:
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -904,7 +904,7 @@ function staticdim_tmapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N:
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
         push!(block.args, setξ)
         return quote
             $t = As
@@ -993,7 +993,7 @@ function tmapreduceall_vararg_init_quote(OP, P::Int)
     end
     block = Expr(:block)
     loops = Expr(:for, Expr(:(=), :i, Expr(:call, :eachindex, t.args...)), block)
-    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), f, :ξ))
+    setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, f))
     push!(block.args, setξ)
     # Pre-reduction
     ξ = Expr(:(=), :ξ, Expr(:call, :convert, :(Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)), :init))

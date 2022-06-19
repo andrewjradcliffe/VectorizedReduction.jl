@@ -286,7 +286,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -310,7 +310,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ
@@ -461,7 +461,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -484,7 +484,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ
@@ -799,7 +799,7 @@ function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -820,7 +820,7 @@ function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ
@@ -965,7 +965,7 @@ function staticdim_tmapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         setb = Expr(:(=), Bᵥ′, :ξ)
         push!(rblock.args, setb)
@@ -988,7 +988,7 @@ function staticdim_tmapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), Expr(:call, :f, A), :ξ))
+        setξ = Expr(:(=), :ξ, Expr(:call, Symbol(OP.instance), :ξ, Expr(:call, :f, A)))
         push!(block.args, setξ)
         return quote
             Bᵥ = $Bᵥ

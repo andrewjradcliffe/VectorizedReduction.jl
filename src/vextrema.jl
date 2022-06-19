@@ -134,8 +134,8 @@ function staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{Int
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         setb = Expr(:(=), Bᵥ′, :mn)
         setc = Expr(:(=), Cᵥ′, :mx)
@@ -159,8 +159,8 @@ function staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{Int
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         return quote
             Bᵥ = $Bᵥ
@@ -310,8 +310,8 @@ function staticdim_extrema_init_quote(static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         setb = Expr(:(=), Bᵥ′, :mn)
         setc = Expr(:(=), Cᵥ′, :mx)
@@ -337,8 +337,8 @@ function staticdim_extrema_init_quote(static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         return quote
             Bᵥ = $Bᵥ
@@ -550,8 +550,8 @@ function staticdim_textrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{In
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         setb = Expr(:(=), Bᵥ′, :mn)
         setc = Expr(:(=), Cᵥ′, :mx)
@@ -575,8 +575,8 @@ function staticdim_textrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{In
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         return quote
             Bᵥ = $Bᵥ
@@ -726,8 +726,8 @@ function staticdim_textrema_init_quote(static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         setb = Expr(:(=), Bᵥ′, :mn)
         setc = Expr(:(=), Cᵥ′, :mx)
@@ -753,8 +753,8 @@ function staticdim_textrema_init_quote(static_dims::Vector{Int}, N::Int)
             block = newblock
         end
         # Push to inside innermost loop
-        setmin = Expr(:(=), :mn, Expr(:call, :min, Expr(:call, :f, A), :mn))
-        setmax = Expr(:(=), :mx, Expr(:call, :max, Expr(:call, :f, A), :mx))
+        setmin = Expr(:(=), :mn, Expr(:call, :min, :mn, Expr(:call, :f, A)))
+        setmax = Expr(:(=), :mx, Expr(:call, :max, :mx, Expr(:call, :f, A)))
         push!(block.args, setmin, setmax)
         return quote
             Bᵥ = $Bᵥ
