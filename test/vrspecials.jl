@@ -125,6 +125,7 @@ end
     @test ind1 == ind2 && val1 ≈ val2
 end
 @testset "vfindminmax_vararg" begin
+    Random.seed!(1234)
     A1 = rand(5,5)
     A2 = rand(5,5)
     A3 = rand(5,5)

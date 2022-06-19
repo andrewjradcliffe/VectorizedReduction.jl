@@ -1,5 +1,6 @@
 # Essentially, a direct reproduction of Base's reducedim.jl tests.
 # Some small allowances are made for deviations.
+Random.seed!(0x537335fdb9e832b1)
 
 @testset "test reductions over region: $region" for region in Any[
     1, 2, 3, 4, 5, (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4),

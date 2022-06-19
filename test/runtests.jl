@@ -1,5 +1,6 @@
 using VectorizedReduction
 using Test
+using Random
 
 const tests = [
     "vrspecials.jl",
