@@ -116,7 +116,7 @@ end
     end
 end
 
-@testset "NaN in findmin/findmax/minimum/maximum" begin
+@testset "NaN in findmin/findmax" begin
     A = [1.0 NaN 6.0;
          NaN 2.0 4.0]
     A′ = [-1.0 NaN -6.0;
@@ -126,8 +126,6 @@ end
                               ((1,2), fill(1.0,1,1),fill(CartesianIndex(1,1),1,1))]
         @test isequal(vfindmin1(A, dims=tup), (rval, rind))
         @test isequal(vfindmin1(abs, A′, dims=tup), (rval, rind))
-        @test isequal(vvminimum(A, dims=tup), rval)
-        @test isequal(vvminimum(abs, A′, dims=tup), rval)
     end
 
     for (tup, rval, rind) in [((1,), [1.0 2.0 6.0], [CartesianIndex(1,1) CartesianIndex(2,2) CartesianIndex(1,3)]),
@@ -135,6 +133,24 @@ end
                               ((1,2), fill(6.0,1,1),fill(CartesianIndex(1,3),1,1))]
         @test isequal(vfindmax1(A, dims=tup), (rval, rind))
         @test isequal(vfindmax1(abs, A′, dims=tup), (rval, rind))
+    end
+end
+
+@testset "NaN in minimum/maximum" begin
+    A = [1.0 NaN 6.0;
+         NaN 2.0 4.0]
+    A′ = [-1.0 NaN -6.0;
+          NaN -2.0 4.0]
+    for (tup, rval, rind) in [((1,), [NaN 2.0 4.0], [CartesianIndex(1,1) CartesianIndex(2,2) CartesianIndex(2,3)]),
+                              ((2,), reshape([6.0, 2.0], 2, 1), reshape([CartesianIndex(1,1),CartesianIndex(2,2)], 2, 1)),
+                              ((1,2), fill(1.0,1,1),fill(CartesianIndex(1,1),1,1))]
+        @test isequal(vvminimum(A, dims=tup), rval)
+        @test isequal(vvminimum(abs, A′, dims=tup), rval)
+    end
+
+    for (tup, rval, rind) in [((1,), [NaN 2.0 6.0], [CartesianIndex(1,1) CartesianIndex(2,2) CartesianIndex(1,3)]),
+                              ((2,), reshape([6.0, 4.0], 2, 1), reshape([CartesianIndex(1,3),CartesianIndex(2,3)], 2, 1)),
+                              ((1,2), fill(6.0,1,1),fill(CartesianIndex(1,3),1,1))]
         @test isequal(vvmaximum(A, dims=tup), rval)
         @test isequal(vvmaximum(abs, A′, dims=tup), rval)
     end
