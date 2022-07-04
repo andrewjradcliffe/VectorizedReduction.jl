@@ -233,7 +233,7 @@ vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
         @turbo for i ∈ eachindex(A)
-            ξ = $opsym(f(A[i]), ξ)
+            ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
     end
@@ -753,7 +753,7 @@ vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
         @tturbo for i ∈ eachindex(A)
-            ξ = $opsym(f(A[i]), ξ)
+            ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
     end
