@@ -20,8 +20,8 @@ function vfindextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::Abstrac
     end
     ((mn, i_mn), (mx, i_mx))
 end
-vfindextrema(A) = vfindextrema(identity, typemax, typemin, A)
 vfindextrema(f, A) = vfindextrema(f, typemax, typemin, A)
+vfindextrema(A) = vfindextrema(identity, typemax, typemin, A)
 
 _rf_findextrema((((fm₁, im₁), (fx₁, ix₁))), (((fm₂, im₂), (fx₂, ix₂)))) =
     ((Base.isgreater(fm₁, fm₂) ? (fm₂, im₂) : (fm₁, im₁)), (isless(fx₁, fx₂) ? (fx₂, ix₂) : (fx₁, ix₁)))
