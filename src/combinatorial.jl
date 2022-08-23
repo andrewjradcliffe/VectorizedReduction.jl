@@ -208,7 +208,7 @@ A = rand(5,5,5,5);
 # Test case:
 # does the non-generated function specialize on the types in the tuple? yes.
 # does the generated function specialize on the types in the tuple? yes, at least in this case.
-function bf(dims::D) where {M, D<:Tuple{Vararg{Integer, M}}}
+function bf(dims::D) where {M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     M + 1
 end
 d1 = (1,2,3)

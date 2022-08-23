@@ -319,7 +319,7 @@ function branches_findminmax_vararg_quote(OP, I, N::Int, M::Int, P::Int, D)
     return staticdim_findminmax_vararg_quote(OP, I, static_dims, N, P)
 end
 
-@generated function _vfindminmax_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, Tₗ, N, P, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vfindminmax_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, Tₗ, N, P, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_findminmax_vararg_quote(OP, I, N, M, P, D)
 end
 # In the case of rinds = ∅, this just corresponds to a map
@@ -630,7 +630,7 @@ function branches_tfindminmax_vararg_quote(OP, I, N::Int, M::Int, P::Int, D)
     return staticdim_tfindminmax_vararg_quote(OP, I, static_dims, N, P)
 end
 
-@generated function _vtfindminmax_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, Tₗ, N, P, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtfindminmax_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, Tₗ, N, P, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tfindminmax_vararg_quote(OP, I, N, M, P, D)
 end
 # In the case of rinds = ∅, this just corresponds to a map

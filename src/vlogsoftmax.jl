@@ -160,7 +160,7 @@ function branches_logsoftmax_quote(N::Int, M::Int, D)
     return staticdim_logsoftmax_quote(static_dims, N)
 end
 
-@generated function _vlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_logsoftmax_quote(N, M, D)
 end
 @generated function _vlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::Tuple{}) where {Tₒ, T, Tₘ, N}
@@ -323,7 +323,7 @@ function branches_tlogsoftmax_quote(N::Int, M::Int, D)
     return staticdim_tlogsoftmax_quote(static_dims, N)
 end
 
-@generated function _vtlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tlogsoftmax_quote(N, M, D)
 end
 @generated function _vtlogsoftmax!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::Tuple{}) where {Tₒ, T, Tₘ, N}

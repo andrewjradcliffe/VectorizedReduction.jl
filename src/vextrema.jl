@@ -216,7 +216,7 @@ function branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N::Int, M::Int, D)
     return staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims, N)
 end
 
-@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_extrema_quote(Iₘᵢₙ, Iₘₐₓ, N, M, D)
 end
 
@@ -395,7 +395,7 @@ function branches_extrema_init_quote(N::Int, M::Int, D)
 end
 
 
-@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_extrema_init_quote(N, M, D)
 end
 
@@ -632,7 +632,7 @@ function branches_textrema_quote(Iₘᵢₙ, Iₘₐₓ, N::Int, M::Int, D)
     return staticdim_textrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims, N)
 end
 
-@generated function _vtextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_textrema_quote(Iₘᵢₙ, Iₘₐₓ, N, M, D)
 end
 
@@ -811,7 +811,7 @@ function branches_textrema_init_quote(N::Int, M::Int, D)
 end
 
 
-@generated function _vtextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_textrema_init_quote(N, M, D)
 end
 

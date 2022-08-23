@@ -249,7 +249,7 @@ function map_vararg_quote(P::Int)
     end
 end
 
-# @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_mapreduce_vararg_quote(OP, I, N, M, P, D)
 # end
 
@@ -259,7 +259,7 @@ end
 # end
 
 # Versions which cover arrays with different element types
-@generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_mapreduce_vararg_quote(OP, I, N, M, P, D)
 end
 
@@ -465,7 +465,7 @@ function branches_mapreduce_vararg_init_quote(OP, N::Int, M::Int, P::Int, D)
     return staticdim_mapreduce_vararg_init_quote(OP, static_dims, N, P)
 end
 
-# @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_mapreduce_vararg_init_quote(OP, N, M, P, D)
 # end
 # @generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
@@ -473,7 +473,7 @@ end
 # end
 
 # Versions which cover arrays with different element types
-@generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_mapreduce_vararg_init_quote(OP, N, M, P, D)
 end
 
@@ -747,7 +747,7 @@ function tmap_vararg_quote(P::Int)
     end
 end
 
-# @generated function _vtmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vtmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_tmapreduce_vararg_quote(OP, I, N, M, P, D)
 # end
 
@@ -757,7 +757,7 @@ end
 # end
 
 # Versions which cover arrays with different element types
-@generated function _vtmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtmapreduce_vararg!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tmapreduce_vararg_quote(OP, I, N, M, P, D)
 end
 
@@ -958,7 +958,7 @@ function branches_tmapreduce_vararg_init_quote(OP, N::Int, M::Int, P::Int, D)
     return staticdim_tmapreduce_vararg_init_quote(OP, static_dims, N, P)
 end
 
-# @generated function _vtmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vtmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::D) where {F, OP, I, Tₒ, T, N, M, S<:AbstractArray{T, N}, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_tmapreduce_vararg_init_quote(OP, N, M, P, D)
 # end
 # @generated function _vtmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{S, P}}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N, S<:AbstractArray{T, N}, P}
@@ -966,7 +966,7 @@ end
 # end
 
 # Versions which cover arrays with different element types
-@generated function _vtmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtmapreduce_vararg_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, As::Tuple{Vararg{AbstractArray, P}}, dims::D) where {F, OP, I, Tₒ, N, M, P, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tmapreduce_vararg_init_quote(OP, N, M, P, D)
 end
 

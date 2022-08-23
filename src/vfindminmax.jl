@@ -361,7 +361,7 @@ function branches_findminmax_quote(OP, I, N::Int, M::Int, D)
     return staticdim_findminmax_quote(OP, I, static_dims, N)
 end
 
-@generated function _vfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, Tₗ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, Tₗ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_findminmax_quote(OP, I, N, M, D)
 end
 
@@ -707,7 +707,7 @@ function branches_tfindminmax_quote(OP, I, N::Int, M::Int, D)
     return staticdim_tfindminmax_quote(OP, I, static_dims, N)
 end
 
-@generated function _vtfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, Tₗ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, Tₗ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tfindminmax_quote(OP, I, N, M, D)
 end
 @generated function _vtfindminmax!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, Tₗ, T, N}

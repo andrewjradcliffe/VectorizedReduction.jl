@@ -189,7 +189,7 @@ function branches_logsumexp_quote(N::Int, M::Int, D)
     return staticdim_logsumexp_quote(static_dims, N)
 end
 
-@generated function _vlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_logsumexp_quote(N, M, D)
 end
 @generated function _vlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {Tₒ, T, N}
@@ -332,7 +332,7 @@ end
 #     return staticdim_logsumexp2_quote(static_dims, N)
 # end
 
-# @generated function _vlogsumexp2!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vlogsumexp2!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::D) where {Tₒ, T, Tₘ, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_logsumexp2_quote(N, M, D)
 # end
 # @generated function _vlogsumexp2!(C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, B::AbstractArray{Tₘ, N}, dims::Tuple{}) where {Tₒ, T, Tₘ, N}
@@ -522,7 +522,7 @@ function branches_tlogsumexp_quote(N::Int, M::Int, D)
     return staticdim_tlogsumexp_quote(static_dims, N)
 end
 
-@generated function _vtlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tlogsumexp_quote(N, M, D)
 end
 @generated function _vtlogsumexp!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {Tₒ, T, N}

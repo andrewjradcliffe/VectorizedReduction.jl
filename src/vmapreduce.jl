@@ -8,6 +8,7 @@
 # - Using compile-time branch resolution rather than dispatch system (well,
 #   less on the dispatch system)
 _dim(::Type{StaticInt{N}}) where {N} = N::Int
+const IntOrStaticInt = Union{Integer, StaticInt}
 # Stable return type version, otherwise it's just a suggestion
 # _dim(::Type{StaticInt{N}})::Int where {N} = N
 
@@ -363,7 +364,7 @@ function branches_mapreduce_quote(OP, I, N::Int, M::Int, D)
     return staticdim_mapreduce_quote(OP, I, static_dims, N)
 end
 
-@generated function _vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_mapreduce_quote(OP, I, N, M, D)
 end
 
@@ -537,7 +538,7 @@ function branches_mapreduce_init_quote(OP, N::Int, M::Int, D)
     return staticdim_mapreduce_init_quote(OP, static_dims, N)
 end
 
-@generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_mapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vvmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}
@@ -873,7 +874,7 @@ function branches_tmapreduce_quote(OP, I, N::Int, M::Int, D)
     return staticdim_tmapreduce_quote(OP, I, static_dims, N)
 end
 
-@generated function _vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtmapreduce!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tmapreduce_quote(OP, I, N, M, D)
 end
 
@@ -1041,7 +1042,7 @@ function branches_tmapreduce_init_quote(OP, N::Int, M::Int, D)
     return staticdim_tmapreduce_init_quote(OP, static_dims, N)
 end
 
-@generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+@generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₒ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
     branches_tmapreduce_init_quote(OP, N, M, D)
 end
 @generated function _vtmapreduce_init!(f::F, op::OP, init::I, B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₒ, T, N}

@@ -425,7 +425,7 @@ vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 #     return staticdim_argminmax_quote(OP, I, static_dims, N)
 # end
 
-# @generated function _vargminmax!(f::F, op::OP, init::I, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₗ, T, N, M, D<:Tuple{Vararg{Integer, M}}}
+# @generated function _vargminmax!(f::F, op::OP, init::I, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::D) where {F, OP, I, Tₗ, T, N, M, D<:Tuple{Vararg{IntOrStaticInt, M}}}
 #     branches_argminmax_quote(OP, I, N, M, D)
 # end
 # @generated function _vargminmax!(f::F, op::OP, init::I, C::AbstractArray{Tₗ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, OP, I, Tₗ, T, N}
