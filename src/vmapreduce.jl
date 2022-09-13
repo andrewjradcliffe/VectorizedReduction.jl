@@ -414,7 +414,7 @@ end
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
         @turbo for i ∈ eachindex(A)
-            ξ = $opsym(f(A[i]), ξ)
+            ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
     end
@@ -922,7 +922,7 @@ end
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
         @tturbo for i ∈ eachindex(A)
-            ξ = $opsym(f(A[i]), ξ)
+            ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
     end
