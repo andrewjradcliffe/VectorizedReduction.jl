@@ -198,7 +198,7 @@ function vmapreducethen(f::F, op::OP, g::G, init::I, A::AbstractArray{T, N}, dim
     Dᴬ = size(A)
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : Dᴬ[d], Val(N))
     B = similar(A, Base.promote_op(g, Base.promote_op(op, Base.promote_op(f, T), Int)), Dᴮ′)
-    _vmapreducethen_init!(f, op, init, B, A, dims)
+    _vmapreducethen_init!(f, op, g, init, B, A, dims)
     return B
 end
 
