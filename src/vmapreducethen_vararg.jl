@@ -6,27 +6,32 @@
 ############################################################################################
 
 """
-    vmapreducethen(f, op, g, init, As::Vararg{AbstractArray, N}) where {N}
+    vmapreducethen(f, op, g, As::Vararg{AbstractArray, N}; dims=:, init) where {N}
 
-Version of mapreducethen for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction occurring over
-all dimensions.
+Version of `mapreducethen` wherein `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction over
+the dimensions `dims`.
+
+# Examples
+```jldoctest
+julia> x, y, z = [1 2; 3 4], [5 6; 7 8], [9 10; 11 12];
+
+julia> vmapreducethen((a, b) -> abs2(a - b), +, √, x, y, dims=2)    # Euclidean distance
+2×1 Matrix{Float64}:
+ 5.656854249492381
+ 5.656854249492381
+
+julia> vmapreducethen(*, *, exp, x, y, z, dims=2, init=-1.0)
+2×1 Matrix{Float64}:
+ 0.0
+ 0.0
+```
 """
 vmapreducethen(f::F, op::OP, g::G, init::I, As::Vararg{AbstractArray, P}) where {F, OP, G, I, P} =
     vmapreducethen(f, op, init, As, :)
 
-"""
-    vmapreducethen(f, op, g, As::Vararg{AbstractArray, N}; dims=:, init) where {N}
-
-Keyword args version for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ.
-"""
 vmapreducethen(f, op, g, As::Vararg{AbstractArray, P}; dims=:, init) where {P} =
     vmapreducethen(f, op, g, init, As, dims)
 
-"""
-    vmapreducethen(f, op, g, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
-
-Version of mapreducethen for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction over given `dims`.
-"""
 function vmapreducethen(f::F, op::OP, g::G, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, G, I, M, P}
     ax = axes(As[1])
     for p = 2:P
@@ -237,7 +242,7 @@ function vmapreducethen(f::F, op::OP, g::G, init::I, As::Tuple{Vararg{AbstractAr
         axes(As[p]) == ax || throw(DimensionMismatch)
     end
     Dᴮ′ = ntuple(d -> d ∈ dims ? 1 : length(ax[d]), ndims(As[1]))
-    B = similar(As[1], Base.promote_op(op, Base.promote_op(f, ntuple(p -> eltype(As[p]), Val(P))...), Int), Dᴮ′)
+    B = similar(As[1], Base.promote_op(g, Base.promote_op(op, Base.promote_op(f, ntuple(p -> eltype(As[p]), Val(P))...), Int)), Dᴮ′)
     _vmapreducethen_vararg_init!(f, op, g, init, B, As, dims)
 end
 
