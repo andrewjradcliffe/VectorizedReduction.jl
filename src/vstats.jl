@@ -238,7 +238,7 @@ end
 
 # Match names with StatsBase
 const vmsd = vmse
-const vtmse = vtmsd
+const vtmsd = vtmse
 const vrmsd = vrmse
 const vtrmsd = vtrmse
 
