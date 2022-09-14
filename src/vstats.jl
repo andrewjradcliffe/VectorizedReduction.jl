@@ -7,14 +7,6 @@
 # Assorted functions from StatsBase, plus some of my own
 
 ################
-# Utility functions
-_xlogx(x::T) where {T} = ifelse(iszero(x), zero(T), x * log(x))
-_xlogy(x::T, y::T) where {T} = ifelse(iszero(x) & !isnan(y), zero(T), x * log(y))
-# _xlogxdy(x::T, y::T) where {T} = _xlogy(x, ifelse(iszero(x) & iszero(y), zero(T), x / y))
-_klterm(x::T, y::T) where {T} = _xlogy(x, x) - _xlogy(x, y)
-
-
-################
 # Means
 function vmean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
@@ -93,7 +85,7 @@ end
 ################
 # Entropies
 
-ventropy(A; dims=:) = vmapreducethen(_xlogx, +, -, A, dims=dims)
+ventropy(A; dims=:) = vshannonentropy(A, dims=dims)
 ventropy(A, b::Real; dims=:) = (c = -1 / log(b); vmapreducethen(_xlogx, +, x -> x * c, A, dims=dims ))
 
 vcrossentropy(p, q; dims=:) = vmapreducethen(_xlogy, +, -, p, q, dims=dims)
@@ -134,6 +126,13 @@ end
 #     vrenyientropy(p, α, dims=dims) .- (α/(1-α)) .* log.(vnorm(p, 1, dims=dims))
 
 ####
+
+vtentropy(A; dims=:) = vtshannonentropy(A, dims=dims)
+vtentropy(A, b::Real; dims=:) = (c = -1 / log(b); vtmapreducethen(_xlogx, +, x -> x * c, A, dims=dims ))
+
+vtcrossentropy(p, q; dims=:) = vtmapreducethen(_xlogy, +, -, p, q, dims=dims)
+vtcrossentropy(p, q, b::Real; dims=:) = (c = -1 / log(b); vtmapreducethen(_xlogy, +, x -> x * c, p, q, dims=dims))
+
 # threaded versions
 _vtmaxentropy(p, dims::NTuple{M, Int}) where {M} =
     fill!(similar(p, _reducedsize(p, dims)), log(_denom(p, dims)))
@@ -197,6 +196,26 @@ function vrenyadivergence(p, q, α::Real; dims=:)
         vmapreducethen(/, max, log, p, q, dims=dims)
     else
         _vrenyadivergence(p, q, α, dims)
+    end
+end
+
+_vtrenyadivergence(p, q, α::Real, dims) =
+    vtmapreducethen((pᵢ, qᵢ) -> pᵢ^α / qᵢ^(α-1), +, x -> (1/(α-1)) * log(x), p, q, dims=dims)
+
+function vtrenyadivergence(p, q, α::Real; dims=:)
+    if α ≈ 0
+        vtmapreducethen((pᵢ, qᵢ) -> ifelse(pᵢ > zero(pᵢ), qᵢ, zero(qᵢ)), +, x -> -log(x), p, q, dims=dims)
+    elseif α ≈ 0.5
+        vtmapreducethen((pᵢ, qᵢ) -> √(pᵢ * qᵢ), +, x -> -2log(x), p, q, dims=dims)
+    elseif α ≈ 1
+        vkldivergence(p, q, dims=dims)
+    elseif α ≈ 2
+        c = log(_denom(p, dims))
+        vtmapreducethen(/, +, x -> log(x) - c, p, q, dims=dims)
+    elseif isinf(α)
+        vtmapreducethen(/, max, log, p, q, dims=dims)
+    else
+        _vtrenyadivergence(p, q, α, dims)
     end
 end
 

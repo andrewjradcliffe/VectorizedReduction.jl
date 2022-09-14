@@ -4,10 +4,6 @@
 #
 #
 ############################################################################################
-_denom(A, dims) = prod(d -> size(A, d), dims)
-_denom(A, ::Colon) = length(A)
-
-@inline _reducedsize(A::AbstractArray{T, N}, dims::NTuple{M, Int}) where {T, N, M} = ntuple(d -> d ∈ dims ? 1 : size(A, d), Val(N))
 
 # p-norms
 _norm0(A, dims::NTuple{M, Int}) where {M} = fill!(similar(A, _reducedsize(A, dims)), _denom(A, dims))
