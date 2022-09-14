@@ -181,6 +181,7 @@ vtgkldiv(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> xᵢ * (log(xᵢ) - log(y�
 # Rénya
 _vrenyadivergence(p, q, α::Real, dims) =
     vmapreducethen((pᵢ, qᵢ) -> pᵢ^α / qᵢ^(α-1), +, x -> (1/(α-1)) * log(x), p, q, dims=dims)
+_vrenyadivergence(p, q, α::Rational{T}, dims) where {T} = _vrenyadivergence(p, q, float(α), dims)
 
 function vrenyadivergence(p, q, α::Real; dims=:)
     if α ≈ 0
@@ -201,6 +202,7 @@ end
 
 _vtrenyadivergence(p, q, α::Real, dims) =
     vtmapreducethen((pᵢ, qᵢ) -> pᵢ^α / qᵢ^(α-1), +, x -> (1/(α-1)) * log(x), p, q, dims=dims)
+_vtrenyadivergence(p, q, α::Rational{T}, dims) where {T} = _vtrenyadivergence(p, q, float(α), dims)
 
 function vtrenyadivergence(p, q, α::Real; dims=:)
     if α ≈ 0
