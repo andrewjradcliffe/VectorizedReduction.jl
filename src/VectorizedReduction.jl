@@ -1,6 +1,8 @@
 module VectorizedReduction
 
 using LoopVectorization, Static
+include("utils.jl")
+
 
 export vvmapreduce, vvmapreduce!, vvreduce, vvsum, vvprod, vvmaximum, vvminimum,
     vtmapreduce, vtmapreduce!, vtreduce, vtsum, vtprod, vtmaximum, vtminimum
@@ -38,5 +40,47 @@ include("vlogsoftmax.jl")
 export vsoftmax, vtsoftmax
 
 include("vsoftmax.jl")
+
+export vnorm, vtnorm
+
+include("vnorm.jl")
+
+export vminkowski, vtminkowski,
+    vmanhattan, vtmanhattan,
+    veuclidean, vteuclidean,
+    vchebyshev, vtchebyshev
+
+include("vdistance.jl")
+
+export vmean, vtmean,
+    vgeomean, vtgeomean,
+    vharmmean, vtharmmean,
+    vmean_log, vtmean_log
+
+export vlse, vtlse,
+    vlse_mean, vtlse_mean
+
+export ventropy, vtentropy,
+    vcrossentropy, vtcrossentropy,
+    vmaxentropy, vtmaxentropy,
+    vshannonentropy, vtshannonentropy,
+    vcollisionentropy, vtcollisionentropy,
+    vminentropy, vtminentropy,
+    vrenyientropy, vtrenyientropy
+
+export vkldivergence, vtkldivergence,
+    vgkldiv, vtgkldiv,
+    vrenyadivergence, vtrenyadivergence
+
+export vcounteq, vtcounteq,
+    vcountne, vtcountne,
+    vmeanad, vtmeanad,
+    vmaxad, vtmaxad,
+    vmse, vtmse,
+    vrmse, vtrmse,
+    vmsd, vtmsd,
+    vrmsd, vtrmsd
+
+include("vstats.jl")
 
 end
