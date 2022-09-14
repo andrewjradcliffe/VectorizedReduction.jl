@@ -16,13 +16,13 @@ _klterm(x::T, y::T) where {T} = _xlogy(x, x) - _xlogy(x, y)
 
 ################
 # Means
-function vmean(f, A; dims=:)
+function vmean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
     vmapreducethen(f, +, x -> c * x, A, dims=dims)
 end
 vmean(A; dims=:) = vmean(identity, A, dims=dims)
 
-function vtmean(f, A; dims=:)
+function vtmean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
     vtmapreducethen(f, +, x -> c * x, A, dims=dims)
 end
@@ -54,10 +54,14 @@ function vtharmmean(A; dims=:)
     vtmapreducethen(inv, +, x -> inv(c * x), A, dims=dims)
 end
 
-# Mean on the log scaley
-function vmean_log(f, A; dims=:)
+# Mean on the log scale
+function vmean_log(f::F, A; dims=:) where {F}
     c = log(_denom(A, dims))
     vmapreducethen(f, +, x -> log(x) - c, A, dims=dims)
+end
+function vtmean_log(f::F, A; dims=:) where {F}
+    c = log(_denom(A, dims))
+    vtmapreducethen(f, +, x -> log(x) - c, A, dims=dims)
 end
 
 ################
@@ -65,14 +69,14 @@ end
 # Naturally, faster than the overflow/underflow-safe logsumexp, but if one can tolerate it...
 vlse(A; dims=:) = vmapreducethen(exp, +, log, A, dims=dims)
 vtlse(A; dims=:) = vtmapreducethen(exp, +, log, A, dims=dims)
-vlse(f, A; dims=:) = vmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
-vtlse(f, A; dims=:) = vtmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
+vlse(f::F, A; dims=:) where {F} = vmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
+vtlse(f::F, A; dims=:) where {F} = vtmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
 
 function vlse_mean(A; dims=:)
     c = log(_denom(A, dims))
     vmapreducethen(exp, +, x -> log(x) - c, A, dims=dims)
 end
-function vlse_mean(f, A; dims=:)
+function vlse_mean(f::F, A; dims=:) where {F}
     c = log(_denom(A, dims))
     vmapreducethen(x -> exp(f(x)), +, x -> log(x) - c, A, dims=dims)
 end
@@ -81,7 +85,7 @@ function vtlse_mean(A; dims=:)
     c = log(_denom(A, dims))
     vtmapreducethen(exp, +, x -> log(x) - c, A, dims=dims)
 end
-function vtlse_mean(f, A; dims=:)
+function vtlse_mean(f::F, A; dims=:) where {F}
     c = log(_denom(A, dims))
     vtmapreducethen(x -> exp(f(x)), +, x -> log(x) - c, A, dims=dims)
 end
@@ -195,9 +199,6 @@ function vrenyadivergence(p, q, α::Real; dims=:)
         _vrenyadivergence(p, q, α, dims)
     end
 end
-
-
-
 
 ################
 # Deviations
