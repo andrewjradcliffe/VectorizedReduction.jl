@@ -4,7 +4,15 @@
 #
 #
 ############################################################################################
-# Statistical things
+# Assorted functions from StatsBase, plus some of my own
+
+################
+# Utility functions
+_xlogx(x::T) where {T} = ifelse(iszero(x), zero(T), x * log(x))
+_xlogy(x::T, y::T) where {T} = ifelse(iszero(x) & !isnan(y), zero(T), x * log(y))
+# _xlogxdy(x::T, y::T) where {T} = _xlogy(x, ifelse(iszero(x) & iszero(y), zero(T), x / y))
+_klterm(x::T, y::T) where {T} = _xlogy(x, x) - _xlogy(x, y)
+
 
 ################
 # Means
@@ -20,11 +28,6 @@ function vtmean(f, A; dims=:)
 end
 vtmean(A; dims=:) = vtmean(identity, A, dims=dims)
 
-# Naturally, faster than the overflow/underflow-safe logsumexp, but if one can tolerate it...
-vlse(A; dims=:) = vmapreducethen(exp, +, log, A, dims=dims)
-vtlse(A; dims=:) = vtmapreducethen(exp, +, log, A, dims=dims)
-
-# Assorted functions from StatsBase
 function vgeomean(A; dims=:)
     c = 1 / _denom(A, dims)
     vmapreducethen(log, +, x -> exp(c * x), A, dims=dims)
@@ -33,14 +36,55 @@ function vgeomean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
     vmapreducethen(x -> log(f(x)), +, x -> exp(c * x), A, dims=dims)
 end
-
 function vharmmean(A; dims=:)
     c = 1 / _denom(A, dims)
     vmapreducethen(inv, +, x -> inv(c * x), A, dims=dims)
 end
 
-_xlogx(x::T) where {T} = ifelse(iszero(x), zero(T), x * log(x))
-_xlogy(x::T, y::T) where {T} = ifelse(iszero(x) & !isnan(y), zero(T), x * log(y))
+function vtgeomean(A; dims=:)
+    c = 1 / _denom(A, dims)
+    vtmapreducethen(log, +, x -> exp(c * x), A, dims=dims)
+end
+function vtgeomean(f::F, A; dims=:) where {F}
+    c = 1 / _denom(A, dims)
+    vtmapreducethen(x -> log(f(x)), +, x -> exp(c * x), A, dims=dims)
+end
+function vtharmmean(A; dims=:)
+    c = 1 / _denom(A, dims)
+    vtmapreducethen(inv, +, x -> inv(c * x), A, dims=dims)
+end
+
+# Mean on the log scaley
+function vmean_log(f, A; dims=:)
+    c = log(_denom(A, dims))
+    vmapreducethen(f, +, x -> log(x) - c, A, dims=dims)
+end
+
+################
+# logsumexp (the naive and unsafe version)
+# Naturally, faster than the overflow/underflow-safe logsumexp, but if one can tolerate it...
+vlse(A; dims=:) = vmapreducethen(exp, +, log, A, dims=dims)
+vtlse(A; dims=:) = vtmapreducethen(exp, +, log, A, dims=dims)
+vlse(f, A; dims=:) = vmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
+vtlse(f, A; dims=:) = vtmapreducethen(x -> exp(f(x)), +, log, A, dims=dims)
+
+function vlse_mean(A; dims=:)
+    c = log(_denom(A, dims))
+    vmapreducethen(exp, +, x -> log(x) - c, A, dims=dims)
+end
+function vlse_mean(f, A; dims=:)
+    c = log(_denom(A, dims))
+    vmapreducethen(x -> exp(f(x)), +, x -> log(x) - c, A, dims=dims)
+end
+
+function vtlse_mean(A; dims=:)
+    c = log(_denom(A, dims))
+    vtmapreducethen(exp, +, x -> log(x) - c, A, dims=dims)
+end
+function vtlse_mean(f, A; dims=:)
+    c = log(_denom(A, dims))
+    vtmapreducethen(x -> exp(f(x)), +, x -> log(x) - c, A, dims=dims)
+end
 
 ################
 # Entropies
