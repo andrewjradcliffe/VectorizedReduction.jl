@@ -7,9 +7,9 @@
 
 # Distances
 _vminkowski(x, y, p::T, dims=:) where {T<:Integer} =
-    vmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp(one(T)/p * log(abs(x))), x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vminkowski(x, y, p::T, dims=:) where {T<:AbstractFloat} =
-    vmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp(one(T)/p * log(abs(x))), x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vminkowski(x, y, p::Rational{T}, dims=:) where {T} = _vminkowski(x, y, float(p), dims=dims)
 
 """
@@ -39,9 +39,9 @@ function vminkowski(x, y, p::Real; dims=:)
 end
 
 _vtminkowski(x, y, p::T, dims=:) where {T<:Integer} =
-    vtmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp(one(T)/p * log(abs(x))), x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vtminkowski(x, y, p::T, dims=:) where {T<:AbstractFloat} =
-    vtmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp(one(T)/p * log(abs(x))), x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vtminkowski(x, y, p::Rational{T}, dims=:) where {T} = _vtminkowski(x, y, float(p), dims=dims)
 
 """
