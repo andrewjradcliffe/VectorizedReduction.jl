@@ -41,6 +41,10 @@ export vsoftmax, vtsoftmax
 
 include("vsoftmax.jl")
 
+export vmapreducethen, vtmapreducethen
+include("vmapreducethen.jl")
+include("vmapreducethen_vararg.jl")
+
 export vnorm, vtnorm
 
 include("vnorm.jl")
