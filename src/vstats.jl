@@ -118,11 +118,10 @@ end
 ################
 # Divergences
 
+# Kullback-Leibler
 # # StatsBase handling of pᵢ = qᵢ = 0
-# _xlogxdy(x::T, y::T) where {T} = _xlogy(x, ifelse(iszero(x) & iszero(y), zero(T), x / y))
 # vkldivergence(p, q; dims=:) = vvmapreduce(_xlogxdy, +, p, q, dims=dims)
 # Slightly more efficient (and likely more stable)
-_klterm(x::T, y::T) where {T} = _xlogy(x, x) - _xlogy(x, y)
 vkldivergence(p, q; dims=:) = vvmapreduce(_klterm, +, p, q, dims=dims)
 vkldivergence(p, q, b::Real; dims=:) = (c = 1 / log(b); vmapreducethen(_klterm, +, x -> x * c, p, q, dims=dims))
 vtkldivergence(p, q; dims=:) = vtmapreduce(_klterm, +, p, q, dims=dims)
@@ -131,6 +130,30 @@ vtkldivergence(p, q, b::Real; dims=:) = (c = 1 / log(b); vtmapreducethen(_klterm
 # generalized KL divergence sum(a*log(a/b)-a+b)
 vgkldiv(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> xᵢ * (log(xᵢ) - log(yᵢ)) - xᵢ + yᵢ, +, x, y, dims=dims)
 vtgkldiv(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> xᵢ * (log(xᵢ) - log(yᵢ)) - xᵢ + yᵢ, +, x, y, dims=dims)
+
+# Rénya
+_vrenyadivergence(p, q, α::Real, dims) =
+    vmapreducethen((pᵢ, qᵢ) -> pᵢ^α / qᵢ^(α-1), +, x -> (1/(α-1)) * log(x), p, q, dims=dims)
+
+function vrenyadivergence(p, q, α::Real; dims=:)
+    if α ≈ 0
+        vmapreducethen((pᵢ, qᵢ) -> ifelse(pᵢ > zero(pᵢ), qᵢ, zero(qᵢ)), +, x -> -log(x), p, q, dims=dims)
+    elseif α ≈ 0.5
+        vmapreducethen((pᵢ, qᵢ) -> √(pᵢ * qᵢ), +, x -> -2log(x), p, q, dims=dims)
+    elseif α ≈ 1
+        vkldivergence(p, q, dims=dims)
+    elseif α ≈ 2
+        c = log(_denom(p, dims))
+        vmapreducethen(/, +, x -> log(x) - c, p, q, dims=dims)
+    elseif isinf(α)
+        vmapreducethen(/, max, log, p, q, dims=dims)
+    else
+        _vrenyadivergence(p, q, α, dims)
+    end
+end
+
+
+
 
 ################
 # Deviations
@@ -174,3 +197,5 @@ const vmsd = vmse
 const vtmse = vtmsd
 const vrmsd = vrmse
 const vtrmsd = vtrmse
+
+################
