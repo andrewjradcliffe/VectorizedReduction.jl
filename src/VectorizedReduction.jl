@@ -74,7 +74,7 @@ export ventropy, vtentropy,
 
 export vkldivergence, vtkldivergence,
     vgkldiv, vtgkldiv,
-    vrenyadivergence, vtrenyadivergence
+    vrenyidivergence, vtrenyidivergence
 
 export vcounteq, vtcounteq,
     vcountne, vtcountne,
