@@ -238,7 +238,7 @@ function extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
     end
 end
 
-@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vvextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N}
     extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
 end
 
@@ -417,7 +417,7 @@ function extrema_init_map_quote()
     end
 end
 
-@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vvextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N}
     extrema_init_map_quote()
 end
 
@@ -654,7 +654,7 @@ function textrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
     end
 end
 
-@generated function _vtextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vtextrema!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N}
     textrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
 end
 
@@ -833,6 +833,6 @@ function textrema_init_map_quote()
     end
 end
 
-@generated function _vtextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N, M}
+@generated function _vtextrema_init!(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, B::AbstractArray{Tₒ, N}, C::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, dims::Tuple{}) where {F, Iₘᵢₙ, Iₘₐₓ, Tₒ, T, N}
     textrema_init_map_quote()
 end
