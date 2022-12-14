@@ -415,7 +415,7 @@ end
 """
     vtmapreducethen(f, op, g, init, As::Vararg{AbstractArray, N}) where {N}
 
-Version of mapreducethen for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction occurring over
+Version of `mapreducethen` for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction occurring over
 all dimensions.
 """
 vtmapreducethen(f::F, op::OP, g::G, init::I, As::Vararg{AbstractArray, P}) where {F, OP, G, I, P} =
@@ -432,7 +432,7 @@ vtmapreducethen(f, op, g, As::Vararg{AbstractArray, P}; dims=:, init) where {P} 
 """
     vtmapreducethen(f, op, g, init, As::Tuple{Vararg{AbstractArray}}, dims=:)
 
-Version of mapreducethen for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction over given `dims`.
+Version of `mapreducethen` for `f` : ℝᴺ → ℝ, then `g` : ℝ → ℝ, with reduction over given `dims`.
 """
 function vtmapreducethen(f::F, op::OP, g::G, init::I, As::Tuple{Vararg{AbstractArray, P}}, dims::NTuple{M, Int}) where {F, OP, G, I, M, P}
     ax = axes(As[1])
