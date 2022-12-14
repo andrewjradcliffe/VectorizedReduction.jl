@@ -2,6 +2,7 @@ using VectorizedReduction
 using Test
 using Random
 using LinearAlgebra
+using Statistics
 
 const tests = [
     "vrspecials.jl",
@@ -12,6 +13,7 @@ const tests = [
     "vmapreducethen.jl",
     "vnorm.jl",
     "vdistance.jl",
+    "vstats.jl",
 ]
 
 # @testset "VectorizedReduction.jl" begin
