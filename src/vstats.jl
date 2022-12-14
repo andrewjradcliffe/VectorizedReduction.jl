@@ -224,35 +224,143 @@ end
 ################
 # Deviations
 
+"""
+    vcounteq(x::AbstractArray, y::AbstractArray; dims=:)
+
+Count the number of elements for which `xᵢ == yᵢ` returns `true` on the vectors
+corresponding to the slices along the dimension `dims`.
+
+See also: [`vcountne`](@ref)
+"""
 vcounteq(x, y; dims=:) = vvmapreduce(==, +, x, y, dims=dims)
+
+"""
+    vtcounteq(x::AbstractArray, y::AbstractArray; dims=:)
+
+Count the number of elements for which `xᵢ == yᵢ` returns `true` on the vectors
+corresponding to the slices along the dimension `dims`. Threaded.
+
+See also: [`vtcountne`](@ref)
+"""
 vtcounteq(x, y; dims=:) = vtmapreduce(==, +, x, y, dims=dims)
+
+"""
+    vcountne(x::AbstractArray, y::AbstractArray; dims=:)
+
+Count the number of elements for which `xᵢ != yᵢ` returns `true` on the vectors
+corresponding to the slices along the dimension `dims`.
+
+See also: [`vcounteq`](@ref)
+"""
 vcountne(x, y; dims=:) = vvmapreduce(!=, +, x, y, dims=dims)
+
+"""
+    vtcountne(x::AbstractArray, y::AbstractArray; dims=:)
+
+Count the number of elements for which `xᵢ != yᵢ` returns `true` on the vectors
+corresponding to the slices along the dimension `dims`. Threaded.
+
+See also: [`vtcounteq`](@ref)
+"""
 vtcountne(x, y; dims=:) = vtmapreduce(!=, +, x, y, dims=dims)
 
+"""
+    vmeanad(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the mean absolute deviation between the vectors corresponding to the slices along
+the dimension `dims`.
+
+See also: [`vmaxad`](@ref)
+"""
 function vmeanad(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
 end
+
+"""
+    vtmeanad(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the mean absolute deviation between the vectors corresponding to the slices along
+the dimension `dims`. Threaded.
+
+See also: [`vtmaxad`](@ref)
+"""
 function vtmeanad(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vtmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
 end
 
+"""
+    vmaxad(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the maximum absolute deviation between the vectors corresponding to the slices along
+the dimension `dims`.
+
+See also: [`vmeanad`](@ref)
+"""
 vmaxad(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , max, x, y, dims=dims)
+
+"""
+    vtmaxad(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the maximum absolute deviation between the vectors corresponding to the slices along
+the dimension `dims`. Threaded.
+
+See also: [`vtmeanad`](@ref)
+"""
 vtmaxad(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , max, x, y, dims=dims)
 
+"""
+    vmse(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the mean squared error between the vectors corresponding to the slices along
+the dimension `dims`.
+
+See also: [`vrmse`](@ref)
+"""
 function vmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
 end
+
+"""
+    vtmse(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the mean squared error between the vectors corresponding to the slices along
+the dimension `dims`. Threaded.
+
+See also: [`vtrmse`](@ref)
+"""
 function vtmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vtmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
 end
+
+"""
+    vrmse(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the square root of the mean squared error between the vectors corresponding
+to the slices along the dimension `dims`. More efficient than `sqrt.(vmse(...))`
+as the `sqrt` operation is performed at the point of generation, thereby eliminating the
+full traversal which would otherwise occur.
+
+See also: [`vmse`](@ref)
+"""
 function vrmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> √(c * z), x, y, dims=dims)
 end
+
+"""
+    vtrmse(x::AbstractArray, y::AbstractArray; dims=:)
+
+Compute the square root of the mean squared error between the vectors corresponding
+to the slices along the dimension `dims`. More efficient than `sqrt.(vmse(...))`
+as the `sqrt` operation is performed at the point of generation, thereby eliminating the
+full traversal which would otherwise occur. Threaded.
+
+See also: [`vtmse`](@ref)
+"""
 function vtrmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
     vtmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> √(c * z), x, y, dims=dims)
