@@ -3,8 +3,9 @@
 
 @test vtreduce(+, Int64[]) === Int64(0)
 @test vtreduce(+, Int16[]) === 0 # here we promote to Int64
-@test vtreduce(-, 1:5, init=0) == 15
-@test vtreduce(-, 1:5; init=10) == 25
+# binary op not associative, so hardly expect to be deterministic
+# @test vtreduce(-, 1:5, init=0) == 15
+# @test vtreduce(-, 1:5; init=10) == 25
 
 # llvmcall issue
 @test_broken vtmapreduce((x)-> x ⊻ true, &, [true false true false false], init=true) == false
