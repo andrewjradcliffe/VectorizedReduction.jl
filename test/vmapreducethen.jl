@@ -1,50 +1,24 @@
 # Assorted tests; TODO: systematic
-xx = rand(ntuple(_ -> 3, 4)...);
-@timev R = vmapreducethen(abs2, +, √, xx, dims=(2,4))
-@timev R2 = .√mapreduce(abs2, +, xx, dims=(2,4))
-R ≈ R2
+Random.seed!(0x9f164f673dbb3f65)
+@testset "Simple mapreduce with post-operator" begin
+    xx = rand(ntuple(_ -> 3, 4)...);
+    R = vmapreducethen(abs2, +, √, xx, dims=(2,4))
+    R2 = .√mapreduce(abs2, +, xx, dims=(2,4))
+    @test R ≈ R2
+end
 
-XX = rand(ntuple(_ -> 5, 4)...);
-@benchmark vmapreducethen(abs2, +, √, $XX, dims=(2,4))
-@benchmark .√mapreduce(abs2, +, XX, dims=(2,4))
-
-@benchmark vnorm3($x1, 2.0)
-@benchmark vnorm($x1, 1.5)
-@benchmark vnorm3($x1, 1.5)
-
-
-@benchmark vnorm($x1, 2.0)
-@benchmark norm($x1, 1.5)
-@benchmark vnorm($x1, 1)
-@benchmark vnorm2($x1, 1.5)
-
-vmean(x1, dims=(2,4))
-@benchmark vmean($lpds, dims=(1,2))
-@benchmark mean($lpds, dims=(1,2))
-
-@benchmark veuclidean($x1, $x2)
-@benchmark norm($x1 .- $x2)
-@benchmark euclidean($x1, $x2)
-@test euclidean(x1, x2, dims=(2,4)) ≈ veuclidean(x1, x2, dims=(2,4))
-@benchmark veuclidean($x1, $x2, dims=(2,4))
-@benchmark euclidean($x1, $x2, dims=(2,4))
-
-YY = rand(1:100, 3,3,3,3);
-xxx = rand(3,3,3,3);
-
-@benchmark vmapreducethen(abs2, +, abs2, $YY, dims=(2,4))
-@benchmark vmapreducethen(abs2, +, abs2, $xxx, dims=(2,4))
-
-abs2.(mapreduce(abs2, +, YY, dims=(2,4))) == vmapreducethen(abs2, +, abs2, YY, dims=(2,4))
-
-@code_warntype _vmapreducethen!(abs2, +, abs2, zero, R, xxx, (static(2), static(4)))
-
-x1 = rand(5,5,5,5);
-x2 = rand(5,5,5,5);
-x3 = rand(5,5,5,5);
-@benchmark vmapreducethen(+, +, abs2, $x1, $x2, $x3)
-@benchmark abs2(mapreduce(+, +, $x1, $x2, $x3))
-@test abs2(mapreduce(+, +, x1, x2, x3)) ≈ vmapreducethen(+, +, abs2, x1, x2, x3)
-
-@benchmark vmapreducethen(+, +, abs2, $x1, $x2, $x3, dims=(2,4))
-@benchmark abs2.(mapreduce(+, +, $x1, $x2, $x3, dims=(2,4)))
+@testset "mapreducethen, varargs" begin
+    x = rand(5,5,5,5);
+    y = rand(5,5,5,5);
+    z = rand(5,5,5,5);
+    @test vmapreducethen(+, +, abs2, x, y, z) ≈ abs2(mapreduce(+, +, x, y, z))
+    for f ∈ (+, *, muladd)
+        for op ∈ (+, *, max, min)
+            for g ∈ (abs, abs2, sqrt)
+                for dims ∈ (1, 2, 3, 4, (1,2), (1,3), (1,4), (2,3), (2,4), (3,4), (1,2,3), (1,2,4), (2,3,4), (1,2,3,4), (1,2,3,4,5))
+                    @test vmapreducethen(f, op, g, x, y, z, dims=dims) ≈ g.(mapreduce(f, op, x, y, z, dims=dims))
+                end
+            end
+        end
+    end
+end
