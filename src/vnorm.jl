@@ -7,6 +7,7 @@
 
 # p-norms
 _norm0(A, dims::NTuple{M, Int}) where {M} = fill!(similar(A, _reducedsize(A, dims)), _denom(A, dims))
+_norm0(A, dims::Int) = _norm0(A, (dims,))
 _norm0(A, ::Colon) = float(length(A))
 
 _vnorm(A, p::Rational{T}, dims) where {T} = _vnorm(A, float(p), dims)
