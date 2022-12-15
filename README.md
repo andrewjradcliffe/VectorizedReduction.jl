@@ -18,6 +18,15 @@ This library provides "vectorized" (with/without multithreading) versions of the
 The naming convention is as follows: a vectorized (without threading) version is prefixed by `v`, and a vectorized with threading version is prefixed by `vt`.
 There is a single exception to this rule: vectorized (without threading) versions of the functions listed in 1. are prefixed by `vv` in order to avoid name collisions with LoopVectorization and VectorizedStatistics.
 
+This library also provides other, less common, reductions (all of which follow the naming convention above):
+1. `mapreducethen` : Apply function `f` to each element of `A`, reduce the result over the dimensions `dims` using the binary function `op`, then apply `g` to the result
+2. distances: `manhattan`, `euclidean`, `chebyshe`, `minkowski`
+3. norms: `norm`, treating arbitrary slices via `dims` keyword
+4. deviances: `counteq`, `countne`, `meanad`, `maxad`, `mse`, `rmse`
+5. means: `mean`, `geomean`, `harmmean`
+6. entropies: `crossentropy`, `shannonentropy`, `collisionentropy`, `minentropy`, `maxentropy`, `renyientropy`
+7. divergences: `kldivergence`, `gkldiv`, `renyidivergence`
+
 ## Motivation
 
 When writing numerical code, one may wish to perform a reduction, perhaps across multiple dimensions, as the most natural means of expressing the relevant mathematical operation.
@@ -238,13 +247,65 @@ BenchmarkTools.Trial: 10000 samples with 173 evaluations.
 </details>
 
 
+### `mapreducethen` examples
+<details>
+ <summaryClick me! ></summary>
+<p>
+
+Examples of seemingly strange but useful concept: `mapreduce(f, op, ...)`, then apply `g` to each element of the result. However, the post-transform `g` can be fused such that the output array is populated in a single pass, hence, `mapreducethen(f, op, g, ...)`. It happens that many familiar quantities follow this pattern, as shown below.
+
+```julia
+# L₂ norm
+julia> A = rand(10,10,10,10);
+
+julia> @benchmark vmapreducethen(abs2, +, √, $A, dims=(2,4))
+BenchmarkTools.Trial: 10000 samples with 10 evaluations.
+ Range (min … max):  1.634 μs … 620.474 μs  ┊ GC (min … max): 0.00% … 99.00%
+ Time  (median):     1.969 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   2.040 μs ±   6.188 μs  ┊ GC (mean ± σ):  3.01% ±  0.99%
+
+ Memory estimate: 960 bytes, allocs estimate: 3.
+
+julia> @benchmark .√mapreduce(abs2, +, $A, dims=(2,4))
+BenchmarkTools.Trial: 10000 samples with 4 evaluations.
+ Range (min … max):  7.462 μs …  13.938 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     7.957 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   8.017 μs ± 378.040 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+ Memory estimate: 2.05 KiB, allocs estimate: 10.
+
+# Euclidean distance
+julia> euclidean(x, y; dims=:) = .√mapreduce(abs2 ∘ -, +, x, y, dims=dims);
+
+julia> veuclidean(x, y; dims=:) = vmapreducethen((a, b) -> abs2(a - b), +, √, x, y, dims=dims);
+
+julia> @benchmark veuclidean(A, B, dims=(1,3))
+BenchmarkTools.Trial: 10000 samples with 8 evaluations.
+ Range (min … max):  3.277 μs …   6.065 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     3.576 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   3.602 μs ± 202.787 ns  ┊ GC (mean ± σ):  0.00% ± 0.00%
+
+ Memory estimate: 992 bytes, allocs estimate: 4.
+
+julia> @benchmark euclidean(A, B, dims=(1,3))
+BenchmarkTools.Trial: 10000 samples with 1 evaluation.
+ Range (min … max):  11.103 μs …  2.024 ms  ┊ GC (min … max): 0.00% … 95.82%
+ Time  (median):     13.781 μs              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   17.502 μs ± 58.495 μs  ┊ GC (mean ± σ):  9.72% ±  2.90%
+
+ Memory estimate: 80.28 KiB, allocs estimate: 13.
+```
+</p>
+</details>
+
+
 ## Acknowledgments
 The original motivation for this work was a vectorized & multithreaded multi-dimensional findmin, taking a variable number of array arguments -- it's a long story, but the similarity between findmin and mapreduce motivated a broad approach. My initial attempt (visible in the /attic) did not deliver all the performance possible -- this was only apparent through comparison to C. Elrod's approach to multidimensional forms in VectorizedStatistics. Having fully appreciated the beauty of branching through @generated functions, I decided to take a tour of some low-hanging fruit -- this package is the result.
 
 ## Future work
-1. post-reduction operators
-2. reductions over index subsets within a dimension.
-3. actual documentation
+1. ✓ post-reduction operators
+2. □ reductions over index subsets within a dimension.
+3. □ actual documentation
 
 ## Elsewhere
 * [LoopVectorization.jl](https://github.com/chriselrod/LoopVectorization.jl) back-end for this package.
