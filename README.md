@@ -1,5 +1,13 @@
 # VectorizedReduction
 
+## Note: deprecated in Julia 1.11
+See [the
+announcement](https://github.com/JuliaSIMD/LoopVectorization.jl?tab=readme-ov-file#note-looking-for-new-maintainers-otherwise-deprecated-in-julia-111)
+of `LoopVectorization.jl`'s deprecation. This package is little more
+than code generation, thus, I doubt that substantial performance
+advantages could be realized over `Base` without
+`LoopVectorization.jl`.
+
 ## Installation
 
 ```julia
