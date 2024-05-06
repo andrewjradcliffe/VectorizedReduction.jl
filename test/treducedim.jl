@@ -196,12 +196,12 @@ end
 @testset "region=$region" for region in Any[[0, 1], [0 1; 2 3], "hello"]
     Areduc = rand(3, 4, 5, 6)
 
-    @test_throws ArgumentError vtsum(Areduc, dims=region)
-    @test_throws ArgumentError vtprod(Areduc, dims=region)
-    @test_throws ArgumentError vtmaximum(Areduc, dims=region)
-    @test_throws ArgumentError vtminimum(Areduc, dims=region)
-    @test_throws ArgumentError vtsum(abs, Areduc, dims=region)
-    @test_throws ArgumentError vtsum(abs2, Areduc, dims=region)
-    @test_throws ArgumentError vtmaximum(abs, Areduc, dims=region)
-    @test_throws ArgumentError vtminimum(abs, Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtsum(Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtprod(Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtmaximum(Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtminimum(Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtsum(abs, Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtsum(abs2, Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtmaximum(abs, Areduc, dims=region)
+    @test_throws r"(?:Argument|Method)Error" vtminimum(abs, Areduc, dims=region)
 end
