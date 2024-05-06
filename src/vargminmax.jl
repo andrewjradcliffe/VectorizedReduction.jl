@@ -230,7 +230,7 @@ vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 #     quote
 #         m = $initsym(Base.promote_op(f, $T))
 #         j = 0
-#         @turbo for i ∈ eachindex(A)
+#         @turbo check_empty=true for i ∈ eachindex(A)
 #             newm = $opsym(f(A[i]), m)
 #             m = ifelse(newm, f(A[i]), m)
 #             j = ifelse(newm, i, j)
@@ -321,7 +321,7 @@ vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 #             Dstar = $dstar
 #             Dstar = -Dstar
 #             Cᵥ = $Cᵥ
-#             @turbo $loops
+#             @turbo check_empty=true $loops
 #             return C
 #         end
 #     else
@@ -377,7 +377,7 @@ vtargmin(f, As::Vararg{AbstractArray, P}; dims=:) where {P} =
 #             Dstar = -Dstar
 #             Cᵥ = $Cᵥ
 #             $ξ
-#             @turbo $loops
+#             @turbo check_empty=true $loops
 #             Cᵥ[] = $setc
 #             return C
 #         end

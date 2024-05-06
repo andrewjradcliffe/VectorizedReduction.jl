@@ -94,7 +94,7 @@ function findmax_quote(N::Int, D)
         $dstar′
         $Bᵥ
         $Cᵥ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B, C
     end
 end
@@ -173,7 +173,7 @@ ls2 = LoopVectorization.LoopSet(ls02);
 ops2 = LoopVectorization.operations(ls2)
 
 # following sequence
-q = @macroexpand @turbo for i_2 = indices((A, B, C), 2)
+q = @macroexpand @turbo check_empty=true for i_2 = indices((A, B, C), 2)
     v = typemin(eltype(Bᵥ))
     j_1 = one(Int)
     for i_1 = axes(A, 1)

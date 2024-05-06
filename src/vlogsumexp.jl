@@ -9,10 +9,10 @@
 function vlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N}
     vmax = typemin(T)
     s = zero(promote_type(T, Float64))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         vmax = max(A[i], vmax)
     end
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         s += exp(A[i] - vmax)
     end
     vmax + log(s)
@@ -51,12 +51,12 @@ vlogsumexp(A, dims::Int) = vlogsumexp(A, (dims,))
 # function vlogsumexp(A::AbstractArray{T, N}) where {T, N}
 #     m = typemin(T)
 #     d = zero(T)
-#     # @turbo for i ∈ eachindex(A)
+#     # @turbo check_empty=true for i ∈ eachindex(A)
 #     #     d = exp(min(m, A[i]) - A[i]) * d + exp(A[i] - max(m, A[i]))
 #     #     newmax = A[i] > m
 #     #     m = ifelse(newmax, A[i], m)
 #     # end
-#     @turbo for i ∈ eachindex(A)
+#     @turbo check_empty=true for i ∈ eachindex(A)
 #         d = d * exp(m - max(m, A[i])) + exp(A[i] - max(m, A[i]))
 #         newmax = A[i] > m
 #         m = ifelse(newmax, A[i], m)
@@ -119,7 +119,7 @@ function staticdim_logsumexp_quote(static_dims::Vector{Int}, N::Int)
         push!(rblock.args, setb)
         return quote
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -141,7 +141,7 @@ function staticdim_logsumexp_quote(static_dims::Vector{Int}, N::Int)
             Bᵥ = $Bᵥ
             $vmax
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = log(ξ) + vmax
             return B
         end
@@ -261,7 +261,7 @@ end
 #         return quote
 #             Bᵥ = $Bᵥ
 #             Cᵥ = $Cᵥ
-#             @turbo $loops
+#             @turbo check_empty=true $loops
 #             return C
 #         end
 #     else
@@ -284,7 +284,7 @@ end
 #             Cᵥ = $Cᵥ
 #             $vmax
 #             $ξ
-#             @turbo $loops
+#             @turbo check_empty=true $loops
 #             Cᵥ[] = log(ξ) + vmax
 #             return C
 #         end
@@ -344,10 +344,10 @@ end
 function vtlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N}
     vmax = typemin(T)
     s = zero(promote_type(T, Float64))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         vmax = max(A[i], vmax)
     end
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         s += exp(A[i] - vmax)
     end
     vmax + log(s)
@@ -383,12 +383,12 @@ vtlogsumexp(A, dims::Int) = vtlogsumexp(A, (dims,))
 # function vtlogsumexp(A::AbstractArray{T, N}) where {T, N}
 #     m = typemin(T)
 #     d = zero(T)
-#     # @tturbo for i ∈ eachindex(A)
+#     # @tturbo check_empty=true for i ∈ eachindex(A)
 #     #     d = exp(min(m, A[i]) - A[i]) * d + exp(A[i] - max(m, A[i]))
 #     #     newmax = A[i] > m
 #     #     m = ifelse(newmax, A[i], m)
 #     # end
-#     @tturbo for i ∈ eachindex(A)
+#     @tturbo check_empty=true for i ∈ eachindex(A)
 #         d = d * exp(m - max(m, A[i])) + exp(A[i] - max(m, A[i]))
 #         newmax = A[i] > m
 #         m = ifelse(newmax, A[i], m)
@@ -452,7 +452,7 @@ function staticdim_tlogsumexp_quote(static_dims::Vector{Int}, N::Int)
         push!(rblock.args, setb)
         return quote
             Bᵥ = $Bᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -474,7 +474,7 @@ function staticdim_tlogsumexp_quote(static_dims::Vector{Int}, N::Int)
             Bᵥ = $Bᵥ
             $vmax
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = log(ξ) + vmax
             return B
         end

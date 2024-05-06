@@ -23,7 +23,7 @@ function sumsqdiff_quote(N::Int, D)
     body = sumsqdiff_body(N, D)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return C
     end
 end
@@ -56,12 +56,12 @@ _lvvar(A::AbstractArray{T, N}, ::Colon, corrected::Bool) where {T, N} = lvvar1(A
 
 function lvvar1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         s += A[i]
     end
     μ = s / length(A)
     ss = zero(Base.promote_op(/, T, Int))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         Δ = A[i] - μ
         ss += Δ * Δ
     end
@@ -75,7 +75,7 @@ function tsumsqdiff_quote(N::Int, D)
     body = sumsqdiff_body(N, D)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return C
     end
 end
@@ -108,12 +108,12 @@ _lvtvar(A::AbstractArray{T, N}, ::Colon, corrected::Bool) where {T, N} = lvtvar1
 
 function lvtvar1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         s += A[i]
     end
     μ = s / length(A)
     ss = zero(Base.promote_op(/, T, Int))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         Δ = A[i] - μ
         ss += Δ * Δ
     end
@@ -194,7 +194,7 @@ end
 #     push!(outer.args, inner)
 #     outer
 #     # return quote
-#     #     @turbo $outer
+#     #     @turbo check_empty=true $outer
 #     #     return C
 #     # end
 # end

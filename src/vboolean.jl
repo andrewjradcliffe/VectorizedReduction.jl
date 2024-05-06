@@ -22,7 +22,7 @@ end
 vcount(f, A, dims::Int) = vcount(f, A, (dims,))
 function vcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     ξ = 0
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         ξ += f(A[i])
     end
     return ξ
@@ -152,7 +152,7 @@ vall(A; dims=:) = vall(identity, A, dims)
 function vany(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     # The proper implementation, but, alas, zero_mask problems in LoopVectorization
     # ξ = false
-    # @turbo for i ∈ eachindex(A)
+    # @turbo check_empty=true for i ∈ eachindex(A)
     #     ξ |= f(A[i])
     # end
     # return ξ
@@ -163,7 +163,7 @@ vany(f::F, A) where {F<:Function} = vany(f, A, :)
 vany(A::AbstractArray{Bool, N}) where {N} = vany(identity, A)
 function vall(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     ξ = true
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         ξ &= f(A[i])
     end
     return ξ
@@ -187,7 +187,7 @@ vall(A::AbstractArray{Bool, N}) where {N} = vall(identity, A)
 # at which point the cost of CartesianIndices(A)[B] becomes the limiting factor.
 function vmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     B = similar(A, Bool)
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         B[i] = f(A[i])
     end
     return B
@@ -214,7 +214,7 @@ end
 vtcount(f, A, dims::Int) = vtcount(f, A, (dims,))
 function vtcount(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     ξ = 0
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         ξ += f(A[i])
     end
     return ξ
@@ -303,7 +303,7 @@ vtany(f::F, A) where {F<:Function} = vtany(f, A, :)
 vtany(A::AbstractArray{Bool, N}) where {N} = vtany(identity, A)
 function vtall(f::F, A::AbstractArray{T, N}, ::Colon) where {F, T, N}
     ξ = true
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         ξ &= f(A[i])
     end
     return ξ
@@ -313,7 +313,7 @@ vtall(A::AbstractArray{Bool, N}) where {N} = vtall(identity, A)
 
 function vtmask(f::F, A::AbstractArray{T, N}) where {F, T, N}
     B = similar(A, Bool)
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         B[i] = f(A[i])
     end
     return B

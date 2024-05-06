@@ -57,7 +57,7 @@ function mean_quote3(N::Int, D)
         denom = $denom
         invdenom = inv(denom)
         $bᵥ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -130,7 +130,7 @@ function mean_quote3(F, N::Int, D)
         denom = $denom
         invdenom = inv(denom)
         $bᵥ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end

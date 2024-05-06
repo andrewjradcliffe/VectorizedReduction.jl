@@ -87,7 +87,7 @@ vfindmin(A::AbstractArray, dims) = vfindminmax(identity, <, typemax, A, dims)
     quote
         m = $initsym(Base.promote_op(f, $T))
         j = 1
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
             j = ifelse(newm, i, j)
@@ -104,7 +104,7 @@ end
     quote
         m = $initsym(Base.promote_op(f, $T))
         j = 1
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
             j = ifelse(newm, i, j)
@@ -248,7 +248,7 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             Dstar = -Dstar
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B, C
         end
     else
@@ -312,7 +312,7 @@ function staticdim_findminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             Cᵥ[] = $setc
             return B, C
@@ -432,7 +432,7 @@ vtfindmin(A::AbstractArray, dims) = vtfindminmax(identity, <, typemax, A, dims)
     quote
         m = $initsym(Base.promote_op(f, $T))
         j = 1
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
             j = ifelse(newm, i, j)
@@ -449,7 +449,7 @@ end
     quote
         m = $initsym(Base.promote_op(f, $T))
         j = 1
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             newm = $opsym(f(A[i]), m)
             m = ifelse(newm, f(A[i]), m)
             j = ifelse(newm, i, j)
@@ -596,7 +596,7 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             Dstar = -Dstar
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B, C
         end
     else
@@ -658,7 +658,7 @@ function staticdim_tfindminmax_quote(OP, I, static_dims::Vector{Int}, N::Int)
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = ξ
             Cᵥ[] = $setc
             return B, C

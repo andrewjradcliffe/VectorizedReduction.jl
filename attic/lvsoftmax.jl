@@ -27,7 +27,7 @@ function aminusb_exp_quote(N::Int, D)
     body = aminusb_expbody(N, D)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return C
     end
 end
@@ -55,7 +55,7 @@ _lvsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvsoftmax1(A)
 function lvsoftmax1(A::AbstractArray{T, N}) where {T, N}
     b = lvlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         C[i] = exp(A[i] - b)
     end
     C
@@ -68,7 +68,7 @@ function taminusb_exp_quote(N::Int, D)
     body = aminusb_expbody(N, D)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return C
     end
 end
@@ -96,7 +96,7 @@ _lvtsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtsoftmax1(A)
 function lvtsoftmax1(A::AbstractArray{T, N}) where {T, N}
     b = lvtlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         C[i] = exp(A[i] - b)
     end
     C

@@ -55,7 +55,7 @@ function sum_quote3(N::Int, D)
     push!(rblock.args, post)
     return quote
         $bᵥ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -75,7 +75,7 @@ end
 end
 function _lvsum1(A::AbstractArray{T, N}) where {T, N}
     ξ = zero(Base.promote_op(+, T, Int))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         ξ += A[i]
     end
     ξ

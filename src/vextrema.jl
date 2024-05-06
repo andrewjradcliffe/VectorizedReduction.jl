@@ -74,7 +74,7 @@ function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractAr
     Tₒ = Base.promote_op(f, T)
     mn = initmin(Tₒ)
     mx = initmax(Tₒ)
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         mn = min(mn, f(A[i]))
         mx = max(mx, f(A[i]))
     end
@@ -143,7 +143,7 @@ function staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{Int
         return quote
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B, C
         end
     else
@@ -167,7 +167,7 @@ function staticdim_extrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{Int
             Cᵥ = $Cᵥ
             $mn
             $mx
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = mn
             Cᵥ[] = mx
             return B, C
@@ -233,7 +233,7 @@ function extrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
     return quote
         $mn
         $mx
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B, C
     end
 end
@@ -248,7 +248,7 @@ function vvextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractAr
     Tₒ = Base.promote_op(f, T)
     mn = convert(Tₒ, initmin)
     mx = convert(Tₒ, initmax)
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         mn = min(mn, f(A[i]))
         mx = max(mx, f(A[i]))
     end
@@ -321,7 +321,7 @@ function staticdim_extrema_init_quote(static_dims::Vector{Int}, N::Int)
             Cᵥ = $Cᵥ
             mn₀ = $mn₀
             mx₀ = $mx₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B, C
         end
     else
@@ -345,7 +345,7 @@ function staticdim_extrema_init_quote(static_dims::Vector{Int}, N::Int)
             Cᵥ = $Cᵥ
             mn = $mn₀
             mx = $mx₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = mn
             Cᵥ[] = mx
             return B, C
@@ -412,7 +412,7 @@ function extrema_init_map_quote()
     return quote
         mn = $mn₀
         mx = $mx₀
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B, C
     end
 end
@@ -490,7 +490,7 @@ function vtextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractAr
     Tₒ = Base.promote_op(f, T)
     mn = initmin(Tₒ)
     mx = initmax(Tₒ)
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         mn = min(mn, f(A[i]))
         mx = max(mx, f(A[i]))
     end
@@ -559,7 +559,7 @@ function staticdim_textrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{In
         return quote
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B, C
         end
     else
@@ -583,7 +583,7 @@ function staticdim_textrema_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vector{In
             Cᵥ = $Cᵥ
             $mn
             $mx
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = mn
             Cᵥ[] = mx
             return B, C
@@ -649,7 +649,7 @@ function textrema_map_quote(Iₘᵢₙ, Iₘₐₓ)
     return quote
         $mn
         $mx
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B, C
     end
 end
@@ -664,7 +664,7 @@ function vtextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::AbstractAr
     Tₒ = Base.promote_op(f, T)
     mn = convert(Tₒ, initmin)
     mx = convert(Tₒ, initmax)
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         mn = min(mn, f(A[i]))
         mx = max(mx, f(A[i]))
     end
@@ -737,7 +737,7 @@ function staticdim_textrema_init_quote(static_dims::Vector{Int}, N::Int)
             Cᵥ = $Cᵥ
             mn₀ = $mn₀
             mx₀ = $mx₀
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B, C
         end
     else
@@ -761,7 +761,7 @@ function staticdim_textrema_init_quote(static_dims::Vector{Int}, N::Int)
             Cᵥ = $Cᵥ
             mn = $mn₀
             mx = $mx₀
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = mn
             Cᵥ[] = mx
             return B, C
@@ -828,7 +828,7 @@ function textrema_init_map_quote()
     return quote
         mn = $mn₀
         mx = $mx₀
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B, C
     end
 end

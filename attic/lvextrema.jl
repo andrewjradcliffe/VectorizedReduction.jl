@@ -63,7 +63,7 @@ function extrema_quote(N::Int, D)
     return quote
         $Bᵥ
         $Cᵥ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B, C
     end
 end
@@ -153,7 +153,7 @@ function staticdim_extrema_quote(static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B, C
         end
     else
@@ -180,7 +180,7 @@ function staticdim_extrema_quote(static_dims::Vector{Int}, N::Int)
             Cᵥ = $Cᵥ
             $vmax
             $vmin
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = vmax
             Cᵥ[] = vmin
             return B, C

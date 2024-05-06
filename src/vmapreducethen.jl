@@ -57,7 +57,7 @@ end
     initsym = I.instance
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return g(ξ)
@@ -123,7 +123,7 @@ function staticdim_mapreducethen_quote(OP, I, static_dims::Vector{Int}, N::Int)
         return quote
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -145,7 +145,7 @@ function staticdim_mapreducethen_quote(OP, I, static_dims::Vector{Int}, N::Int)
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -204,7 +204,7 @@ function mapthen_quote()
     setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :g, Expr(:call, :f, Expr(:ref, :A, :i))))
     push!(block.args, setb)
     return quote
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B
     end
 end
@@ -229,7 +229,7 @@ end
     opsym = OP.instance
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return g(ξ)
@@ -282,7 +282,7 @@ function staticdim_mapreducethen_init_quote(OP, static_dims::Vector{Int}, N::Int
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -303,7 +303,7 @@ function staticdim_mapreducethen_init_quote(OP, static_dims::Vector{Int}, N::Int
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -413,7 +413,7 @@ end
     initsym = I.instance
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return g(ξ)
@@ -479,7 +479,7 @@ function staticdim_tmapreducethen_quote(OP, I, static_dims::Vector{Int}, N::Int)
         return quote
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -501,7 +501,7 @@ function staticdim_tmapreducethen_quote(OP, I, static_dims::Vector{Int}, N::Int)
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -560,7 +560,7 @@ function tmapthen_quote()
     setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :g, Expr(:call, :f, Expr(:ref, :A, :i))))
     push!(block.args, setb)
     return quote
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -585,7 +585,7 @@ end
     opsym = OP.instance
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return g(ξ)
@@ -638,7 +638,7 @@ function staticdim_tmapreducethen_init_quote(OP, static_dims::Vector{Int}, N::In
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -659,7 +659,7 @@ function staticdim_tmapreducethen_init_quote(OP, static_dims::Vector{Int}, N::In
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, T), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end

@@ -183,7 +183,7 @@ function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::In
         return quote
             $t = As
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -205,7 +205,7 @@ function staticdim_mapreduce_vararg_quote(OP, I, static_dims::Vector{Int}, N::In
             $t = As
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end
@@ -282,7 +282,7 @@ function map_vararg_quote(N::Int, P::Int)
     push!(block.args, setb)
     return quote
         $t = As
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B
     end
 end
@@ -331,7 +331,7 @@ function mapreduceall_vararg_quote(OP, I, P::Int)
     return quote
         $t = As
         $ξ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return ξ
     end
 end
@@ -430,7 +430,7 @@ function staticdim_mapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N::
             $t = As
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -452,7 +452,7 @@ function staticdim_mapreduce_vararg_init_quote(OP, static_dims::Vector{Int}, N::
             $t = As
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end
@@ -545,7 +545,7 @@ function mapreduceall_vararg_init_quote(OP, P::Int)
     return quote
         $t = As
         $ξ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return ξ
     end
 end

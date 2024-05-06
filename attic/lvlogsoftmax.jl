@@ -21,7 +21,7 @@ function aminusb_quote(N::Int, D)
     body = aminusbbody(N, D)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return C
     end
 end
@@ -32,7 +32,7 @@ end
 end
 
 function exp!(A::AbstractArray{T, N}) where {T, N}
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         A[i] = exp(A[i])
     end
     A
@@ -56,7 +56,7 @@ _lvlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsoftmax1(A)
 function lvlogsoftmax1(A::AbstractArray{T, N}) where {T, N}
     b = lvlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         C[i] = A[i] - b
     end
     C
@@ -69,7 +69,7 @@ function taminusb_quote(N::Int, D)
     body = aminusbbody(N, D)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return C
     end
 end
@@ -95,7 +95,7 @@ _lvtlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsoftmax1(A)
 function lvtlogsoftmax1(A::AbstractArray{T, N}) where {T, N}
     b = lvtlogsumexp1(A)
     C = similar(A, Base.promote_op(exp, T))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         C[i] = A[i] - b
     end
     C

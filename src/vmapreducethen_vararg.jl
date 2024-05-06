@@ -99,7 +99,7 @@ function staticdim_mapreducethen_vararg_quote(OP, I, static_dims::Vector{Int}, N
             $t = As
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -121,7 +121,7 @@ function staticdim_mapreducethen_vararg_quote(OP, I, static_dims::Vector{Int}, N
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -188,7 +188,7 @@ function mapthen_vararg_quote(P::Int)
     push!(block.args, setb)
     return quote
         $t = As
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B
     end
 end
@@ -224,7 +224,7 @@ function mapreducethenall_vararg_quote(OP, I, P::Int)
     return quote
         $t = As
         $ξ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return g(ξ)
     end
 end
@@ -303,7 +303,7 @@ function staticdim_mapreducethen_vararg_init_quote(OP, static_dims::Vector{Int},
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -325,7 +325,7 @@ function staticdim_mapreducethen_vararg_init_quote(OP, static_dims::Vector{Int},
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -400,7 +400,7 @@ function mapreducethenall_vararg_init_quote(OP, P::Int)
     return quote
         $t = As
         $ξ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return g(ξ)
     end
 end
@@ -501,7 +501,7 @@ function staticdim_tmapreducethen_vararg_quote(OP, I, static_dims::Vector{Int}, 
             $t = As
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -523,7 +523,7 @@ function staticdim_tmapreducethen_vararg_quote(OP, I, static_dims::Vector{Int}, 
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -590,7 +590,7 @@ function tmapthen_vararg_quote(P::Int)
     push!(block.args, setb)
     return quote
         $t = As
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -626,7 +626,7 @@ function tmapreducethenall_vararg_quote(OP, I, P::Int)
     return quote
         $t = As
         $ξ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return g(ξ)
     end
 end
@@ -705,7 +705,7 @@ function staticdim_tmapreducethen_vararg_init_quote(OP, static_dims::Vector{Int}
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -727,7 +727,7 @@ function staticdim_tmapreducethen_vararg_init_quote(OP, static_dims::Vector{Int}
             𝒯ₒ = Base.promote_op($(Symbol(OP.instance)), Base.promote_op(f, $(ntuple(p -> Expr(:call, :eltype, Symbol(:A_, p)), P)...)), Int)
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = g(ξ)
             return B
         end
@@ -802,7 +802,7 @@ function tmapreducethenall_vararg_init_quote(OP, P::Int)
     return quote
         $t = As
         $ξ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return g(ξ)
     end
 end

@@ -233,7 +233,7 @@ vvminimum(A; dims=:, init=typemax) = vvmapreduce(identity, min, init, A, dims)
     initsym = I.instance
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
@@ -293,7 +293,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         push!(rblock.args, setb)
         return quote
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -316,7 +316,7 @@ function staticdim_mapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end
@@ -388,7 +388,7 @@ function map_quote()
     setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :f, Expr(:ref, :A, :i)))
     push!(block.args, setb)
     return quote
-        @turbo $loops
+        @turbo check_empty=true $loops
         return B
     end
 end
@@ -413,7 +413,7 @@ end
     opsym = OP.instance
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
@@ -469,7 +469,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B
         end
     else
@@ -490,7 +490,7 @@ function staticdim_mapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end
@@ -753,7 +753,7 @@ vtminimum(A; dims=:, init=typemax) = vtmapreduce(identity, min, init, A, dims)
     initsym = I.instance
     quote
         ξ = $initsym(Base.promote_op($opsym, Base.promote_op(f, $T), Int))
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
@@ -806,7 +806,7 @@ function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         push!(rblock.args, setb)
         return quote
             Bᵥ = $Bᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -826,7 +826,7 @@ function staticdim_tmapreduce_quote(OP, I, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end
@@ -896,7 +896,7 @@ function tmap_quote()
     setb = Expr(:(=), Expr(:ref, :B, :i), Expr(:call, :f, Expr(:ref, :A, :i)))
     push!(block.args, setb)
     return quote
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -921,7 +921,7 @@ end
     opsym = OP.instance
     quote
         ξ = convert(Base.promote_op($opsym, Base.promote_op(f, $T), Int), init)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             ξ = $opsym(ξ, f(A[i]))
         end
         return ξ
@@ -973,7 +973,7 @@ function staticdim_tmapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             ξ₀ = $ξ₀
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B
         end
     else
@@ -994,7 +994,7 @@ function staticdim_tmapreduce_init_quote(OP, static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = ξ
             return B
         end

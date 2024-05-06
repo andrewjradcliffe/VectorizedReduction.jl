@@ -8,7 +8,7 @@
 function vlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N}
     b = vlogsumexp(A)
     C = similar(A, Base.promote_op(exp, T))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         C[i] = A[i] - b
     end
     C
@@ -93,7 +93,7 @@ function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
         push!(block.args, setc)
         return quote
             Bᵥ = $Bᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return C
         end
     else
@@ -113,7 +113,7 @@ function staticdim_logsoftmax_quote(static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $lse
-            @turbo $loops
+            @turbo check_empty=true $loops
             return C
         end
     end
@@ -181,7 +181,7 @@ See also: [`vtsoftmax`](@ref)
 function vtlogsoftmax(A::AbstractArray{T, N}, ::Colon) where {T, N}
     b = vtlogsumexp(A)
     C = similar(A, Base.promote_op(exp, T))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         C[i] = A[i] - b
     end
     C
@@ -256,7 +256,7 @@ function staticdim_tlogsoftmax_quote(static_dims::Vector{Int}, N::Int)
         push!(block.args, setc)
         return quote
             Bᵥ = $Bᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return C
         end
     else
@@ -276,7 +276,7 @@ function staticdim_tlogsoftmax_quote(static_dims::Vector{Int}, N::Int)
         return quote
             Bᵥ = $Bᵥ
             $lse
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return C
         end
     end

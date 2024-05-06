@@ -21,7 +21,7 @@ function aminusb_exp_sum_quote(N::Int, D)
     body = aminusb_exp_sumbody(N, D)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return C
     end
 end
@@ -31,7 +31,7 @@ end
 end
 
 function logself_plusb!(C::AbstractArray{Tₒ, N}, B::AbstractArray{T, N}) where {Tₒ, T, N}
-    @turbo for i ∈ eachindex(C)
+    @turbo check_empty=true for i ∈ eachindex(C)
         C[i] = B[i] + log(C[i])
     end
     C
@@ -57,10 +57,10 @@ _lvlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvlogsumexp1(A)
 function lvlogsumexp1(A::AbstractArray{T, N}) where {T, N}
     α = typemin(T)
     s = zero(promote_type(T, Float64))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         α = max(A[i], α)
     end
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         s += exp(A[i] - α)
     end
     α + log(s)
@@ -72,7 +72,7 @@ function taminusb_exp_sum_quote(N::Int, D)
     body = aminusb_exp_sumbody(N, D)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return B
     end
 end
@@ -82,7 +82,7 @@ end
 end
 
 function tlogself_plusb!(C::AbstractArray{Tₒ, N}, B::AbstractArray{T, N}) where {Tₒ, T, N}
-    @tturbo for i ∈ eachindex(C)
+    @tturbo check_empty=true for i ∈ eachindex(C)
         C[i] = B[i] + log(C[i])
     end
     C
@@ -109,10 +109,10 @@ _lvtlogsumexp(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtlogsumexp1(A)
 function lvtlogsumexp1(A::AbstractArray{T, N}) where {T, N}
     α = typemin(T)
     s = zero(promote_type(T, Float64))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         α = max(A[i], α)
     end
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         s += exp(A[i] - α)
     end
     α + log(s)

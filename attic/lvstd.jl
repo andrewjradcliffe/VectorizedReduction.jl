@@ -18,7 +18,7 @@
 #     body = smul_sqrt_inplacebody(N)
 #     push!(ls.args, body)
 #     return quote
-#         @turbo $ls
+#         @turbo check_empty=true $ls
 #         return A
 #     end
 # end
@@ -28,7 +28,7 @@
 # end
 
 function _smul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         A[i] = sqrt(A[i] * x)
     end
     A
@@ -58,7 +58,7 @@ lvstd1(A::AbstractArray{T, N}, corrected::Bool=true) where {T, N} = √(lvvar1(A
 
 ################ threaded version
 function _tsmul_sqrt!(A::AbstractArray{T, N}, x::T) where {T, N}
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         A[i] = sqrt(A[i] * x)
     end
     A

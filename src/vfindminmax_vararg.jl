@@ -85,7 +85,7 @@ function findminmaxall_vararg_quote(OP, I, P::Int)
         $t = As
         indmax = 1
         $ξ
-        @turbo $loops
+        @turbo check_empty=true $loops
         return ξ, CartesianIndices(A_1)[indmax]
     end
 end
@@ -208,7 +208,7 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             Dstar = -Dstar
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @turbo $loops
+            @turbo check_empty=true $loops
             return B, C
         end
     else
@@ -270,7 +270,7 @@ function staticdim_findminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::I
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
             $ξ
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = ξ
             Cᵥ[] = $setc
             return B, C
@@ -401,7 +401,7 @@ function tfindminmaxall_vararg_quote(OP, I, P::Int)
         $t = As
         indmax = 1
         $ξ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return ξ, CartesianIndices(A_1)[indmax]
     end
 end
@@ -519,7 +519,7 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
             Dstar = -Dstar
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             return B, C
         end
     else
@@ -581,7 +581,7 @@ function staticdim_tfindminmax_vararg_quote(OP, I, static_dims::Vector{Int}, N::
             Bᵥ = $Bᵥ
             Cᵥ = $Cᵥ
             $ξ
-            @tturbo $loops
+            @tturbo check_empty=true $loops
             Bᵥ[] = ξ
             Cᵥ[] = $setc
             return B, C

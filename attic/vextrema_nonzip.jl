@@ -43,8 +43,8 @@ function staticdim_extrema_nonzip_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vec
         newblock = Expr(:block)
         d = first(rinds)
         il1 = Expr(:for, :($(Symbol(:i_, d)) = axes(A, $d)), newblock)
-        push!(block.args, :(@turbo $il1))
-        # push!(block.args, quote @turbo $il1 end)
+        push!(block.args, :(@turbo check_empty=true $il1))
+        # push!(block.args, quote @turbo check_empty=true $il1 end)
         block = newblock
         for d ∈ @view(rinds[2:end])
             newblock = Expr(:block)
@@ -82,7 +82,7 @@ function staticdim_extrema_nonzip_quote(Iₘᵢₙ, Iₘₐₓ, static_dims::Vec
             Bᵥ = $Bᵥ
             $mn
             $mx
-            @turbo $loops
+            @turbo check_empty=true $loops
             Bᵥ[] = (mn, mx)
             return B
         end

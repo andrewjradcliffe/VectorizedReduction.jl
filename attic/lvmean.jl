@@ -27,7 +27,7 @@ end
 #     body = smul_inplacebody(N)
 #     push!(ls.args, body)
 #     return quote
-#         @turbo $ls
+#         @turbo check_empty=true $ls
 #         return A
 #     end
 # end
@@ -36,14 +36,14 @@ end
 # end
 
 function _smul!(A::AbstractArray{T, N}, x::T) where {T, N}
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         A[i] *= x
     end
     A
 end
 
 function _smul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         B[i] = A[i] * x
     end
     B
@@ -69,7 +69,7 @@ _lvmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(A)
 
 function lvmean1(A::AbstractArray{T, N}) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         s += A[i]
     end
     s / length(A)
@@ -101,7 +101,7 @@ _lvmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmean1(f, A)
     Tₒ = Base.promote_op(+, Base.promote_op(f, T), Int)
     quote
         s = zero($Tₒ)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s += $f(A[i])
         end
         s / length(A)
@@ -111,14 +111,14 @@ end
 ################ threaded version
 
 function _tsmul!(A::AbstractArray{T, N}, x::T) where {T, N}
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         A[i] *= x
     end
     A
 end
 
 function _tsmul!(B::AbstractArray{Tₒ, N}, A::AbstractArray{T, N}, x::Tₒ) where {Tₒ, T, N}
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         B[i] = A[i] * x
     end
     B
@@ -144,7 +144,7 @@ _lvtmean(A::AbstractArray{T, N}, ::Colon) where {T, N} = lvtmean1(A)
 
 function lvtmean1(A::AbstractArray{T, N}) where {T, N}
     s = zero(Base.promote_op(+, T, Int))
-    @tturbo for i ∈ eachindex(A)
+    @tturbo check_empty=true for i ∈ eachindex(A)
         s += A[i]
     end
     s / length(A)
@@ -173,7 +173,7 @@ _lvtmean(f, A::AbstractArray{T, N}, ::Colon) where {T, N} = _lvtmean1(f, A)
     Tₒ = Base.promote_op(+, Base.promote_op(f, T), Int)
     quote
         s = zero($Tₒ)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s += $f(A[i])
         end
         s / length(A)

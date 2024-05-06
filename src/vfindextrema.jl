@@ -9,7 +9,7 @@ function vfindextrema(f::F, initmin::Iₘᵢₙ, initmax::Iₘₐₓ, A::Abstrac
     Tₒ = Base.promote_op(f, T)
     mn, mx = initmin(Tₒ), initmax(Tₒ)
     i_mn, i_mx = firstindex(A), firstindex(A)
-    @turbo for i ∈ eachindex(A)
+    @turbo check_empty=true for i ∈ eachindex(A)
         v = f(A[i])
         newmin = v < mn
         newmax = v > mx

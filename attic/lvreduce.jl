@@ -55,7 +55,7 @@ function reduce_quote(F, N::Int, D)
     push!(body.args, e)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return B
     end
 end
@@ -89,7 +89,7 @@ _lvreduce(f, A, ::Colon) = lvreduce1(f, A)
     f = F.instance
     quote
         s = zero($T)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $f(s, A[i])
         end
         s
@@ -108,7 +108,7 @@ for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
     end
     @eval function lvreduce1(::typeof($op), A::AbstractArray{T, N}) where {T, N}
         s = $init(T)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, A[i])
         end
         s
@@ -130,7 +130,7 @@ end
     f = F.instance
     quote
         s = $T(init)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $f(s, A[i])
         end
         s
@@ -178,7 +178,7 @@ function mapreduce_quote(F, OP, N::Int, D)
     push!(body.args, e)
     push!(ls.args, body)
     return quote
-        @turbo $ls
+        @turbo check_empty=true $ls
         return B
     end
 end
@@ -214,7 +214,7 @@ _lvmapreduce(f, op, A::AbstractArray{T, N}, ::Colon) where {T, N} = lvmapreduce1
     f = F.instance
     quote
         s = zero(Base.promote_op($f, $T))
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, $f(A[i]))
         end
         s
@@ -233,7 +233,7 @@ for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
     end
     @eval function lvmapreduce1(f, ::typeof($op), A::AbstractArray{T, N}) where {T, N}
         s = $init(Base.promote_op(f, T))
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, f(A[i]))
         end
         s
@@ -256,7 +256,7 @@ end
     op = OP.instance
     quote
         s = Base.promote_op($f, $T)(init)
-        @turbo for i ∈ eachindex(A)
+        @turbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, $f(A[i]))
         end
         s
@@ -303,7 +303,7 @@ function treduce_quote(F, N::Int, D)
     push!(body.args, e)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return B
     end
 end
@@ -330,7 +330,7 @@ _lvtreduce(f, A, ::Colon) = lvtreduce1(f, A)
     f = F.instance
     quote
         s = zero($T)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $f(s, A[i])
         end
         s
@@ -349,7 +349,7 @@ for (op, init) ∈ zip((:+, :*, :max, :min), (:zero, :one, :typemin, :typemax))
     end
     @eval function lvtreduce1(::typeof($op), A::AbstractArray{T, N}) where {T, N}
         s = $init(T)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, A[i])
         end
         s
@@ -371,7 +371,7 @@ end
     f = F.instance
     quote
         s = $T(init)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $f(s, A[i])
         end
         s
@@ -393,7 +393,7 @@ function tmapreduce_quote(F, OP, N::Int, D)
     push!(body.args, e)
     push!(ls.args, body)
     return quote
-        @tturbo $ls
+        @tturbo check_empty=true $ls
         return B
     end
 end
@@ -422,7 +422,7 @@ _lvtmapreduce(f, op, A, ::Colon) = lvtmapreduce1(f, op, A)
     op = OP.instance
     quote
         s = zero(Base.promote_op($f, $T))
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, $f(A[i]))
         end
         s
@@ -441,7 +441,7 @@ for (op, init) ∈ zip((:+, :-, :*, :max, :min), (:zero, :zero, :one, :typemin, 
     end
     @eval function lvtmapreduce1(f, ::typeof($op), A::AbstractArray{T, N}) where {T, N}
         s = $init(Base.promote_op(f, T))
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, f(A[i]))
         end
         s
@@ -464,7 +464,7 @@ end
     op = OP.instance
     quote
         s = Base.promote_op($f, $T)(init)
-        @tturbo for i ∈ eachindex(A)
+        @tturbo check_empty=true for i ∈ eachindex(A)
             s = $op(s, $f(A[i]))
         end
         s

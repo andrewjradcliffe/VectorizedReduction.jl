@@ -53,7 +53,7 @@ function reduce_quote3(OP, I, N::Int, D)
     push!(rblock.args, post)
     return quote
         $bᵥ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
@@ -156,7 +156,7 @@ function mapreduce_quote3(F, OP, I, N::Int, D)
     push!(rblock.args, post)
     return quote
         $bᵥ
-        @tturbo $loops
+        @tturbo check_empty=true $loops
         return B
     end
 end
