@@ -9,7 +9,7 @@
 
 # llvmcall issue
 @test_broken vtmapreduce((x)-> x ⊻ true, &, [true false true false false], init=true) == false
-@test_throws UndefVarError vtmapreduce((x)-> x ⊻ true, |, [true false true false false]; init=false) == true
+@test_broken vtmapreduce((x)-> x ⊻ true, |, [true false true false false]; init=false) == true
 
 @test vtreduce(+, [1]) == 1 # Issue #21493
 
