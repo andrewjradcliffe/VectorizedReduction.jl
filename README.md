@@ -29,7 +29,7 @@ There is a single exception to this rule: vectorized (without threading) version
 
 This library also provides other, less common, reductions (all of which follow the naming convention above):
 1. `mapreducethen` : Apply function `f` to each element of `A`, reduce the result over the dimensions `dims` using the binary function `op`, then apply `g` to the result
-2. distances: `manhattan`, `euclidean`, `chebyshe`, `minkowski`
+2. distances: `manhattan`, `euclidean`, `chebyshev`, `minkowski`
 3. norms: `norm`, treating arbitrary slices via `dims` keyword
 4. deviances: `counteq`, `countne`, `meanad`, `maxad`, `mse`, `rmse`
 5. means: `mean`, `geomean`, `harmmean`
