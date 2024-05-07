@@ -1,3 +1,5 @@
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://andrewjradcliffe.github.io/VectorizedReduction.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://andrewjradcliffe.github.io/VectorizedReduction.jl/dev)
 # VectorizedReduction
 
 ## Note: deprecated in Julia 1.11
