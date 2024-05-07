@@ -2,13 +2,12 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://andrewjradcliffe.github.io/VectorizedReduction.jl/dev)
 # VectorizedReduction
 
-## Note: deprecated in Julia 1.11
-See [the
-announcement](https://github.com/JuliaSIMD/LoopVectorization.jl?tab=readme-ov-file#note-looking-for-new-maintainers-otherwise-deprecated-in-julia-111)
-of `LoopVectorization.jl`'s deprecation. This package is little more
-than code generation, thus, I doubt that substantial performance
-advantages could be realized over `Base` without
-`LoopVectorization.jl`.
+## Note for Julia >= 1.11
+Maintenance of this package will continue, albeit, without the performance
+afforded by LoopVectorization (See [the
+deprecation announcement](https://github.com/JuliaSIMD/LoopVectorization.jl?tab=readme-ov-file#note-looking-for-new-maintainers-otherwise-deprecated-in-julia-111)).
+
+Once 1.11 is the stable Julia release, I will reassess interest.
 
 ## Installation
 
@@ -266,7 +265,7 @@ Examples of seemingly strange but useful concept: `mapreduce(f, op, ...)`, then 
 
 ```julia
 # L₂ norm
-julia> A = rand(10,10,10,10);
+julia> A = rand(10,10,10,10); B = rand(10,10,10,10);
 
 julia> @benchmark vmapreducethen(abs2, +, √, $A, dims=(2,4))
 BenchmarkTools.Trial: 10000 samples with 10 evaluations.
