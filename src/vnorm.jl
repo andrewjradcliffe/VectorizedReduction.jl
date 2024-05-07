@@ -37,9 +37,10 @@ were vectors.
 
 `p` can assume any numeric value (even though not all values produce a
 mathematically valid vector norm). `vnorm(A, Inf)` returns the largest value in `abs.(A)`,
-whereas `vnorm(A, -Inf)` returns the smallest; `vnorm(A, 0)` matches the behavior of `norm(A, 0)`.
+whereas `vnorm(A, -Inf)` returns the smallest; `vnorm(A, 0)` matches the behavior of
+`LinearAlgebra.norm(A, 0)`.
 
-See also: [`norm`](@ref)
+See also: [`vtnorm`](@ref)
 """
 vnorm(A, p::Real=2; dims=:) = p == 0 ? _norm0(A, dims) : _vnorm(A, p, dims)
 
@@ -69,9 +70,10 @@ Compute the `p`-norm of `A` along the dimensions `dims` as if the corresponding 
 were vectors. Threaded.
 
 `p` can assume any numeric value (even though not all values produce a
-mathematically valid vector norm). `vnorm(A, Inf)` returns the largest value in `abs.(A)`,
-whereas `vnorm(A, -Inf)` returns the smallest; `vnorm(A, 0)` matches the behavior of `norm(A, 0)`.
+mathematically valid vector norm). `vtnorm(A, Inf)` returns the largest value in `abs.(A)`,
+whereas `vtnorm(A, -Inf)` returns the smallest; `vnorm(A, 0)` matches the behavior
+of `LinearAlgebra.norm(A, 0)`.
 
-See also: [`norm`](@ref)
+See also: [`vnorm`](@ref)
 """
 vtnorm(A, p::Real=2; dims=:) = p == 0 ? _norm0(A, dims) : _vtnorm(A, p, dims)
