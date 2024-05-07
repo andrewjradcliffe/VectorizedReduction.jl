@@ -7,9 +7,9 @@
 
 # Distances
 _vminkowski(x, y, p::T, dims=:) where {T<:Integer} =
-    vmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ))^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vminkowski(x, y, p::T, dims=:) where {T<:AbstractFloat} =
-    vmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(float(xᵢ) - float(yᵢ)))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vminkowski(x, y, p::Rational{T}, dims=:) where {T} = _vminkowski(x, y, float(p), dims=dims)
 
 """
@@ -39,9 +39,9 @@ function vminkowski(x, y, p::Real; dims=:)
 end
 
 _vtminkowski(x, y, p::T, dims=:) where {T<:Integer} =
-    vtmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ)^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ))^p, +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vtminkowski(x, y, p::T, dims=:) where {T<:AbstractFloat} =
-    vtmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(xᵢ - yᵢ))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> exp(p * log(abs(float(xᵢ) - float(yᵢ)))), +, x -> exp((one(T)/p) * log(abs(x))), x, y, dims=dims)
 _vtminkowski(x, y, p::Rational{T}, dims=:) where {T} = _vtminkowski(x, y, float(p), dims=dims)
 
 """
@@ -78,7 +78,7 @@ dimensions `dims`.
 
 See also: [`veuclidean`](@ref), [`vchebyshev`](@ref), [`vminkowski`](@ref)
 """
-vmanhattan(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), +, x, y, dims=dims)
+vmanhattan(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), +, x, y, dims=dims)
 
 """
     vtmanhattan(x::AbstractArray, y::AbstractArray; dims=:)
@@ -88,7 +88,7 @@ dimensions `dims`. Threaded.
 
 See also: [`vteuclidean`](@ref), [`vtchebyshev`](@ref), [`vtminkowski`](@ref)
 """
-vtmanhattan(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), +, x, y, dims=dims)
+vtmanhattan(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), +, x, y, dims=dims)
 
 """
     veuclidean(x::AbstractArray, y::AbstractArray; dims=:)
@@ -98,7 +98,7 @@ dimensions `dims`.
 
 See also: [`vmanhattan`](@ref), [`vchebyshev`](@ref), [`vminkowski`](@ref)
 """
-veuclidean(x, y; dims=:) = vmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, √, x, y, dims=dims)
+veuclidean(x, y; dims=:) = vmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, √, x, y, dims=dims)
 
 """
     vteuclidean(x::AbstractArray, y::AbstractArray; dims=:)
@@ -108,7 +108,7 @@ dimensions `dims`. Threaded.
 
 See also: [`vtmanhattan`](@ref), [`vtchebyshev`](@ref), [`vtminkowski`](@ref)
 """
-vteuclidean(x, y; dims=:) = vtmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, √, x, y, dims=dims)
+vteuclidean(x, y; dims=:) = vtmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, √, x, y, dims=dims)
 
 """
     vchebyshev(x::AbstractArray, y::AbstractArray; dims=:)
@@ -118,8 +118,8 @@ dimensions `dims`.
 
 See also: [`vmanhattan`](@ref), [`veuclidean`](@ref), [`vminkowski`](@ref)
 """
-vchebyshev(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), max, x, y, dims=dims)
-vchebyshev₋(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), min, x, y, dims=dims)
+vchebyshev(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), max, x, y, dims=dims)
+vchebyshev₋(x, y; dims=:) = vvmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), min, x, y, dims=dims)
 
 """
     vtchebyshev(x::AbstractArray, y::AbstractArray; dims=:)
@@ -129,5 +129,5 @@ dimensions `dims`. Threaded.
 
 See also: [`vtmanhattan`](@ref), [`vteuclidean`](@ref), [`vtminkowski`](@ref)
 """
-vtchebyshev(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), max, x, y, dims=dims)
-vtchebyshev₋(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(xᵢ - yᵢ), min, x, y, dims=dims)
+vtchebyshev(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), max, x, y, dims=dims)
+vtchebyshev₋(x, y; dims=:) = vtmapreduce((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)), min, x, y, dims=dims)

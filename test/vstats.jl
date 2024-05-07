@@ -30,10 +30,10 @@ end
     end
 end
 
-meanad(x, y; dims=:) = mean(abs.(x .- y), dims=dims)
+meanad(x, y; dims=:) = mean(abs.(float.(x) .- float.(y)), dims=dims)
 maxad(x, y; dims=:) = maximum(abs.(x .- y), dims=dims)
-mse(x, y; dims=:) = mean(abs2.(x .- y), dims=dims)
-rmse(x, y; dims=:) = .√mean(abs2.(x .- y), dims=dims)
+mse(x, y; dims=:) = mean(abs2.(float.(x) .- float.(y)), dims=dims)
+rmse(x, y; dims=:) = .√mean(abs2.(float.(x) .- float.(y)), dims=dims)
 
 @testset "meanad" begin
     for T ∈ (Float32, Float64, Int32)

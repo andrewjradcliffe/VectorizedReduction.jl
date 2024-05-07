@@ -5,18 +5,17 @@
 #
 ############################################################################################
 # Assorted functions from StatsBase, plus some of my own
-
 ################
 # Means
 function vmean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
-    vmapreducethen(f, +, x -> c * x, A, dims=dims)
+    vmapreducethen(x -> float(f(x)), +, x -> c * x, A, dims=dims)
 end
 vmean(A; dims=:) = vmean(identity, A, dims=dims)
 
 function vtmean(f::F, A; dims=:) where {F}
     c = 1 / _denom(A, dims)
-    vtmapreducethen(f, +, x -> c * x, A, dims=dims)
+    vtmapreducethen(x -> float(f(x)), +, x -> c * x, A, dims=dims)
 end
 vtmean(A; dims=:) = vtmean(identity, A, dims=dims)
 
@@ -97,13 +96,12 @@ _vmaxentropy(p, dims::NTuple{M, Int}) where {M} =
 _vmaxentropy(p, ::Colon) = log(length(p))
 vmaxentropy(p; dims=:) = _vmaxentropy(p, dims)
 vshannonentropy(p; dims=:) = vmapreducethen(_xlogx, +, -, p, dims=dims)
-vcollisionentropy(p; dims=:) = vmapreducethen(abs2, +, x -> -log(x), p, dims=dims)
+vcollisionentropy(p; dims=:) = vmapreducethen(abs2 ∘ float, +, x -> -log(x), p, dims=dims)
 vminentropy(p; dims=:) = vmapreducethen(identity, max, x -> -log(x), p, dims=dims)
 
-_vrenyientropy(p, α::T, dims) where {T<:Integer} =
-    (c = one(T) / (one(T) - α); vmapreducethen(x -> x^α, +, x -> c * log(x), p, dims=dims))
 _vrenyientropy(p, α::T, dims) where {T<:AbstractFloat} =
     (c = one(T) / (one(T) - α); vmapreducethen(x -> exp(α * log(x)), +, x -> c * log(x), p, dims=dims))
+_vrenyientropy(p, α::T, dims) where {T<:Integer} = _vrenyientryop(p, float(α), dims)
 _vrenyientropy(p, α::Rational{T}, dims) where {T} = _vrenyientropy(p, float(α), dims)
 function vrenyientropy(p, α::Real; dims=:)
     α < 0 && throw(ArgumentError("Order of Rényi entropy not legal, $(α) < 0."))
@@ -139,13 +137,12 @@ _vtmaxentropy(p, dims::NTuple{M, Int}) where {M} =
 _vtmaxentropy(p, ::Colon) = log(length(p))
 vtmaxentropy(p; dims=:) = _vtmaxentropy(p, dims)
 vtshannonentropy(p; dims=:) = vtmapreducethen(_xlogx, +, -, p, dims=dims)
-vtcollisionentropy(p; dims=:) = vtmapreducethen(abs2, +, x -> -log(x), p, dims=dims)
+vtcollisionentropy(p; dims=:) = vtmapreducethen(abs2 ∘ float, +, x -> -log(x), p, dims=dims)
 vtminentropy(p; dims=:) = vtmapreducethen(identity, max, x -> -log(x), p, dims=dims)
 
-_vtrenyientropy(p, α::T, dims) where {T<:Integer} =
-    (c = one(T) / (one(T) - α); vtmapreducethen(x -> x^α, +, x -> c * log(x), p, dims=dims))
 _vtrenyientropy(p, α::T, dims) where {T<:AbstractFloat} =
     (c = one(T) / (one(T) - α); vtmapreducethen(x -> exp(α * log(x)), +, x -> c * log(x), p, dims=dims))
+_vtrenyientropy(p, α::T, dims) where {T<:Integer} = _vrenyientryop(p, float(α), dims)
 _vtrenyientropy(p, α::Rational{T}, dims) where {T} = _vtrenyientropy(p, float(α), dims)
 function vtrenyientropy(p, α::Real; dims=:)
     α < 0 && throw(ArgumentError("Order of Rényi entropy not legal, $(α) < 0."))
@@ -274,7 +271,7 @@ See also: [`vmaxad`](@ref)
 """
 function vmeanad(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)) , +, z -> c * z, x, y, dims=dims)
 end
 
 """
@@ -287,7 +284,7 @@ See also: [`vtmaxad`](@ref)
 """
 function vtmeanad(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vtmapreducethen((xᵢ, yᵢ) -> abs(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> abs(float(xᵢ) - float(yᵢ)) , +, z -> c * z, x, y, dims=dims)
 end
 
 """
@@ -320,7 +317,7 @@ See also: [`vrmse`](@ref)
 """
 function vmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, z -> c * z, x, y, dims=dims)
 end
 
 """
@@ -333,7 +330,7 @@ See also: [`vtrmse`](@ref)
 """
 function vtmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vtmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> c * z, x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, z -> c * z, x, y, dims=dims)
 end
 
 """
@@ -348,7 +345,7 @@ See also: [`vmse`](@ref)
 """
 function vrmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> √(c * z), x, y, dims=dims)
+    vmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, z -> √(c * z), x, y, dims=dims)
 end
 
 """
@@ -363,7 +360,7 @@ See also: [`vtmse`](@ref)
 """
 function vtrmse(x, y; dims=:)
     c = 1 / _denom(x, dims)
-    vtmapreducethen((xᵢ, yᵢ) -> abs2(xᵢ - yᵢ) , +, z -> √(c * z), x, y, dims=dims)
+    vtmapreducethen((xᵢ, yᵢ) -> abs2(float(xᵢ) - float(yᵢ)) , +, z -> √(c * z), x, y, dims=dims)
 end
 
 # Match names with StatsBase
