@@ -4,22 +4,18 @@ using Random
 using LinearAlgebra
 using Statistics
 
-const tests = [
-    "vrspecials.jl",
-    "reduce.jl",
-    "reducedim.jl",
-    "treduce.jl",
-    "treducedim.jl",
-    "vmapreducethen.jl",
-    "vnorm.jl",
-    "vdistance.jl",
-    "vstats.jl",
-]
-
-# @testset "VectorizedReduction.jl" begin
-for t in tests
-    @testset "Test $t" begin
-        include(t)
+macro inctests(xs...)
+    block = Expr(:block)
+    for x in xs
+        e = :(@testset "$($x)" begin
+                  include("$($x).jl")
+              end)
+        push!(block.args, e)
+    end
+    quote
+        $block
     end
 end
-# end
+
+@inctests "vrspecials" "reduce" "reducedim" "treduce" "treducedim"
+@inctests "vmapreducethen" "vnorm" "vdistance" "vstats"
