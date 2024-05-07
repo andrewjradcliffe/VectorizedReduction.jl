@@ -10,7 +10,7 @@ Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 [compat]
 LoopVectorization = "0.12.108"
 Static = "0.7, 0.8"
-julia = "1.5 - 1.10"
+julia = "1.5 - 1.11"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
