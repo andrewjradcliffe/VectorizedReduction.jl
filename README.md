@@ -5,15 +5,9 @@
 ## Note for Julia >= 1.11
 Maintenance of this package will continue. 
 
-### Clarification
-The performance afforded by LoopVectorization (see [the deprecation
-announcement](https://github.com/JuliaSIMD/LoopVectorization.jl?tab=readme-ov-file#note-looking-for-new-maintainers-otherwise-deprecated-in-julia-111) for background)
-will be present so long as the test suites for LoopVectorization and VectorizedReduction pass on the relevant Julia version. At time of writing (2024-05-17), this corresponds to Julia versions 1.5 - 1.11 (inclusive). 
-
-See the
-[tracking issue](https://github.com/andrewjradcliffe/VectorizedReduction.jl/issues/8) for 1.11 for more details.
-
 Tentative support for Julia `master` branch (1.12-DEV at time of writing) appears to be justified; please file an issue with MWE and `versioninfo()` output if this packages raises errors.
+
+Note that tests run with `--depwarn=error` will convert warnings ([described here](https://sciml.ai/small_grants/#update_loopvectorization_to_support_changes_in_julia_v112_200)) to hard errors.
 
 ## Installation
 
